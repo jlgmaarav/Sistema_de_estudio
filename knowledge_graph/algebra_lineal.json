@@ -1,0 +1,16 @@
+{
+  "esquema_version": 1,
+  "materia": "Álgebra Lineal y Geometría",
+  "codigo_uva": "",
+  "curso": 1,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "al.01", "tema": 1, "nombre": "Espacios vectoriales y aplicaciones lineales", "descripcion": "Subespacios, bases, dimensión, núcleo e imagen.", "prerequisitos": [] },
+    { "id": "al.02", "tema": 1, "nombre": "Matrices y sistemas de ecuaciones", "descripcion": "Matriz de una aplicación, cambio de base, resolución de sistemas.", "prerequisitos": [{ "id": "al.01", "peso": 1.0 }] },
+    { "id": "al.03", "tema": 1, "nombre": "Determinantes", "descripcion": "Permutaciones, propiedades, desarrollo y aplicaciones.", "prerequisitos": [{ "id": "al.02", "peso": 1.0 }] },
+    { "id": "al.04", "tema": 1, "nombre": "Diagonalización y formas canónicas", "descripcion": "Valores propios, polinomio característico, Jordan, exponencial de matrices.", "prerequisitos": [{ "id": "al.03", "peso": 1.0 }] },
+    { "id": "al.05", "tema": 1, "nombre": "Formas bilineales y espacios euclídeos", "descripcion": "Formas hermíticas, Gram-Schmidt, teorema espectral, producto vectorial, isometrías.", "prerequisitos": [{ "id": "al.04", "peso": 1.0 }] },
+    { "id": "al.06", "tema": 1, "nombre": "Espacio afín, cónicas y cuádricas", "descripcion": "Geometría afín y euclídea, movimientos, clasificación de cónicas/cuádricas.", "prerequisitos": [{ "id": "al.05", "peso": 1.0 }] }
+  ]
+}

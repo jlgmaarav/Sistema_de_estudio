@@ -1,0 +1,16 @@
+{
+  "esquema_version": 1,
+  "materia": "Análisis Matemático",
+  "codigo_uva": "",
+  "curso": 1,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "am.01", "tema": 1, "nombre": "Recta real, sucesiones y series numéricas", "descripcion": "Números reales, límites de sucesiones, criterios de convergencia de series.", "prerequisitos": [] },
+    { "id": "am.02", "tema": 1, "nombre": "Cálculo diferencial en una variable", "descripcion": "Límites, continuidad, derivada, teoremas del valor medio, Taylor.", "prerequisitos": [{ "id": "am.01", "peso": 1.0 }] },
+    { "id": "am.03", "tema": 1, "nombre": "Cálculo integral en una variable", "descripcion": "Primitivas, integral de Riemann, teorema fundamental, integrales impropias.", "prerequisitos": [{ "id": "am.02", "peso": 1.0 }] },
+    { "id": "am.04", "tema": 1, "nombre": "Sucesiones y series de funciones; series de potencias", "descripcion": "Convergencia puntual y uniforme, series de potencias.", "prerequisitos": [{ "id": "am.03", "peso": 1.0 }] },
+    { "id": "am.05", "tema": 1, "nombre": "Números complejos", "descripcion": "Estructura algebraica, módulo, argumento, exponencial compleja.", "prerequisitos": [{ "id": "am.01", "peso": 1.0 }] },
+    { "id": "am.06", "tema": 1, "nombre": "Cálculo en varias variables", "descripcion": "Topología de R^n, continuidad, diferenciabilidad, regla de la cadena, extremos, función implícita.", "prerequisitos": [{ "id": "am.02", "peso": 1.0 }] }
+  ]
+}

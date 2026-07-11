@@ -1,0 +1,29 @@
+# Secretos — NUNCA subir
+.env
+
+# Entorno y caches
+venv/
+__pycache__/
+*.pyc
+
+# Datos temporales y personales
+_archivo/
+knowledge_graph/_subidas/
+knowledge_graph/backups/
+knowledge_graph/correcciones.json
+remarkable_sync_state.json
+watcher.lock
+Inbox/
+
+# PDFs personales sueltos en la raíz (calendarios, etc.)
+/*.pdf
+
+# Material de los profesores con posible copyright (los grafos y transcripciones propias sí se versionan)
+Guiones Asignaturas/**/*.pdf
+Problemas/**/*.pdf
+.claude/settings.local.json
+
+# Datos personales / con copyright ajeno — NO en repo público
+knowledge_graph/banco_problemas.json
+knowledge_graph/perfil.json
+knowledge_graph/examenes.json

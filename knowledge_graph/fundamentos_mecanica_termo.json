@@ -1,0 +1,16 @@
+{
+  "esquema_version": 1,
+  "materia": "Fundamentos de Mecánica y Termodinámica",
+  "codigo_uva": "",
+  "curso": 1,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "fmt.01", "tema": 1, "nombre": "Cinemática y dinámica de la partícula", "descripcion": "Magnitudes cinemáticas, leyes de Newton, sistemas inerciales.", "prerequisitos": [{ "id": "am.02", "peso": 0.5 }] },
+    { "id": "fmt.02", "tema": 1, "nombre": "Trabajo y energía", "descripcion": "Fuerzas conservativas, energía potencial, conservación.", "prerequisitos": [{ "id": "fmt.01", "peso": 1.0 }] },
+    { "id": "fmt.03", "tema": 1, "nombre": "Sistemas de partículas y rotación", "descripcion": "Centro de masas, colisiones, momento angular, momento de inercia.", "prerequisitos": [{ "id": "fmt.02", "peso": 1.0 }] },
+    { "id": "fmt.04", "tema": 1, "nombre": "Gravitación y oscilaciones", "descripcion": "Ley de gravitación, Kepler, movimiento armónico simple, amortiguado y forzado.", "prerequisitos": [{ "id": "fmt.02", "peso": 1.0 }] },
+    { "id": "fmt.05", "tema": 1, "nombre": "Fundamentos de mecánica relativista", "descripcion": "Postulados de Einstein, transformación de Lorentz, energía y momento relativistas.", "prerequisitos": [{ "id": "fmt.02", "peso": 1.0 }] },
+    { "id": "fmt.06", "tema": 1, "nombre": "Fundamentos de termodinámica", "descripcion": "Temperatura y calor, primer y segundo principios, entropía.", "prerequisitos": [{ "id": "fmt.02", "peso": 0.5 }] }
+  ]
+}

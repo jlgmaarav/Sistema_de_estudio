@@ -1,0 +1,15 @@
+{
+  "esquema_version": 1,
+  "materia": "Física de Fluidos",
+  "codigo_uva": "",
+  "curso": 3,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "fl.01", "tema": 1, "nombre": "Descripción del flujo", "descripcion": "Descripciones euleriana y lagrangiana, cinemática de fluidos.", "prerequisitos": [{ "id": "mo.06", "peso": 1.0 }, { "id": "m1.04", "peso": 1.0 }] },
+    { "id": "fl.02", "tema": 1, "nombre": "Fluidos ideales", "descripcion": "Continuidad, Euler, Bernoulli, teorema de Kelvin, flujo potencial.", "prerequisitos": [{ "id": "fl.01", "peso": 1.0 }] },
+    { "id": "fl.03", "tema": 1, "nombre": "Fluidos viscosos", "descripcion": "Navier-Stokes, disipación, ley de semejanza, fórmula de Stokes, soluciones exactas.", "prerequisitos": [{ "id": "fl.02", "peso": 1.0 }] },
+    { "id": "fl.04", "tema": 1, "nombre": "Turbulencia y capas límite", "descripcion": "Estabilidad, turbulencia desarrollada, capa límite laminar y turbulenta, crisis de arrastre.", "prerequisitos": [{ "id": "fl.03", "peso": 1.0 }] },
+    { "id": "fl.05", "tema": 1, "nombre": "Transferencia de calor en fluidos", "descripcion": "Convección, ley de semejanza térmica, capa límite térmica.", "prerequisitos": [{ "id": "fl.03", "peso": 1.0 }, { "id": "td.02", "peso": 0.5 }] }
+  ]
+}

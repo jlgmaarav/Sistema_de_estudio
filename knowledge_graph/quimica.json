@@ -1,0 +1,12 @@
+{
+  "esquema_version": 1,
+  "materia": "Química",
+  "codigo_uva": "",
+  "curso": 1,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "qm.01", "tema": 1, "nombre": "Estructura atómica, enlace y estequiometría", "descripcion": "Modelo mecano-cuántico del átomo, tabla periódica, enlace iónico/covalente, VSEPR, orbitales moleculares.", "prerequisitos": [{ "id": "fce.01", "peso": 0.5 }] },
+    { "id": "qm.02", "tema": 1, "nombre": "Termoquímica, equilibrio y cinética", "descripcion": "Entalpía, energía libre, equilibrio químico y de fases, ácido-base, electroquímica, cinética.", "prerequisitos": [{ "id": "fmt.06", "peso": 0.5 }] }
+  ]
+}

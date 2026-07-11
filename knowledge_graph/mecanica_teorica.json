@@ -1,0 +1,14 @@
+{
+  "esquema_version": 1,
+  "materia": "Mecánica Teórica",
+  "codigo_uva": "",
+  "curso": 3,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "mt.01", "tema": 1, "nombre": "Mecánica lagrangiana", "descripcion": "Ligaduras, acción estacionaria, Euler-Lagrange, Noether, potenciales generalizados.", "prerequisitos": [{ "id": "mo.01", "peso": 1.0 }, { "id": "mo.02", "peso": 0.5 }, { "id": "am.06", "peso": 1.0 }] },
+    { "id": "mt.02", "tema": 1, "nombre": "Mecánica hamiltoniana", "descripcion": "Momentos conjugados, ecuaciones canónicas, corchetes de Poisson, espacio de fases.", "prerequisitos": [{ "id": "mt.01", "peso": 1.0 }] },
+    { "id": "mt.03", "tema": 1, "nombre": "Transformaciones canónicas y Hamilton-Jacobi", "descripcion": "Variables acción-ángulo, ecuación de Hamilton-Jacobi, invariantes adiabáticos.", "prerequisitos": [{ "id": "mt.02", "peso": 1.0 }] },
+    { "id": "mt.04", "tema": 1, "nombre": "Cálculo variacional y campos clásicos", "descripcion": "Funcionales, formulación lagrangiana/hamiltoniana de sistemas continuos, simetrías gauge.", "prerequisitos": [{ "id": "mt.02", "peso": 1.0 }] }
+  ]
+}

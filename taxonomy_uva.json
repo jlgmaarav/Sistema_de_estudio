@@ -1,0 +1,209 @@
+{
+  "Física del Estado Sólido": [
+    "Estructura cristalina y difracción",
+    "Teoría de bandas",
+    "Dinámica semiclásica",
+    "Semiconductores (se imparte en Electrónica)",
+    "Propiedades de transporte",
+    "Fonones y propiedades térmicas",
+    "Fenómenos cooperativos",
+    "Sistemas de baja dimensión"
+  ],
+  "Física Nuclear y de Partículas": [
+    "Física Nuclear",
+    "Física de Partículas"
+  ],
+  "Mecánica Cuántica": [
+    "Tema 1: Formalismo matemático",
+    "Tema 2: Postulados",
+    "Tema 3: Oscilador armónico",
+    "Tema 4: Momento cinético",
+    "Tema 5: Dispersión y colisiones",
+    "Tema 6: Métodos aproximados",
+    "Tema 7: Partículas idénticas"
+  ],
+  "Electrónica": [
+    "Tema 1: Propiedades electrónicas de los materiales semiconductores",
+    "Tema 2: El diodo de unión PN",
+    "Tema 3: Aplicaciones de la unión PN",
+    "Tema 4: El transistor bipolar de unión (BJT)",
+    "Tema 5: La estructura MIS y el transistor MOSFET"
+  ],
+  "Electromagnetismo": [
+    "Tema 0: Fundamentos matemáticos (cálculo vectorial)",
+    "Tema 1: Electrostática en el vacío",
+    "Tema 2: Electrostática en presencia de conductores",
+    "Tema 3: Electrostática en presencia de medios dieléctricos",
+    "Tema 4: Teoría del potencial",
+    "Tema 5: Corriente eléctrica",
+    "Tema 6: Magnetostática en el vacío",
+    "Tema 7: Inducción electromagnética",
+    "Tema 8: Corrientes lentamente variables",
+    "Tema 9: Magnetostática en presencia de medios materiales",
+    "Tema 10: Las ecuaciones del campo electromagnético"
+  ],
+  "Técnicas experimentales en Física IV": [
+    "Tema 1: Técnicas Instrumentales Avanzadas y Adquisición de Datos",
+    "Tema 2: Métodos Espectroscópicos y Ópticos",
+    "Tema 3: Instrumentación en Física Nuclear y de Partículas",
+    "Tema 4: Técnicas de Caracterización en Física de la Materia Condensada",
+    "Tema 5: Análisis Estadístico y Tratamiento de Datos Experimentales"
+  ],
+  "Trabajo de Fin de Grado": [
+    "Tema 1: Metodología Científica y Búsqueda Bibliográfica",
+    "Tema 2: Elaboración de la Memoria Escrita",
+    "Tema 3: Exposición y Defensa Oral"
+  ],
+  "Análisis Matemático": [
+    "Recta real, sucesiones y series numéricas",
+    "Cálculo diferencial en una variable",
+    "Cálculo integral en una variable",
+    "Sucesiones y series de funciones; series de potencias",
+    "Números complejos",
+    "Cálculo en varias variables"
+  ],
+  "Álgebra Lineal y Geometría": [
+    "Espacios vectoriales y aplicaciones lineales",
+    "Matrices y sistemas de ecuaciones",
+    "Determinantes",
+    "Diagonalización y formas canónicas",
+    "Formas bilineales y espacios euclídeos",
+    "Espacio afín, cónicas y cuádricas"
+  ],
+  "Fundamentos de Mecánica y Termodinámica": [
+    "Cinemática y dinámica de la partícula",
+    "Trabajo y energía",
+    "Sistemas de partículas y rotación",
+    "Gravitación y oscilaciones",
+    "Fundamentos de mecánica relativista",
+    "Fundamentos de termodinámica"
+  ],
+  "Fundamentos de Campos y Ondas": [
+    "Electricidad y magnetismo básicos",
+    "Movimiento ondulatorio y óptica básica"
+  ],
+  "Fundamentos de Física Cuántica y Estadística": [
+    "Cuantización y dualidad onda-corpúsculo",
+    "Schrödinger elemental y átomos",
+    "Teoría cinética y física estadística elemental"
+  ],
+  "Física Computacional": [
+    "Programación científica",
+    "Métodos numéricos elementales"
+  ],
+  "Química": [
+    "Estructura atómica, enlace y estequiometría",
+    "Termoquímica, equilibrio y cinética"
+  ],
+  "Métodos Matemáticos I": [
+    "Integral de Riemann en R^n",
+    "Curvas en E3",
+    "Superficies en E3",
+    "Teoremas integrales"
+  ],
+  "Métodos Matemáticos II": [
+    "Función Gamma y funciones especiales",
+    "Distribuciones y delta de Dirac",
+    "Series de Fourier",
+    "Transformada de Fourier",
+    "Transformada de Laplace",
+    "EDOs: métodos elementales y sistemas lineales",
+    "Soluciones en serie: Frobenius y funciones de Bessel",
+    "Polinomios ortogonales y armónicos esféricos"
+  ],
+  "Métodos Matemáticos III": [
+    "Funciones analíticas e integración compleja",
+    "Teorema de los residuos",
+    "Probabilidad y estadística"
+  ],
+  "Métodos Matemáticos IV": [
+    "EDPs de primer orden",
+    "Análisis armónico aplicado",
+    "EDPs de segundo orden: ondas, difusión y Laplace"
+  ],
+  "Mecánica y Ondas": [
+    "Dinámica de la partícula y de sistemas",
+    "Oscilaciones",
+    "Fuerzas centrales: Kepler y Rutherford",
+    "Sistemas de referencia no inerciales",
+    "Sólido rígido",
+    "Medios deformables: elasticidad y fluidos",
+    "Ondas mecánicas",
+    "Relatividad especial"
+  ],
+  "Termodinámica": [
+    "Conceptos, postulados y temperatura",
+    "Trabajo, primer principio y ecuaciones de estado",
+    "Segundo principio y entropía",
+    "Potenciales termodinámicos y aplicaciones"
+  ],
+  "Física de Materiales": [
+    "Cristalografía y difracción",
+    "El cristal real: defectos y difusión",
+    "Amorfos, polímeros, aleaciones y compuestos"
+  ],
+  "Física Cuántica": [
+    "Orígenes de la física cuántica",
+    "Ecuación de Schrödinger en una dimensión",
+    "Schrödinger en tres dimensiones: átomo de hidrógeno",
+    "Postulados de la mecánica cuántica",
+    "Momento angular y espín",
+    "Partículas idénticas y átomos multielectrónicos",
+    "Moléculas",
+    "Sólidos: bandas y semiconductores"
+  ],
+  "Física Estadística": [
+    "Probabilidad, entropía y método MaxEnt",
+    "Conjuntos microcanónico y canónico",
+    "Conjuntos grancanónico y generalizados",
+    "Conexión micro-macro",
+    "Modelos energéticos: cristal de Einstein y gas ideal",
+    "Modelos entrópicos: el caucho"
+  ],
+  "Física de Fluidos": [
+    "Descripción del flujo",
+    "Fluidos ideales",
+    "Fluidos viscosos",
+    "Turbulencia y capas límite",
+    "Transferencia de calor en fluidos"
+  ],
+  "Mecánica Teórica": [
+    "Mecánica lagrangiana",
+    "Mecánica hamiltoniana",
+    "Transformaciones canónicas y Hamilton-Jacobi",
+    "Cálculo variacional y campos clásicos"
+  ],
+  "Óptica": [
+    "Óptica geométrica e instrumentos",
+    "Visión, radiometría, fotometría y color",
+    "Óptica electromagnética y polarización",
+    "Medios isótropos y anisótropos",
+    "Interferencias",
+    "Difracción y óptica de Fourier",
+    "Óptica cuántica, láseres y óptica no lineal"
+  ],
+  "Gravitación y Cosmología": [
+    "Bloque 1: Relatividad Especial",
+    "Bloque 2: Teoría de Einstein de la Gravitación",
+    "Bloque 3: Cosmología"
+  ],
+  "Electrodinámica Clásica": [
+    "Bloque 1: Ecuaciones del campo electromagnético",
+    "Bloque 2: Leyes de conservación",
+    "Bloque 3: Formulación covariante",
+    "Bloque 4: La ecuación de ondas",
+    "Bloque 5: Desarrollo multipolar de la radiación",
+    "Bloque 6: Radiación de partículas cargadas",
+    "Bloque 7: Dinámica de partículas cargadas"
+  ],
+  "Física Atómica": [
+    "Parte 1: Átomos",
+    "Parte 2: Moléculas"
+  ],
+  "Simetrías, Campos y Partículas": [
+    "Bloque 1: Teoría clásica de campos",
+    "Bloque 2: Ecuación de Klein-Gordon",
+    "Bloque 3: Ecuación de Dirac",
+    "Bloque 4: Introducción a la QFT"
+  ]
+}

@@ -1,0 +1,107 @@
+{
+ "em.3.04": [
+  {
+   "titulo": "Confusión entre carga libre y carga de polarización",
+   "como_evitarlo": "Utiliza siempre la ley de Gauss para D con la carga libre total, no con la carga de polarización.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ],
+ "em.0.05": [
+  {
+   "titulo": "Error en la elección del diferencial de línea",
+   "como_evitarlo": "Define el diferencial de línea basándote en la geometría del problema y la dirección de la corriente, no de forma arbitraria.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ],
+ "em.6.06": [
+  {
+   "titulo": "Error en la elección del diferencial de línea",
+   "como_evitarlo": "Define el diferencial de línea basándote en la geometría del problema y la dirección de la corriente, no de forma arbitraria.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ],
+ "em.6.10": [
+  {
+   "titulo": "Aplicación incorrecta de condiciones de contorno",
+   "como_evitarlo": "Asegúrate de que el producto vectorial de la normal con la diferencia de campos sea igual a la densidad de corriente superficial.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ],
+ "em.9.06": [
+  {
+   "titulo": "Aplicación incorrecta de condiciones de contorno",
+   "como_evitarlo": "Asegúrate de que el producto vectorial de la normal con la diferencia de campos sea igual a la densidad de corriente superficial.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ],
+ "em.0.08": [
+  {
+   "titulo": "Error en la normal a superficies cónicas",
+   "como_evitarlo": "Proyecta el vector normal utilizando correctamente los ángulos de apertura del cono en coordenadas esféricas.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ],
+ "em.3.02": [
+  {
+   "titulo": "Error en la normal a superficies cónicas",
+   "como_evitarlo": "Proyecta el vector normal utilizando correctamente los ángulos de apertura del cono en coordenadas esféricas.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ],
+ "em.0.01": [
+  {
+   "titulo": "Confusión entre vector posición y vector unitario",
+   "como_evitarlo": "Distingue siempre entre el vector posición r y el vector unitario r-gorro al plantear integrales de campo.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ],
+ "em.6.02": [
+  {
+   "titulo": "Confusión entre vector posición y vector unitario",
+   "como_evitarlo": "Distingue siempre entre el vector posición r y el vector unitario r-gorro al plantear integrales de campo.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ],
+ "em.0.02": [
+  {
+   "titulo": "Uso erróneo de operadores vectoriales",
+   "como_evitarlo": "Verifica la identidad vectorial correcta antes de aplicar operadores; el gradiente de un escalar no es la divergencia de un vector.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ],
+ "em.0.03": [
+  {
+   "titulo": "Uso erróneo de operadores vectoriales",
+   "como_evitarlo": "Verifica la identidad vectorial correcta antes de aplicar operadores; el gradiente de un escalar no es la divergencia de un vector.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ],
+ "em.1.04": [
+  {
+   "titulo": "Error en la simetría de componentes del campo",
+   "como_evitarlo": "Analiza la simetría del sistema antes de asumir qué componentes del campo son nulas.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ],
+ "em.1.07": [
+  {
+   "titulo": "Error en la simetría de componentes del campo",
+   "como_evitarlo": "Analiza la simetría del sistema antes de asumir qué componentes del campo son nulas.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ],
+ "em.7.01": [
+  {
+   "titulo": "Omisión del número de espiras en el flujo magnético",
+   "como_evitarlo": "Recuerda que el flujo total a través de una bobina es N veces el flujo a través de una sola espira.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ],
+ "em.7.04": [
+  {
+   "titulo": "Omisión del número de espiras en el flujo magnético",
+   "como_evitarlo": "Recuerda que el flujo total a través de una bobina es N veces el flujo a través de una sola espira.",
+   "fuente": "compañero (curso 24-25)"
+  }
+ ]
+}

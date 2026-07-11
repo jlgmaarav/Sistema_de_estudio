@@ -1,0 +1,13 @@
+{
+  "esquema_version": 1,
+  "materia": "Física de Materiales",
+  "codigo_uva": "",
+  "curso": 2,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "fm.01", "tema": 1, "nombre": "Cristalografía y difracción", "descripcion": "Redes de Bravais, índices de Miller, red recíproca, Laue/Bragg, rayos X.", "prerequisitos": [{ "id": "al.05", "peso": 0.5 }] },
+    { "id": "fm.02", "tema": 1, "nombre": "El cristal real: defectos y difusión", "descripcion": "Defectos puntuales, dislocaciones, ecuaciones de Fick.", "prerequisitos": [{ "id": "fm.01", "peso": 1.0 }] },
+    { "id": "fm.03", "tema": 1, "nombre": "Amorfos, polímeros, aleaciones y compuestos", "descripcion": "Estado amorfo, transición vítrea, viscoelasticidad, diagramas de fases, cerámicas y fibras.", "prerequisitos": [{ "id": "fm.02", "peso": 1.0 }, { "id": "td.04", "peso": 0.5 }] }
+  ]
+}

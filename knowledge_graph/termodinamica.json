@@ -1,0 +1,14 @@
+{
+  "esquema_version": 1,
+  "materia": "Termodinámica",
+  "codigo_uva": "",
+  "curso": 2,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "td.01", "tema": 1, "nombre": "Conceptos, postulados y temperatura", "descripcion": "Sistemas y variables termodinámicas, principio cero, termometría.", "prerequisitos": [{ "id": "fmt.06", "peso": 1.0 }] },
+    { "id": "td.02", "tema": 1, "nombre": "Trabajo, primer principio y ecuaciones de estado", "descripcion": "Trabajo generalizado, energía interna, gases reales, coeficientes térmicos y calorimétricos.", "prerequisitos": [{ "id": "td.01", "peso": 1.0 }, { "id": "am.06", "peso": 0.5 }] },
+    { "id": "td.03", "tema": 1, "nombre": "Segundo principio y entropía", "descripcion": "Carnot-Clausius-Kelvin, Carathéodory, formulación matemática, evaluación de entropías.", "prerequisitos": [{ "id": "td.02", "peso": 1.0 }] },
+    { "id": "td.04", "tema": 1, "nombre": "Potenciales termodinámicos y aplicaciones", "descripcion": "Transformadas de Legendre, relaciones de Maxwell, equilibrio y estabilidad, transiciones de fase.", "prerequisitos": [{ "id": "td.03", "peso": 1.0 }] }
+  ]
+}

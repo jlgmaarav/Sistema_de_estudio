@@ -1,0 +1,13 @@
+{
+  "esquema_version": 1,
+  "materia": "Métodos Matemáticos III",
+  "codigo_uva": "",
+  "curso": 2,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "m3.01", "tema": 1, "nombre": "Funciones analíticas e integración compleja", "descripcion": "Funciones de variable compleja, teorema de Cauchy, series de Taylor y Laurent.", "prerequisitos": [{ "id": "am.05", "peso": 1.0 }, { "id": "am.06", "peso": 1.0 }] },
+    { "id": "m3.02", "tema": 1, "nombre": "Teorema de los residuos", "descripcion": "Cálculo de integrales reales mediante residuos.", "prerequisitos": [{ "id": "m3.01", "peso": 1.0 }] },
+    { "id": "m3.03", "tema": 1, "nombre": "Probabilidad y estadística", "descripcion": "Espacios de probabilidad, variables aleatorias, momentos, estimación de parámetros.", "prerequisitos": [{ "id": "am.03", "peso": 1.0 }] }
+  ]
+}

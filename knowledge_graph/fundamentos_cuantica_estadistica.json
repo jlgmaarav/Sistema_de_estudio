@@ -1,0 +1,13 @@
+{
+  "esquema_version": 1,
+  "materia": "Fundamentos de Física Cuántica y Estadística",
+  "codigo_uva": "",
+  "curso": 1,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "fce.01", "tema": 1, "nombre": "Cuantización y dualidad onda-corpúsculo", "descripcion": "Cuerpo negro, efecto fotoeléctrico, Compton, de Broglie, incertidumbre.", "prerequisitos": [{ "id": "fco.02", "peso": 1.0 }, { "id": "fmt.05", "peso": 0.5 }] },
+    { "id": "fce.02", "tema": 1, "nombre": "Schrödinger elemental y átomos", "descripcion": "Función de onda, pozos y barreras, efecto túnel, modelo de Bohr, hidrógeno, espín y Pauli.", "prerequisitos": [{ "id": "fce.01", "peso": 1.0 }, { "id": "am.03", "peso": 1.0 }] },
+    { "id": "fce.03", "tema": 1, "nombre": "Teoría cinética y física estadística elemental", "descripcion": "Teoría cinética de gases, entropía estadística, equipartición, gases ideales.", "prerequisitos": [{ "id": "fmt.06", "peso": 1.0 }] }
+  ]
+}

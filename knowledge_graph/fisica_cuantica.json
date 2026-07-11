@@ -1,0 +1,18 @@
+{
+  "esquema_version": 1,
+  "materia": "Física Cuántica",
+  "codigo_uva": "",
+  "curso": 3,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "cu.01", "tema": 1, "nombre": "Orígenes de la física cuántica", "descripcion": "Planck, fotones, de Broglie, incertidumbre, modelos atómicos, Bohr.", "prerequisitos": [{ "id": "fce.01", "peso": 1.0 }] },
+    { "id": "cu.02", "tema": 1, "nombre": "Ecuación de Schrödinger en una dimensión", "descripcion": "Función de onda, estados estacionarios, pozos, barreras, túnel, oscilador armónico 1D.", "prerequisitos": [{ "id": "fce.02", "peso": 1.0 }, { "id": "m2.06", "peso": 1.0 }] },
+    { "id": "cu.03", "tema": 1, "nombre": "Schrödinger en tres dimensiones: átomo de hidrógeno", "descripcion": "Separación en esféricas, armónicos esféricos, ecuación radial, hidrógeno.", "prerequisitos": [{ "id": "cu.02", "peso": 1.0 }, { "id": "m2.08", "peso": 1.0 }] },
+    { "id": "cu.04", "tema": 1, "nombre": "Postulados de la mecánica cuántica", "descripcion": "Operadores hermíticos, conmutación, distribución de probabilidad, evolución temporal.", "prerequisitos": [{ "id": "cu.02", "peso": 1.0 }, { "id": "al.05", "peso": 1.0 }] },
+    { "id": "cu.05", "tema": 1, "nombre": "Momento angular y espín", "descripcion": "Operadores de momento angular, matrices de Pauli, suma de momentos angulares.", "prerequisitos": [{ "id": "cu.03", "peso": 1.0 }, { "id": "cu.04", "peso": 1.0 }] },
+    { "id": "cu.06", "tema": 1, "nombre": "Partículas idénticas y átomos multielectrónicos", "descripcion": "Pauli, fermiones/bosones, intercambio en helio, campo central, Hartree, tabla periódica.", "prerequisitos": [{ "id": "cu.05", "peso": 1.0 }] },
+    { "id": "cu.07", "tema": 1, "nombre": "Moléculas", "descripcion": "H2+, orbitales moleculares, híbridos, rotaciones y vibraciones moleculares.", "prerequisitos": [{ "id": "cu.06", "peso": 1.0 }] },
+    { "id": "cu.08", "tema": 1, "nombre": "Sólidos: bandas y semiconductores", "descripcion": "Tipos de sólidos, teoría de bandas, Bloch, conductividad, unión p-n introductoria.", "prerequisitos": [{ "id": "cu.06", "peso": 1.0 }] }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "esquema_version": 1,
+  "materia": "Mecánica y Ondas",
+  "codigo_uva": "",
+  "curso": 2,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "mo.01", "tema": 1, "nombre": "Dinámica de la partícula y de sistemas", "descripcion": "Fuerzas dependientes de posición/velocidad/tiempo, métodos de Fourier y Green, conservaciones, masa variable.", "prerequisitos": [{ "id": "fmt.03", "peso": 1.0 }, { "id": "m2.06", "peso": 0.5 }] },
+    { "id": "mo.02", "tema": 1, "nombre": "Oscilaciones", "descripcion": "Oscilador armónico, amortiguado y forzado; acoplados y coordenadas normales; osciladores no lineales.", "prerequisitos": [{ "id": "mo.01", "peso": 1.0 }, { "id": "m2.06", "peso": 1.0 }] },
+    { "id": "mo.03", "tema": 1, "nombre": "Fuerzas centrales: Kepler y Rutherford", "descripcion": "Problema de dos cuerpos, potencial efectivo, órbitas, sección eficaz, dispersión.", "prerequisitos": [{ "id": "mo.01", "peso": 1.0 }] },
+    { "id": "mo.04", "tema": 1, "nombre": "Sistemas de referencia no inerciales", "descripcion": "Transformaciones de Galileo, Coriolis, péndulo de Foucault.", "prerequisitos": [{ "id": "mo.01", "peso": 1.0 }] },
+    { "id": "mo.05", "tema": 1, "nombre": "Sólido rígido", "descripcion": "Tensor de inercia, ecuaciones y ángulos de Euler, peonzas y giróscopos.", "prerequisitos": [{ "id": "mo.01", "peso": 1.0 }, { "id": "al.05", "peso": 0.5 }] },
+    { "id": "mo.06", "tema": 1, "nombre": "Medios deformables: elasticidad y fluidos", "descripcion": "Ley de Hooke, módulos elásticos, estática y dinámica de fluidos, Navier-Stokes introductorio.", "prerequisitos": [{ "id": "mo.01", "peso": 1.0 }] },
+    { "id": "mo.07", "tema": 1, "nombre": "Ondas mecánicas", "descripcion": "Ecuación de ondas, D'Alembert, Fourier, ondas estacionarias, interferencia y difracción, velocidad de grupo.", "prerequisitos": [{ "id": "mo.02", "peso": 1.0 }, { "id": "m4.03", "peso": 0.5 }] },
+    { "id": "mo.08", "tema": 1, "nombre": "Relatividad especial", "descripcion": "Lorentz, Minkowski, cuadrivectores, dinámica relativista, Doppler, colisiones.", "prerequisitos": [{ "id": "fmt.05", "peso": 1.0 }, { "id": "mo.01", "peso": 1.0 }] }
+  ]
+}

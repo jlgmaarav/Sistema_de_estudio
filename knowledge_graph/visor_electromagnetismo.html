@@ -1,0 +1,289 @@
+<title>Grafo Electromagnetismo UVa</title>
+<style>
+:root {
+  --bg: #F7F9FB;
+  --surface: #FFFFFF;
+  --ink: #1C2733;
+  --muted: #5B6B7A;
+  --line: #D8E0E8;
+  --accent: #1D5FC2;
+  --accent-ink: #FFFFFF;
+  --accent-soft: rgba(29, 95, 194, 0.10);
+  --copper: #B4690E;
+  --copper-soft: rgba(180, 105, 14, 0.12);
+  --sel: #12345E;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0E141B;
+    --surface: #16202B;
+    --ink: #E2E9F0;
+    --muted: #8FA1B3;
+    --line: #26323F;
+    --accent: #6FA5F2;
+    --accent-ink: #0E141B;
+    --accent-soft: rgba(111, 165, 242, 0.14);
+    --copper: #E39A4E;
+    --copper-soft: rgba(227, 154, 78, 0.14);
+    --sel: #BDD7FF;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #F7F9FB; --surface: #FFFFFF; --ink: #1C2733; --muted: #5B6B7A;
+  --line: #D8E0E8; --accent: #1D5FC2; --accent-ink: #FFFFFF;
+  --accent-soft: rgba(29, 95, 194, 0.10); --copper: #B4690E;
+  --copper-soft: rgba(180, 105, 14, 0.12); --sel: #12345E;
+}
+:root[data-theme="dark"] {
+  --bg: #0E141B; --surface: #16202B; --ink: #E2E9F0; --muted: #8FA1B3;
+  --line: #26323F; --accent: #6FA5F2; --accent-ink: #0E141B;
+  --accent-soft: rgba(111, 165, 242, 0.14); --copper: #E39A4E;
+  --copper-soft: rgba(227, 154, 78, 0.14); --sel: #BDD7FF;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, "Segoe UI", sans-serif;
+  margin: 0;
+  line-height: 1.45;
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding: 28px 20px 80px; }
+header.top { margin-bottom: 20px; }
+h1 {
+  font-family: Charter, Georgia, "Times New Roman", serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  text-wrap: balance;
+}
+.sub { color: var(--muted); font-size: 0.92rem; margin: 0; }
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+  margin-top: 16px;
+}
+#buscar {
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 6px;
+  padding: 8px 12px; font-size: 0.9rem; width: 260px; max-width: 100%;
+}
+#buscar:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.leyenda { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.8rem; color: var(--muted); }
+.leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.dot.d-sel { background: var(--accent); }
+.dot.d-pre { background: transparent; border: 2px solid var(--accent); }
+.dot.d-anc { background: var(--accent-soft); border: 1px solid var(--accent); }
+.dot.d-dep { background: transparent; border: 2px solid var(--copper); }
+
+.cols { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+@media (max-width: 900px) { .cols { grid-template-columns: 1fr; } .panel { position: static !important; } }
+
+section.tema { margin-bottom: 18px; }
+.tema h2 {
+  font-family: Charter, Georgia, serif;
+  font-size: 1.02rem; font-weight: 700; margin: 0 0 8px;
+  padding-bottom: 4px; border-bottom: 1px solid var(--line);
+}
+.tema h2 small { color: var(--muted); font-weight: 400; font-size: 0.8rem; margin-left: 8px; }
+.pills { display: flex; flex-wrap: wrap; gap: 7px; }
+button.pill {
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 5px 12px; font-size: 0.82rem; cursor: pointer;
+  font-family: inherit; line-height: 1.3;
+  transition: border-color 120ms, background 120ms, opacity 120ms;
+}
+@media (prefers-reduced-motion: reduce) { button.pill { transition: none; } }
+button.pill .nid {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.68rem; color: var(--muted); margin-right: 6px;
+}
+button.pill:hover { border-color: var(--accent); }
+button.pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button.pill.sel { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.pill.sel .nid { color: var(--accent-ink); opacity: 0.75; }
+button.pill.pre { border: 2px solid var(--accent); background: var(--accent-soft); }
+button.pill.pre.blanda { border-style: dashed; }
+button.pill.anc { background: var(--accent-soft); }
+button.pill.dep { border: 2px solid var(--copper); background: var(--copper-soft); }
+button.pill.apagado { opacity: 0.28; }
+
+.panel {
+  position: sticky; top: 16px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 10px; padding: 18px 18px 20px;
+}
+.panel .vacio { color: var(--muted); font-size: 0.9rem; }
+.panel h3 {
+  font-family: Charter, Georgia, serif;
+  font-size: 1.15rem; margin: 2px 0 2px; text-wrap: balance;
+}
+.panel .meta {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.72rem; color: var(--muted);
+}
+.panel .temaLbl { font-size: 0.78rem; color: var(--accent); margin: 4px 0 10px; }
+.panel p.desc { font-size: 0.88rem; margin: 0 0 14px; }
+.panel h4 {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--muted); margin: 14px 0 6px; font-weight: 600;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+button.chip {
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  color: var(--ink); font-size: 0.78rem; padding: 3px 9px; cursor: pointer;
+  font-family: inherit; text-align: left;
+}
+button.chip:hover, button.chip:focus-visible { border-color: var(--accent); outline: none; }
+button.chip .peso { color: var(--muted); font-size: 0.7rem; }
+.chip.cPre { border-left: 3px solid var(--accent); }
+.chip.cDep { border-left: 3px solid var(--copper); }
+ul.fuentes { margin: 0; padding: 0 0 0 2px; list-style: none; font-size: 0.82rem; }
+ul.fuentes li { margin-bottom: 3px; }
+ul.fuentes .libro { color: var(--muted); }
+.stats { font-size: 0.78rem; color: var(--muted); margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Electromagnetismo · grafo de conocimiento</h1>
+    <p class="sub" id="resumen"></p>
+    <div class="toolbar">
+      <input id="buscar" type="search" placeholder="Filtrar nodos… (ej. Gauss, dieléctrico)" aria-label="Filtrar nodos">
+      <div class="leyenda">
+        <span><span class="dot d-sel"></span> seleccionado</span>
+        <span><span class="dot d-pre"></span> prerrequisito directo</span>
+        <span><span class="dot d-anc"></span> ancestro</span>
+        <span><span class="dot d-dep"></span> lo necesita</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="cols">
+    <main id="temas"></main>
+    <aside class="panel" id="panel">
+      <p class="vacio">Haz clic en un nodo para ver sus prerrequisitos, qué temas dependen de él y dónde estudiarlo en la bibliografía.</p>
+    </aside>
+  </div>
+</div>
+
+<script>
+const GRAFO = {"esquema_version": 1, "materia": "Electromagnetismo", "codigo_uva": "45758", "temas": {"0": "Tema 0: Fundamentos matemáticos (cálculo vectorial)", "1": "Tema 1: Electrostática en el vacío", "2": "Tema 2: Electrostática en presencia de conductores", "3": "Tema 3: Electrostática en presencia de medios dieléctricos", "4": "Tema 4: Teoría del potencial", "5": "Tema 5: Corriente eléctrica", "6": "Tema 6: Magnetostática en el vacío", "7": "Tema 7: Inducción electromagnética", "8": "Tema 8: Corrientes lentamente variables", "9": "Tema 9: Magnetostática en presencia de medios materiales", "10": "Tema 10: Las ecuaciones del campo electromagnético"}, "nodos": [{"id": "em.0.01", "tema": 0, "nombre": "Álgebra vectorial", "descripcion": "Suma, componentes, vectores unitarios, producto escalar y vectorial, vector de posición y coordenadas relativas.", "prerequisitos": [], "fuentes": {"wangsness": "1-1 a 1-7, 1-20", "griffiths": "1.1", "problemas": "cap. 1"}}, {"id": "em.0.02", "tema": 0, "nombre": "Gradiente y derivada direccional", "descripcion": "Derivación respecto a un escalar, gradiente de un campo escalar, operador nabla.", "prerequisitos": [{"id": "em.0.01", "peso": 1.0}], "fuentes": {"wangsness": "1-8, 1-9", "griffiths": "1.2.1 a 1.2.3", "problemas": "cap. 1"}}, {"id": "em.0.03", "tema": 0, "nombre": "Divergencia y rotacional", "descripcion": "Definición e interpretación física; reglas de producto con nabla.", "prerequisitos": [{"id": "em.0.02", "peso": 1.0}], "fuentes": {"wangsness": "1-10, 1-19", "griffiths": "1.2.4 a 1.2.6", "problemas": "cap. 1"}}, {"id": "em.0.04", "tema": 0, "nombre": "Laplaciano y operadores de segundo orden", "descripcion": "Segundas derivadas de campos, laplaciano escalar y vectorial, identidades (rot grad = 0, div rot = 0).", "prerequisitos": [{"id": "em.0.03", "peso": 1.0}], "fuentes": {"wangsness": "1-19", "griffiths": "1.2.7", "problemas": "cap. 1"}}, {"id": "em.0.05", "tema": 0, "nombre": "Integrales de línea, superficie y volumen", "descripcion": "Circulación, elemento vectorial de superficie, flujo de un campo vectorial.", "prerequisitos": [{"id": "em.0.01", "peso": 1.0}], "fuentes": {"wangsness": "1-11 a 1-13", "griffiths": "1.3.1", "problemas": "cap. 1"}}, {"id": "em.0.06", "tema": 0, "nombre": "Teorema de la divergencia", "descripcion": "Teorema de Gauss-Ostrogradski y teorema de Green; uso para convertir integrales.", "prerequisitos": [{"id": "em.0.03", "peso": 1.0}, {"id": "em.0.05", "peso": 1.0}], "fuentes": {"wangsness": "1-14", "griffiths": "1.3.4", "problemas": "cap. 1"}}, {"id": "em.0.07", "tema": 0, "nombre": "Teorema de Stokes", "descripcion": "Relación circulación-rotacional; campos irrotacionales y solenoidales.", "prerequisitos": [{"id": "em.0.03", "peso": 1.0}, {"id": "em.0.05", "peso": 1.0}], "fuentes": {"wangsness": "1-15", "griffiths": "1.3.5", "problemas": "cap. 1"}}, {"id": "em.0.08", "tema": 0, "nombre": "Coordenadas cilíndricas y esféricas", "descripcion": "Vectores base, elementos de línea/superficie/volumen y operadores diferenciales en curvilíneas.", "prerequisitos": [{"id": "em.0.01", "peso": 1.0}], "fuentes": {"wangsness": "1-16, 1-17", "griffiths": "1.4, Ap. A", "problemas": "cap. 1"}}, {"id": "em.0.09", "tema": 0, "nombre": "Delta de Dirac", "descripcion": "Delta 1D y 3D, divergencia de r̂/r², representación de cargas puntuales como densidades.", "prerequisitos": [{"id": "em.0.05", "peso": 1.0}], "fuentes": {"griffiths": "1.5"}}, {"id": "em.0.10", "tema": 0, "nombre": "Campos conservativos, potenciales y teorema de Helmholtz", "descripcion": "Condiciones de campo conservativo, existencia de potenciales escalar y vector, teorema de Helmholtz.", "prerequisitos": [{"id": "em.0.06", "peso": 1.0}, {"id": "em.0.07", "peso": 1.0}], "fuentes": {"wangsness": "1-18", "griffiths": "1.6, Ap. B", "problemas": "cap. 1 (1.4)"}}, {"id": "em.1.01", "tema": 1, "nombre": "Carga eléctrica", "descripcion": "Propiedades de la carga: cuantización, conservación, invariancia; fenomenología básica.", "prerequisitos": [], "fuentes": {"wangsness": "2-1", "griffiths": "2.1.1", "problemas": "cap. 2 (2.1)"}}, {"id": "em.1.02", "tema": 1, "nombre": "Ley de Coulomb y superposición", "descripcion": "Fuerza entre cargas puntuales, principio de superposición, sistemas de cargas puntuales.", "prerequisitos": [{"id": "em.1.01", "peso": 1.0}, {"id": "em.0.01", "peso": 1.0}], "fuentes": {"wangsness": "2-2, 2-3", "griffiths": "2.1.2", "problemas": "cap. 2 (2.2)"}}, {"id": "em.1.03", "tema": 1, "nombre": "Distribuciones continuas de carga", "descripcion": "Densidades lineal, superficial y volumétrica; fuerza y campo por integración sobre la distribución.", "prerequisitos": [{"id": "em.1.02", "peso": 1.0}, {"id": "em.0.05", "peso": 1.0}, {"id": "em.0.08", "peso": 0.5}], "fuentes": {"wangsness": "2-4, 2-5", "griffiths": "2.1.4", "problemas": "cap. 2"}}, {"id": "em.1.04", "tema": 1, "nombre": "El campo eléctrico y las líneas de fuerza", "descripcion": "Definición de E, interpretación, representación mediante líneas de campo.", "prerequisitos": [{"id": "em.1.02", "peso": 1.0}], "fuentes": {"wangsness": "3-1, 3-4", "griffiths": "2.1.3", "problemas": "cap. 2 (2.3)"}}, {"id": "em.1.05", "tema": 1, "nombre": "Cálculo de E por integración directa", "descripcion": "Campo de hilo infinito, anillo, disco, plano infinito y otras geometrías canónicas.", "prerequisitos": [{"id": "em.1.03", "peso": 1.0}, {"id": "em.1.04", "peso": 1.0}, {"id": "em.0.08", "peso": 1.0}], "fuentes": {"wangsness": "3-2, 3-3", "griffiths": "2.1.4", "problemas": "cap. 2"}}, {"id": "em.1.06", "tema": 1, "nombre": "Flujo de E y ley de Gauss (forma integral)", "descripcion": "Concepto de flujo, deducción de la ley de Gauss, ángulo sólido.", "prerequisitos": [{"id": "em.1.04", "peso": 1.0}, {"id": "em.0.05", "peso": 1.0}], "fuentes": {"wangsness": "4-1", "griffiths": "2.2.1", "problemas": "cap. 2 (2.5.1)"}}, {"id": "em.1.07", "tema": 1, "nombre": "Aplicaciones de la ley de Gauss", "descripcion": "Cálculo de E con simetría esférica, cilíndrica y plana; elección de superficie gaussiana.", "prerequisitos": [{"id": "em.1.06", "peso": 1.0}, {"id": "em.0.08", "peso": 0.5}], "fuentes": {"wangsness": "4-2", "griffiths": "2.2.3", "problemas": "cap. 2"}}, {"id": "em.1.08", "tema": 1, "nombre": "Ecuaciones diferenciales de la electrostática", "descripcion": "div E = ρ/ε₀ y rot E = 0; paso entre formas integral y diferencial.", "prerequisitos": [{"id": "em.1.06", "peso": 1.0}, {"id": "em.0.06", "peso": 1.0}, {"id": "em.0.07", "peso": 0.5}, {"id": "em.0.09", "peso": 0.5}], "fuentes": {"wangsness": "4-3", "griffiths": "2.2.2, 2.2.4", "problemas": "cap. 2 (2.5.2)"}}, {"id": "em.1.09", "tema": 1, "nombre": "El potencial electrostático", "descripcion": "Definición, relación E = -grad V, cálculo para distribuciones, superficies equipotenciales.", "prerequisitos": [{"id": "em.1.04", "peso": 1.0}, {"id": "em.0.02", "peso": 1.0}, {"id": "em.0.10", "peso": 0.5}], "fuentes": {"wangsness": "5-1 a 5-3", "griffiths": "2.3", "problemas": "cap. 2 (2.4)"}}, {"id": "em.1.10", "tema": 1, "nombre": "Energía de una distribución de cargas", "descripcion": "Trabajo para ensamblar cargas puntuales y distribuciones continuas; energía y potencial.", "prerequisitos": [{"id": "em.1.09", "peso": 1.0}], "fuentes": {"wangsness": "5-4, 7-1", "griffiths": "2.4.1, 2.4.2", "problemas": "cap. 3 (3.3)"}}, {"id": "em.1.11", "tema": 1, "nombre": "Energía en función del campo", "descripcion": "Densidad de energía ε₀E²/2, energía total del campo, comentarios sobre autoenergía.", "prerequisitos": [{"id": "em.1.10", "peso": 1.0}, {"id": "em.0.06", "peso": 0.5}], "fuentes": {"wangsness": "7-3", "griffiths": "2.4.3, 2.4.4", "problemas": "cap. 3 (3.3)"}}, {"id": "em.1.12", "tema": 1, "nombre": "El dipolo eléctrico", "descripcion": "Potencial y campo del dipolo, momento dipolar, fuerza y par en campo externo.", "prerequisitos": [{"id": "em.1.09", "peso": 1.0}], "fuentes": {"wangsness": "8-2", "griffiths": "3.4.4", "problemas": "cap. 2"}}, {"id": "em.1.13", "tema": 1, "nombre": "Desarrollo multipolar", "descripcion": "Expansión del potencial a grandes distancias: monopolo, dipolo, cuadrupolo; energía en campo externo.", "prerequisitos": [{"id": "em.1.12", "peso": 1.0}, {"id": "em.1.09", "peso": 1.0}], "fuentes": {"wangsness": "8-1, 8-3, 8-4", "griffiths": "3.4", "jackson": "4.1, 4.2"}}, {"id": "em.1.14", "tema": 1, "nombre": "Condiciones de frontera del campo electrostático", "descripcion": "Discontinuidad de la componente normal de E y continuidad de la tangencial y del potencial en superficies cargadas.", "prerequisitos": [{"id": "em.1.08", "peso": 1.0}], "fuentes": {"wangsness": "9-1 a 9-5", "griffiths": "2.3.5", "problemas": "cap. 3"}}, {"id": "em.2.01", "tema": 2, "nombre": "Conductores en equilibrio electrostático", "descripcion": "E interno nulo, carga en la superficie, conductor como volumen equipotencial; campo en la superficie.", "prerequisitos": [{"id": "em.1.07", "peso": 1.0}, {"id": "em.1.09", "peso": 1.0}], "fuentes": {"wangsness": "6-1", "griffiths": "2.5.1", "problemas": "cap. 3 (3.1)"}}, {"id": "em.2.02", "tema": 2, "nombre": "Cargas inducidas, cavidades y apantallamiento", "descripcion": "Inducción electrostática, cavidades con y sin carga, jaula de Faraday.", "prerequisitos": [{"id": "em.2.01", "peso": 1.0}, {"id": "em.1.06", "peso": 1.0}], "fuentes": {"wangsness": "6-1", "griffiths": "2.5.2", "feynman": "II-5", "problemas": "cap. 3"}}, {"id": "em.2.03", "tema": 2, "nombre": "Fuerza y presión electrostática sobre conductores", "descripcion": "Fuerza por unidad de superficie σ²/2ε₀ sobre la superficie de un conductor.", "prerequisitos": [{"id": "em.2.01", "peso": 1.0}, {"id": "em.1.14", "peso": 0.5}], "fuentes": {"wangsness": "7-4", "griffiths": "2.5.3", "problemas": "cap. 3"}}, {"id": "em.2.04", "tema": 2, "nombre": "Condiciones de contorno en presencia de conductores", "descripcion": "Formulación de problemas con conductores: potencial dado o carga dada; planteamiento de unicidad.", "prerequisitos": [{"id": "em.2.01", "peso": 1.0}, {"id": "em.1.14", "peso": 1.0}], "fuentes": {"wangsness": "9-4, 11-1", "griffiths": "3.1.5", "problemas": "cap. 3"}}, {"id": "em.2.05", "tema": 2, "nombre": "Capacidad y condensadores", "descripcion": "Definición de capacidad; condensador plano, esférico y cilíndrico; asociaciones serie/paralelo.", "prerequisitos": [{"id": "em.2.01", "peso": 1.0}, {"id": "em.1.09", "peso": 1.0}, {"id": "em.2.04", "peso": 0.5}], "fuentes": {"wangsness": "6-3", "griffiths": "2.5.4", "problemas": "cap. 3 (3.4.2)"}}, {"id": "em.2.06", "tema": 2, "nombre": "Sistemas de conductores: coeficientes de potencial y capacidad", "descripcion": "Matrices de coeficientes p_ij y c_ij, propiedades y su relación con la capacidad.", "prerequisitos": [{"id": "em.2.05", "peso": 1.0}, {"id": "em.1.09", "peso": 1.0}], "fuentes": {"wangsness": "6-2", "problemas": "cap. 3 (3.4.1)", "panofsky": "cap. 3"}}, {"id": "em.2.07", "tema": 2, "nombre": "Energía de sistemas de conductores", "descripcion": "Energía almacenada en condensadores y sistemas de conductores cargados.", "prerequisitos": [{"id": "em.2.05", "peso": 1.0}, {"id": "em.1.10", "peso": 1.0}], "fuentes": {"wangsness": "7-2", "griffiths": "2.5.4", "problemas": "cap. 3"}}, {"id": "em.2.08", "tema": 2, "nombre": "Fuerzas electrostáticas en sistemas de conductores", "descripcion": "Fuerzas a carga constante y a potencial constante; método de la energía.", "prerequisitos": [{"id": "em.2.07", "peso": 1.0}], "fuentes": {"wangsness": "7-4", "problemas": "cap. 3", "panofsky": "6-4"}}, {"id": "em.3.01", "tema": 3, "nombre": "Polarización y sus mecanismos", "descripcion": "Dieléctricos, polarización electrónica/iónica/orientacional, vector polarización P.", "prerequisitos": [{"id": "em.1.12", "peso": 1.0}], "fuentes": {"wangsness": "10-1", "griffiths": "4.1", "problemas": "cap. 3 (3.2.1)"}}, {"id": "em.3.02", "tema": 3, "nombre": "Cargas de polarización", "descripcion": "Densidades de carga ligada ρ_b = -div P y σ_b = P·n; interpretación física.", "prerequisitos": [{"id": "em.3.01", "peso": 1.0}, {"id": "em.0.03", "peso": 0.5}], "fuentes": {"wangsness": "10-2", "griffiths": "4.2.1, 4.2.2", "problemas": "cap. 3 (3.2.2)"}}, {"id": "em.3.03", "tema": 3, "nombre": "Campo dentro de un dieléctrico; esfera polarizada", "descripcion": "Campo creado por objetos polarizados; el ejemplo canónico de la esfera uniformemente polarizada.", "prerequisitos": [{"id": "em.3.02", "peso": 1.0}, {"id": "em.1.09", "peso": 1.0}], "fuentes": {"wangsness": "10-3, 10-4", "griffiths": "4.2.3", "problemas": "cap. 3"}}, {"id": "em.3.04", "tema": 3, "nombre": "El vector desplazamiento D y la ley de Gauss generalizada", "descripcion": "Definición de D, ley de Gauss con cargas libres, precauciones (paralelo engañoso con E).", "prerequisitos": [{"id": "em.3.02", "peso": 1.0}, {"id": "em.1.08", "peso": 1.0}], "fuentes": {"wangsness": "10-5", "griffiths": "4.3", "problemas": "cap. 3 (3.2.4)"}}, {"id": "em.3.05", "tema": 3, "nombre": "Relaciones constitutivas: susceptibilidad y permitividad", "descripcion": "Medios lineales, isótropos y homogéneos; χ_e, ε y constante dieléctrica.", "prerequisitos": [{"id": "em.3.04", "peso": 1.0}], "fuentes": {"wangsness": "10-7", "griffiths": "4.4.1", "problemas": "cap. 3 (3.2.3)"}}, {"id": "em.3.06", "tema": 3, "nombre": "Clasificación de los medios dieléctricos", "descripcion": "Lineales/no lineales, isótropos/anisótropos, homogéneos/inhomogéneos; polarizabilidad molecular, Clausius-Mossotti.", "prerequisitos": [{"id": "em.3.05", "peso": 1.0}], "fuentes": {"wangsness": "10-6, B-1", "griffiths": "4.4.1", "feynman": "II-11"}}, {"id": "em.3.07", "tema": 3, "nombre": "Condiciones de contorno con dieléctricos", "descripcion": "Continuidad de D_n (sin carga libre) y E_t; refracción de líneas de campo; problemas de frontera con dieléctricos.", "prerequisitos": [{"id": "em.3.04", "peso": 1.0}, {"id": "em.1.14", "peso": 1.0}], "fuentes": {"wangsness": "10-7", "griffiths": "4.3.3, 4.4.2", "problemas": "cap. 3 (3.2.5)"}}, {"id": "em.3.08", "tema": 3, "nombre": "Condensadores con dieléctricos", "descripcion": "Capacidad con dieléctricos totales o parciales, en serie/paralelo dentro del condensador.", "prerequisitos": [{"id": "em.3.05", "peso": 1.0}, {"id": "em.3.07", "peso": 1.0}, {"id": "em.2.05", "peso": 1.0}], "fuentes": {"wangsness": "10-7", "griffiths": "4.4.2", "problemas": "cap. 3"}}, {"id": "em.3.09", "tema": 3, "nombre": "Energía y fuerzas en presencia de dieléctricos", "descripcion": "Densidad de energía D·E/2, fuerzas sobre dieléctricos, succión de láminas en condensadores.", "prerequisitos": [{"id": "em.3.05", "peso": 1.0}, {"id": "em.1.11", "peso": 1.0}, {"id": "em.2.08", "peso": 0.5}], "fuentes": {"wangsness": "10-8, 10-9", "griffiths": "4.4.3, 4.4.4", "problemas": "cap. 3"}}, {"id": "em.4.01", "tema": 4, "nombre": "Ecuaciones de Poisson y Laplace; unicidad", "descripcion": "Deducción, propiedades de las soluciones armónicas y teoremas de unicidad.", "prerequisitos": [{"id": "em.1.08", "peso": 1.0}, {"id": "em.1.09", "peso": 1.0}, {"id": "em.0.04", "peso": 1.0}], "fuentes": {"wangsness": "11-1", "griffiths": "3.1", "panofsky": "3-1"}}, {"id": "em.4.02", "tema": 4, "nombre": "Método de las imágenes: plano conductor", "descripcion": "Carga frente a plano a tierra: potencial, carga inducida, fuerza y energía.", "prerequisitos": [{"id": "em.4.01", "peso": 1.0}, {"id": "em.2.04", "peso": 1.0}], "fuentes": {"wangsness": "11-2", "griffiths": "3.2.1 a 3.2.3", "panofsky": "3-5"}}, {"id": "em.4.03", "tema": 4, "nombre": "Método de las imágenes: esfera y otras geometrías", "descripcion": "Carga frente a esfera conductora (a tierra y aislada), imágenes con dieléctricos.", "prerequisitos": [{"id": "em.4.02", "peso": 1.0}], "fuentes": {"wangsness": "11-2, 11-3", "griffiths": "3.2.4", "jackson": "cap. 2"}}, {"id": "em.4.04", "tema": 4, "nombre": "Separación de variables en coordenadas cartesianas", "descripcion": "Soluciones producto de Laplace en 2D/3D rectangular, series de Fourier para condiciones de contorno.", "prerequisitos": [{"id": "em.4.01", "peso": 1.0}], "fuentes": {"wangsness": "11-4", "griffiths": "3.3.1", "jackson": "2.9, 2.10"}}, {"id": "em.4.05", "tema": 4, "nombre": "Separación de variables en coordenadas esféricas", "descripcion": "Polinomios de Legendre, problemas con simetría azimutal (esfera en campo uniforme, etc.).", "prerequisitos": [{"id": "em.4.01", "peso": 1.0}, {"id": "em.0.08", "peso": 1.0}], "fuentes": {"wangsness": "11-5", "griffiths": "3.3.2", "jackson": "3.1 a 3.3"}}, {"id": "em.4.06", "tema": 4, "nombre": "Separación de variables en coordenadas cilíndricas", "descripcion": "Soluciones armónicas cilíndricas 2D; nociones de funciones de Bessel.", "prerequisitos": [{"id": "em.4.01", "peso": 1.0}, {"id": "em.4.05", "peso": 0.5}], "fuentes": {"jackson": "3.6, 3.7", "panofsky": "5-8, 5-9"}}, {"id": "em.5.01", "tema": 5, "nombre": "Densidad e intensidad de corriente", "descripcion": "Naturaleza de la corriente, J y su relación con I, velocidad de arrastre, tipos de corriente.", "prerequisitos": [{"id": "em.1.01", "peso": 1.0}], "fuentes": {"wangsness": "12-1", "griffiths": "5.1.3", "problemas": "cap. 4 (4.1, 4.2)"}}, {"id": "em.5.02", "tema": 5, "nombre": "La ecuación de continuidad", "descripcion": "Conservación local de la carga, forma integral y diferencial, corrientes estacionarias (div J = 0).", "prerequisitos": [{"id": "em.5.01", "peso": 1.0}, {"id": "em.0.06", "peso": 1.0}], "fuentes": {"wangsness": "12-2", "problemas": "cap. 4 (4.3)", "thide": "1.3.1"}}, {"id": "em.5.03", "tema": 5, "nombre": "Ley de Ohm, conductividad y resistencia", "descripcion": "J = σE, modelo microscópico, resistencia de conductores filiformes y geometrías sencillas.", "prerequisitos": [{"id": "em.5.01", "peso": 1.0}, {"id": "em.1.09", "peso": 0.5}], "fuentes": {"wangsness": "12-3, 12-5", "griffiths": "7.1.1", "problemas": "cap. 4 (4.4, 4.5)"}}, {"id": "em.5.04", "tema": 5, "nombre": "Problemas de corrientes estacionarias y condiciones de contorno", "descripcion": "Resolución de problemas de conducción con la ecuación de Laplace; condiciones de contorno para J.", "prerequisitos": [{"id": "em.5.02", "peso": 1.0}, {"id": "em.5.03", "peso": 1.0}, {"id": "em.4.01", "peso": 0.5}], "fuentes": {"panofsky": "7-3", "problemas": "cap. 4"}}, {"id": "em.5.05", "tema": 5, "nombre": "Relajación de la carga", "descripcion": "Tiempo de relajación τ = ε/σ, evolución de la carga libre en un conductor.", "prerequisitos": [{"id": "em.5.02", "peso": 1.0}, {"id": "em.5.03", "peso": 1.0}, {"id": "em.3.05", "peso": 0.5}], "fuentes": {"wangsness": "12-6", "panofsky": "7-4"}}, {"id": "em.5.06", "tema": 5, "nombre": "Ley de Joule, generadores y fuerza electromotriz", "descripcion": "Disipación de energía, fem de un generador, potencia suministrada, motores.", "prerequisitos": [{"id": "em.5.03", "peso": 1.0}], "fuentes": {"wangsness": "12-4", "griffiths": "7.1.2", "problemas": "cap. 4 (4.6 a 4.8)"}}, {"id": "em.5.07", "tema": 5, "nombre": "Leyes de Kirchhoff y circuitos de corriente continua", "descripcion": "Nudos y mallas, método de corrientes de malla, equivalentes Thévenin/Norton.", "prerequisitos": [{"id": "em.5.06", "peso": 1.0}, {"id": "em.5.03", "peso": 1.0}], "fuentes": {"problemas": "cap. 4 (4.9 a 4.13)"}}, {"id": "em.6.01", "tema": 6, "nombre": "Interacción entre corrientes: ley de fuerzas de Ampère", "descripcion": "Experiencia de Oersted, fuerza entre circuitos completos y entre corrientes paralelas.", "prerequisitos": [{"id": "em.5.01", "peso": 1.0}, {"id": "em.0.01", "peso": 1.0}], "fuentes": {"wangsness": "13-1 a 13-3", "problemas": "cap. 5"}}, {"id": "em.6.02", "tema": 6, "nombre": "El campo B: ley de Biot y Savart", "descripcion": "Definición del campo de inducción magnética y su cálculo a partir de corrientes.", "prerequisitos": [{"id": "em.6.01", "peso": 1.0}, {"id": "em.0.05", "peso": 1.0}], "fuentes": {"wangsness": "14-1", "griffiths": "5.2", "problemas": "cap. 5 (5.4)"}}, {"id": "em.6.03", "tema": 6, "nombre": "Cálculo de B por Biot-Savart", "descripcion": "Hilo recto (finito e infinito), espira circular, solenoide, plano de corriente.", "prerequisitos": [{"id": "em.6.02", "peso": 1.0}, {"id": "em.0.08", "peso": 1.0}], "fuentes": {"wangsness": "14-2 a 14-4", "griffiths": "5.2.2", "problemas": "cap. 5"}}, {"id": "em.6.04", "tema": 6, "nombre": "Fuerza de Lorentz y fuerza sobre corrientes", "descripcion": "F = q(E + v×B), fuerza sobre elementos de corriente, par sobre una espira.", "prerequisitos": [{"id": "em.6.02", "peso": 1.0}, {"id": "em.1.04", "peso": 0.5}], "fuentes": {"wangsness": "14-5", "griffiths": "5.1", "problemas": "cap. 5 (5.5, 5.6) y cap. 9 (9.1)"}}, {"id": "em.6.05", "tema": 6, "nombre": "Movimiento de partículas cargadas en campos E y B", "descripcion": "Movimiento ciclotrónico, campos cruzados, ciclotrón y betatrón.", "prerequisitos": [{"id": "em.6.04", "peso": 1.0}], "fuentes": {"wangsness": "Ap. A", "problemas": "cap. 9", "feynman": "II-29"}}, {"id": "em.6.06", "tema": 6, "nombre": "Ecuaciones de la magnetostática: div B = 0 y teorema de Ampère", "descripcion": "Forma integral y diferencial; aplicaciones del teorema de Ampère a simetrías (hilo, solenoide, toroide).", "prerequisitos": [{"id": "em.6.02", "peso": 1.0}, {"id": "em.0.06", "peso": 1.0}, {"id": "em.0.07", "peso": 1.0}], "fuentes": {"wangsness": "15-1 a 15-3, 16-1", "griffiths": "5.3", "problemas": "cap. 5 (5.1, 5.2)"}}, {"id": "em.6.07", "tema": 6, "nombre": "El potencial vector", "descripcion": "Definición B = rot A, elección de gauge, cálculo para corrientes sencillas.", "prerequisitos": [{"id": "em.6.06", "peso": 1.0}, {"id": "em.0.10", "peso": 1.0}], "fuentes": {"wangsness": "16-2 a 16-5", "griffiths": "5.4.1", "problemas": "cap. 5 (5.3)"}}, {"id": "em.6.08", "tema": 6, "nombre": "El potencial escalar magnético", "descripcion": "Regiones sin corriente: B = -grad φ_m; analogías con electrostática y limitaciones.", "prerequisitos": [{"id": "em.6.06", "peso": 1.0}, {"id": "em.1.09", "peso": 0.5}], "fuentes": {"panofsky": "7-7", "jackson": "5.9"}}, {"id": "em.6.09", "tema": 6, "nombre": "El dipolo magnético y el desarrollo multipolar", "descripcion": "Desarrollo multipolar de A, momento magnético, campo dipolar, fuerza y par en campo externo.", "prerequisitos": [{"id": "em.6.07", "peso": 1.0}, {"id": "em.6.04", "peso": 0.5}, {"id": "em.1.13", "peso": 0.5}], "fuentes": {"wangsness": "19-1 a 19-4", "griffiths": "5.4.3", "problemas": "cap. 5 (5.7)"}}, {"id": "em.6.10", "tema": 6, "nombre": "Condiciones de contorno del campo magnetostático", "descripcion": "Continuidad de B_n y salto de B_t a través de láminas de corriente.", "prerequisitos": [{"id": "em.6.06", "peso": 1.0}, {"id": "em.1.14", "peso": 0.5}], "fuentes": {"griffiths": "5.4.2", "jackson": "5.8"}}, {"id": "em.7.01", "tema": 7, "nombre": "Ley de Faraday y ley de Lenz", "descripcion": "fem inducida por variación de flujo, signo (Lenz), forma integral y diferencial.", "prerequisitos": [{"id": "em.6.03", "peso": 1.0}, {"id": "em.5.06", "peso": 1.0}], "fuentes": {"wangsness": "17-1, 17-2", "griffiths": "7.2.1", "problemas": "cap. 7 (7.1)"}}, {"id": "em.7.02", "tema": 7, "nombre": "fem de movimiento: medios en movimiento", "descripcion": "Circuitos móviles en campos estáticos, regla del flujo y sus excepciones, generador de alterna.", "prerequisitos": [{"id": "em.7.01", "peso": 1.0}, {"id": "em.6.04", "peso": 1.0}], "fuentes": {"wangsness": "17-3", "griffiths": "7.1.3", "feynman": "II-17", "problemas": "cap. 7"}}, {"id": "em.7.03", "tema": 7, "nombre": "El campo eléctrico inducido", "descripcion": "E no conservativo con rot E = -∂B/∂t; cálculo de E inducido en simetrías.", "prerequisitos": [{"id": "em.7.01", "peso": 1.0}, {"id": "em.1.08", "peso": 0.5}], "fuentes": {"wangsness": "17-2", "griffiths": "7.2.2", "problemas": "cap. 7"}}, {"id": "em.7.04", "tema": 7, "nombre": "Autoinducción e inducción mutua", "descripcion": "Coeficientes L y M, fórmula de Neumann, cálculo para solenoides, toroides y líneas.", "prerequisitos": [{"id": "em.7.01", "peso": 1.0}, {"id": "em.6.07", "peso": 0.5}], "fuentes": {"wangsness": "17-4", "griffiths": "7.2.3", "problemas": "cap. 7 (7.2)"}}, {"id": "em.7.05", "tema": 7, "nombre": "Aplicaciones de la ley de inducción", "descripcion": "Generadores, transformadores, corrientes de Foucault, betatrón.", "prerequisitos": [{"id": "em.7.02", "peso": 1.0}, {"id": "em.7.04", "peso": 0.5}], "fuentes": {"feynman": "II-16, II-17", "problemas": "cap. 7"}}, {"id": "em.7.06", "tema": 7, "nombre": "Energía magnética", "descripcion": "Energía de sistemas de corrientes estacionarias, densidad B²/2μ₀, energía en inductores.", "prerequisitos": [{"id": "em.7.04", "peso": 1.0}, {"id": "em.1.11", "peso": 0.5}], "fuentes": {"wangsness": "18-1, 18-2", "griffiths": "7.2.4", "problemas": "cap. 7 (7.3.1)"}}, {"id": "em.7.07", "tema": 7, "nombre": "Fuerzas magnéticas entre circuitos", "descripcion": "Fuerzas a flujo constante y a corriente constante mediante la energía magnética.", "prerequisitos": [{"id": "em.7.06", "peso": 1.0}, {"id": "em.6.04", "peso": 0.5}], "fuentes": {"wangsness": "18-3", "problemas": "cap. 7 (7.3.2)"}}, {"id": "em.8.01", "tema": 8, "nombre": "Aproximación cuasiestacionaria y leyes de Kirchhoff", "descripcion": "Validez de la teoría de circuitos para corrientes lentamente variables.", "prerequisitos": [{"id": "em.5.07", "peso": 1.0}, {"id": "em.7.04", "peso": 1.0}], "fuentes": {"problemas": "cap. 8 (8.1)"}}, {"id": "em.8.02", "tema": 8, "nombre": "Componentes ideales: R, L, C, M y generador", "descripcion": "Relaciones tensión-corriente de cada elemento ideal.", "prerequisitos": [{"id": "em.8.01", "peso": 1.0}, {"id": "em.2.05", "peso": 0.5}], "fuentes": {"problemas": "cap. 8 (8.2)"}}, {"id": "em.8.03", "tema": 8, "nombre": "Régimen transitorio", "descripcion": "Carga/descarga RC, establecimiento RL, oscilaciones RLC; constantes de tiempo.", "prerequisitos": [{"id": "em.8.02", "peso": 1.0}], "fuentes": {"problemas": "cap. 8 (8.3)"}}, {"id": "em.8.04", "tema": 8, "nombre": "Notación fasorial e impedancia", "descripcion": "Magnitudes complejas, impedancia de R, L, C y asociaciones.", "prerequisitos": [{"id": "em.8.02", "peso": 1.0}], "fuentes": {"problemas": "cap. 8 (8.4.1 a 8.4.3)"}}, {"id": "em.8.05", "tema": 8, "nombre": "Circuitos de alterna en régimen permanente", "descripcion": "Kirchhoff con fasores, análisis de mallas en AC, transformadores en circuitos.", "prerequisitos": [{"id": "em.8.04", "peso": 1.0}, {"id": "em.5.07", "peso": 1.0}], "fuentes": {"problemas": "cap. 8 (8.4.4)"}}, {"id": "em.8.06", "tema": 8, "nombre": "Potencia en corriente alterna", "descripcion": "Potencia instantánea, activa, reactiva y aparente; factor de potencia; valores eficaces.", "prerequisitos": [{"id": "em.8.05", "peso": 1.0}], "fuentes": {"problemas": "cap. 8 (8.4.5)"}}, {"id": "em.8.07", "tema": 8, "nombre": "Resonancia", "descripcion": "Resonancia serie y paralelo, factor de calidad Q, ancho de banda.", "prerequisitos": [{"id": "em.8.05", "peso": 1.0}], "fuentes": {"problemas": "cap. 8 (8.4.6)"}}, {"id": "em.9.01", "tema": 9, "nombre": "Magnetización y corrientes de magnetización", "descripcion": "Vector M, corrientes ligadas J_m = rot M y K_m = M×n; densidad de cargas magnéticas equivalentes.", "prerequisitos": [{"id": "em.6.09", "peso": 1.0}, {"id": "em.3.01", "peso": 0.5}], "fuentes": {"wangsness": "20-1, 20-2", "griffiths": "6.1, 6.2", "problemas": "cap. 6 (6.1, 6.2)"}}, {"id": "em.9.02", "tema": 9, "nombre": "La esfera uniformemente magnetizada", "descripcion": "Campo de objetos magnetizados; el ejemplo canónico de la esfera y su paralelo con la esfera polarizada.", "prerequisitos": [{"id": "em.9.01", "peso": 1.0}, {"id": "em.3.03", "peso": 0.5}], "fuentes": {"wangsness": "20-3", "jackson": "5.10", "problemas": "cap. 6"}}, {"id": "em.9.03", "tema": 9, "nombre": "El campo H y la ley de Ampère generalizada", "descripcion": "Definición de H, teorema de Ampère con corrientes libres, paralelo engañoso con B.", "prerequisitos": [{"id": "em.9.01", "peso": 1.0}, {"id": "em.6.06", "peso": 1.0}], "fuentes": {"wangsness": "20-4", "griffiths": "6.3", "problemas": "cap. 6 (6.3, 6.4)"}}, {"id": "em.9.04", "tema": 9, "nombre": "Susceptibilidad, permeabilidad y clasificación de medios magnéticos", "descripcion": "Medios l.i.h., χ_m y μ; diamagnetismo, paramagnetismo, ferromagnetismo.", "prerequisitos": [{"id": "em.9.03", "peso": 1.0}, {"id": "em.3.05", "peso": 0.5}], "fuentes": {"wangsness": "20-5, B-2", "griffiths": "6.4.1", "problemas": "cap. 6 (6.5)"}}, {"id": "em.9.05", "tema": 9, "nombre": "Ferromagnetismo, histéresis y circuitos magnéticos", "descripcion": "Curva de magnetización, ciclo de histéresis, imanes permanentes, circuitos magnéticos.", "prerequisitos": [{"id": "em.9.04", "peso": 1.0}], "fuentes": {"wangsness": "20-7, 20-8", "griffiths": "6.4.2", "problemas": "cap. 6 (6.6)", "feynman": "II-36, II-37"}}, {"id": "em.9.06", "tema": 9, "nombre": "Condiciones de contorno con medios magnéticos", "descripcion": "Continuidad de B_n y de H_t (sin corriente libre); problemas de frontera magnéticos.", "prerequisitos": [{"id": "em.9.03", "peso": 1.0}, {"id": "em.6.10", "peso": 1.0}], "fuentes": {"griffiths": "6.3.3", "panofsky": "8-3", "problemas": "cap. 6"}}, {"id": "em.9.07", "tema": 9, "nombre": "Energía y fuerzas con medios magnéticos", "descripcion": "Densidad de energía B·H/2 en medios lineales, fuerzas sobre materiales magnéticos.", "prerequisitos": [{"id": "em.9.03", "peso": 1.0}, {"id": "em.7.06", "peso": 1.0}], "fuentes": {"wangsness": "20-6", "problemas": "cap. 6"}}, {"id": "em.10.01", "tema": 10, "nombre": "Corriente de desplazamiento y ecuaciones de Maxwell", "descripcion": "Crítica de la ley de Ampère, término de Maxwell, sistema completo de ecuaciones en vacío y en medios.", "prerequisitos": [{"id": "em.1.08", "peso": 1.0}, {"id": "em.6.06", "peso": 1.0}, {"id": "em.7.01", "peso": 1.0}, {"id": "em.5.02", "peso": 1.0}], "fuentes": {"wangsness": "21-1 a 21-3", "griffiths": "7.3", "problemas": "cap. 10 (10.1 a 10.3)"}}, {"id": "em.10.02", "tema": 10, "nombre": "Condiciones de frontera generales del campo electromagnético", "descripcion": "Las cuatro condiciones de salto para E, D, B, H en superficies de discontinuidad.", "prerequisitos": [{"id": "em.10.01", "peso": 1.0}, {"id": "em.1.14", "peso": 1.0}, {"id": "em.3.07", "peso": 0.5}, {"id": "em.9.06", "peso": 0.5}], "fuentes": {"griffiths": "7.3.6", "problemas": "cap. 10 (10.4)"}}, {"id": "em.10.03", "tema": 10, "nombre": "Potenciales electromagnéticos y transformaciones gauge", "descripcion": "Potenciales V y A dependientes del tiempo, libertad gauge, gauges de Coulomb y Lorenz.", "prerequisitos": [{"id": "em.10.01", "peso": 1.0}, {"id": "em.6.07", "peso": 1.0}, {"id": "em.1.09", "peso": 1.0}], "fuentes": {"wangsness": "22-1 a 22-3", "griffiths": "10.1", "thide": "cap. 3"}}, {"id": "em.10.04", "tema": 10, "nombre": "Energía del campo electromagnético: teorema de Poynting", "descripcion": "Vector de Poynting, balance de energía, ejemplos de flujo de energía.", "prerequisitos": [{"id": "em.10.01", "peso": 1.0}, {"id": "em.1.11", "peso": 1.0}, {"id": "em.7.06", "peso": 1.0}], "fuentes": {"wangsness": "21-4", "griffiths": "8.1.2", "feynman": "II-27"}}, {"id": "em.10.05", "tema": 10, "nombre": "Momento del campo electromagnético", "descripcion": "Densidad de momento, presión de radiación; noción del tensor de tensiones de Maxwell.", "prerequisitos": [{"id": "em.10.04", "peso": 1.0}], "fuentes": {"wangsness": "21-5", "griffiths": "8.2", "panofsky": "10-6"}}, {"id": "em.10.06", "tema": 10, "nombre": "La ecuación de ondas y las ondas planas", "descripcion": "Deducción de la ecuación de ondas para E y B en el vacío, velocidad de la luz, estructura transversal.", "prerequisitos": [{"id": "em.10.01", "peso": 1.0}, {"id": "em.0.04", "peso": 1.0}], "fuentes": {"wangsness": "24-1, 24-2", "griffiths": "9.2", "problemas": "cap. 10 (10.6)"}}, {"id": "em.10.07", "tema": 10, "nombre": "Ondas planas armónicas: Helmholtz y polarización", "descripcion": "Solución armónica, ecuación de Helmholtz, notación compleja, estados de polarización, promedios temporales.", "prerequisitos": [{"id": "em.10.06", "peso": 1.0}], "fuentes": {"wangsness": "24-5 a 24-7", "griffiths": "9.1.2, 9.2.2, 9.2.3", "thide": "cap. 2"}}, {"id": "em.10.08", "tema": 10, "nombre": "Propagación en medios dieléctricos", "descripcion": "Índice de refracción, velocidad e impedancia en medios lineales; energía transportada.", "prerequisitos": [{"id": "em.10.07", "peso": 1.0}, {"id": "em.3.05", "peso": 1.0}], "fuentes": {"wangsness": "24-2", "griffiths": "9.3.1", "problemas": "cap. 10"}}, {"id": "em.10.09", "tema": 10, "nombre": "Propagación en medios conductores", "descripcion": "Vector de onda complejo, atenuación, profundidad de penetración (efecto pelicular), buen/mal conductor.", "prerequisitos": [{"id": "em.10.07", "peso": 1.0}, {"id": "em.5.03", "peso": 1.0}, {"id": "em.5.05", "peso": 0.5}], "fuentes": {"wangsness": "24-3", "griffiths": "9.4.1", "thide": "2.2.2"}}]};
+
+const nodos = GRAFO.nodos;
+const porId = Object.fromEntries(nodos.map(n => [n.id, n]));
+const dependientes = {};
+nodos.forEach(n => (n.prerequisitos || []).forEach(p => {
+  (dependientes[p.id] = dependientes[p.id] || []).push(n.id);
+}));
+
+const NOMBRES_LIBROS = {
+  wangsness: "Wangsness", griffiths: "Griffiths", jackson: "Jackson",
+  feynman: "Feynman", panofsky: "Panofsky", thide: "Thidé",
+  problemas: "Problemas (López/Núñez)", apuntes: "Apuntes UVa"
+};
+function nombreDe(id) {
+  return porId[id] ? porId[id].nombre : id + " (otra asignatura)";
+}
+
+document.getElementById("resumen").textContent =
+  nodos.length + " nodos · " +
+  nodos.reduce((a, n) => a + (n.prerequisitos || []).length, 0) + " aristas de prerrequisito · " +
+  Object.keys(GRAFO.temas).length + " temas · guía docente " + GRAFO.codigo_uva + " (UVa)";
+
+const contTemas = document.getElementById("temas");
+Object.keys(GRAFO.temas).sort((a, b) => +a - +b).forEach(t => {
+  const sec = document.createElement("section");
+  sec.className = "tema";
+  const nds = nodos.filter(n => String(n.tema) === t);
+  sec.innerHTML = "<h2>" + GRAFO.temas[t] + "<small>" + nds.length + " nodos</small></h2>";
+  const pills = document.createElement("div");
+  pills.className = "pills";
+  nds.forEach(n => {
+    const b = document.createElement("button");
+    b.className = "pill";
+    b.dataset.id = n.id;
+    b.innerHTML = '<span class="nid">' + n.id.replace("em.", "") + "</span>" + n.nombre;
+    b.addEventListener("click", () => seleccionar(n.id));
+    pills.appendChild(b);
+  });
+  sec.appendChild(pills);
+  contTemas.appendChild(sec);
+});
+
+function ancestros(id) {
+  const res = new Set();
+  const cola = [id];
+  while (cola.length) {
+    const actual = porId[cola.pop()];
+    if (!actual) continue;
+    (actual.prerequisitos || []).forEach(p => {
+      if (!res.has(p.id)) { res.add(p.id); cola.push(p.id); }
+    });
+  }
+  return res;
+}
+
+let seleccionado = null;
+
+function seleccionar(id) {
+  const n = porId[id];
+  if (!n) return; // prerrequisito de otra asignatura: no está en este visor
+  seleccionado = id;
+  const directos = new Map((n.prerequisitos || []).map(p => [p.id, p.peso]));
+  const anc = ancestros(id);
+  const deps = dependientes[id] || [];
+
+  document.querySelectorAll("button.pill").forEach(b => {
+    const bid = b.dataset.id;
+    b.classList.remove("sel", "pre", "anc", "dep", "blanda");
+    if (bid === id) b.classList.add("sel");
+    else if (directos.has(bid)) {
+      b.classList.add("pre");
+      if (directos.get(bid) < 1) b.classList.add("blanda");
+    }
+    else if (anc.has(bid)) b.classList.add("anc");
+    else if (deps.includes(bid)) b.classList.add("dep");
+  });
+
+  const fuentes = Object.entries(n.fuentes || {}).map(([k, v]) =>
+    "<li><span class='libro'>" + (NOMBRES_LIBROS[k] || k) + ":</span> " + v + "</li>").join("");
+
+  const chipsPre = (n.prerequisitos || []).map(p =>
+    "<button class='chip cPre' data-go='" + p.id + "'>" + nombreDe(p.id) +
+    (p.peso < 1 ? " <span class='peso'>(" + p.peso + ")</span>" : "") + "</button>").join("") ||
+    "<span class='vacio'>Ninguno — nodo raíz.</span>";
+
+  const chipsDep = deps.map(d =>
+    "<button class='chip cDep' data-go='" + d + "'>" + porId[d].nombre + "</button>").join("") ||
+    "<span class='vacio'>Ninguno (final de rama).</span>";
+
+  document.getElementById("panel").innerHTML =
+    "<div class='meta'>" + n.id + "</div>" +
+    "<h3>" + n.nombre + "</h3>" +
+    "<div class='temaLbl'>" + GRAFO.temas[String(n.tema)] + "</div>" +
+    "<p class='desc'>" + n.descripcion + "</p>" +
+    "<h4>Prerrequisitos directos</h4><div class='chips'>" + chipsPre + "</div>" +
+    "<h4>Lo necesitan</h4><div class='chips'>" + chipsDep + "</div>" +
+    "<h4>Dónde estudiarlo</h4><ul class='fuentes'>" + fuentes + "</ul>" +
+    "<div class='stats'>" + anc.size + " nodos en su cadena de prerrequisitos · desbloquea " +
+    deps.length + " directamente</div>";
+
+  document.querySelectorAll("#panel button.chip").forEach(c =>
+    c.addEventListener("click", () => {
+      seleccionar(c.dataset.go);
+      const pill = document.querySelector("button.pill[data-id='" + c.dataset.go + "']");
+      if (pill) pill.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    }));
+}
+
+document.getElementById("buscar").addEventListener("input", e => {
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll("button.pill").forEach(b => {
+    const n = porId[b.dataset.id];
+    const texto = (n.id + " " + n.nombre + " " + n.descripcion).toLowerCase();
+    b.classList.toggle("apagado", q !== "" && !texto.includes(q));
+  });
+});
+</script>

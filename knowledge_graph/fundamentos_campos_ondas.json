@@ -1,0 +1,12 @@
+{
+  "esquema_version": 1,
+  "materia": "Fundamentos de Campos y Ondas",
+  "codigo_uva": "",
+  "curso": 1,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "fco.01", "tema": 1, "nombre": "Electricidad y magnetismo básicos", "descripcion": "Electrostática, corriente continua, magnetostática e inducción a nivel introductorio (Tipler).", "prerequisitos": [{ "id": "fmt.02", "peso": 1.0 }] },
+    { "id": "fco.02", "tema": 1, "nombre": "Movimiento ondulatorio y óptica básica", "descripcion": "Concepto de onda, interferencia y difracción, óptica geométrica y física elementales.", "prerequisitos": [{ "id": "fmt.04", "peso": 1.0 }] }
+  ]
+}

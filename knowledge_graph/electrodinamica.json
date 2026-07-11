@@ -1,0 +1,312 @@
+{
+  "esquema_version": 1,
+  "materia": "Electrodinámica Clásica",
+  "codigo_uva": "45769",
+  "curso": 4,
+  "temas": {
+    "1": "Bloque 1: Ecuaciones del campo electromagnético",
+    "2": "Bloque 2: Leyes de conservación",
+    "3": "Bloque 3: Formulación covariante",
+    "4": "Bloque 4: La ecuación de ondas",
+    "5": "Bloque 5: Desarrollo multipolar de la radiación",
+    "6": "Bloque 6: Radiación de partículas cargadas",
+    "7": "Bloque 7: Dinámica de partículas cargadas"
+  },
+  "nodos": [
+    {
+      "id": "ed.1.01",
+      "tema": 1,
+      "nombre": "Leyes generales del electromagnetismo",
+      "descripcion": "Repaso sistemático de las ecuaciones de Maxwell micro/macroscópicas y sus condiciones de frontera.",
+      "prerequisitos": [
+        { "id": "em.10.01", "peso": 1.0 },
+        { "id": "em.10.02", "peso": 0.5 }
+      ],
+      "fuentes": { "jackson": "6.3, 6.10", "panofsky": "cap. 9", "thide": "1.3" }
+    },
+    {
+      "id": "ed.1.02",
+      "tema": 1,
+      "nombre": "Campos y potenciales",
+      "descripcion": "Potenciales electromagnéticos como variables fundamentales; ecuaciones acopladas para V y A.",
+      "prerequisitos": [
+        { "id": "ed.1.01", "peso": 1.0 },
+        { "id": "em.10.03", "peso": 1.0 }
+      ],
+      "fuentes": { "jackson": "6.4", "thide": "3.3", "griffiths": "10.1.1" }
+    },
+    {
+      "id": "ed.1.03",
+      "tema": 1,
+      "nombre": "Transformaciones gauge: el gauge de Lorenz",
+      "descripcion": "Libertad gauge, gauges de Lorenz y Coulomb, desacoplo de las ecuaciones de los potenciales.",
+      "prerequisitos": [{ "id": "ed.1.02", "peso": 1.0 }],
+      "fuentes": { "jackson": "6.5", "griffiths": "10.1.2, 10.1.3", "thide": "3.3.1 a 3.3.3" }
+    },
+
+    {
+      "id": "ed.2.01",
+      "tema": 2,
+      "nombre": "Conservación de la energía: teorema de Poynting",
+      "descripcion": "Balance local de energía campo-materia, vector de Poynting, ejemplos no triviales.",
+      "prerequisitos": [
+        { "id": "ed.1.01", "peso": 1.0 },
+        { "id": "em.10.04", "peso": 1.0 }
+      ],
+      "fuentes": { "jackson": "6.8", "thide": "6.3.1", "panofsky": "10-5" }
+    },
+    {
+      "id": "ed.2.02",
+      "tema": 2,
+      "nombre": "Conservación del momento: tensor de tensiones de Maxwell",
+      "descripcion": "Momento electromagnético, tensor de Maxwell, balance de fuerzas sobre distribuciones.",
+      "prerequisitos": [
+        { "id": "ed.2.01", "peso": 1.0 },
+        { "id": "em.10.05", "peso": 1.0 }
+      ],
+      "fuentes": { "jackson": "6.9", "griffiths": "8.2", "panofsky": "10-6", "thide": "6.3.2" }
+    },
+
+    {
+      "id": "ed.3.01",
+      "tema": 3,
+      "nombre": "Postulados y transformaciones de Lorentz",
+      "descripcion": "Base experimental, postulados de Einstein, transformación de Lorentz, contracción y dilatación.",
+      "prerequisitos": [{ "id": "mo.08", "peso": 1.0 }],
+      "fuentes": { "wangsness": "28-1, 28-2", "jackson": "11.1 a 11.4", "griffiths": "12.1", "panofsky": "cap. 15, 16" }
+    },
+    {
+      "id": "ed.3.02",
+      "tema": 3,
+      "nombre": "Cuadrivectores y tensores",
+      "descripcion": "Espacio de Minkowski, métrica, cuadrivectores co/contravariantes, álgebra tensorial.",
+      "prerequisitos": [{ "id": "ed.3.01", "peso": 1.0 }],
+      "fuentes": { "jackson": "11.7, 11.8", "wangsness": "28-3", "panofsky": "17-1, 17-2", "thide": "4.1.2, 4.1.3" }
+    },
+    {
+      "id": "ed.3.03",
+      "tema": 3,
+      "nombre": "Mecánica relativista de partículas",
+      "descripcion": "Tiempo propio, cuadrivelocidad, cuadrimomento, energía-momento, fuerza de Minkowski.",
+      "prerequisitos": [{ "id": "ed.3.02", "peso": 1.0 }],
+      "fuentes": { "jackson": "12.1", "griffiths": "12.2", "panofsky": "17-3 a 17-5", "thide": "4.2" }
+    },
+    {
+      "id": "ed.3.04",
+      "tema": 3,
+      "nombre": "Transformación de las fuentes: cuadricorriente y cuadripotencial",
+      "descripcion": "J^μ y A^μ, ecuación de continuidad y gauge de Lorenz en forma covariante.",
+      "prerequisitos": [
+        { "id": "ed.3.02", "peso": 1.0 },
+        { "id": "ed.1.03", "peso": 1.0 }
+      ],
+      "fuentes": { "panofsky": "18-1", "thide": "4.3.1", "feynman": "II-25" }
+    },
+    {
+      "id": "ed.3.05",
+      "tema": 3,
+      "nombre": "El tensor campo electromagnético",
+      "descripcion": "F^μν, transformación de E y B entre sistemas de referencia, invariantes del campo.",
+      "prerequisitos": [{ "id": "ed.3.04", "peso": 1.0 }],
+      "fuentes": { "jackson": "11.9, 11.10", "griffiths": "12.3.2, 12.3.3", "panofsky": "18-2, 18-6", "wangsness": "28-5" }
+    },
+    {
+      "id": "ed.3.06",
+      "tema": 3,
+      "nombre": "Electrodinámica en forma covariante",
+      "descripcion": "Ecuaciones de Maxwell con F^μν, fuerza de Lorentz covariante, covariancia de las leyes de conservación.",
+      "prerequisitos": [
+        { "id": "ed.3.05", "peso": 1.0 },
+        { "id": "ed.3.03", "peso": 1.0 }
+      ],
+      "fuentes": { "jackson": "11.9, 11.11", "griffiths": "12.3.4, 12.3.5", "panofsky": "18-3" }
+    },
+
+    {
+      "id": "ed.4.01",
+      "tema": 4,
+      "nombre": "Ecuación de ondas no homogénea: potenciales retardados",
+      "descripcion": "Función de Green de la ecuación de ondas, causalidad, potenciales retardados.",
+      "prerequisitos": [
+        { "id": "ed.1.03", "peso": 1.0 },
+        { "id": "em.10.06", "peso": 1.0 }
+      ],
+      "fuentes": { "jackson": "6.6", "griffiths": "10.2", "panofsky": "14-1, 14-2", "wangsness": "27-1" }
+    },
+    {
+      "id": "ed.4.02",
+      "tema": 4,
+      "nombre": "Potenciales de Liénard-Wiechert",
+      "descripcion": "Potenciales de una carga puntual en movimiento arbitrario; tiempo retardado.",
+      "prerequisitos": [
+        { "id": "ed.4.01", "peso": 1.0 },
+        { "id": "ed.3.03", "peso": 0.5 }
+      ],
+      "fuentes": { "jackson": "14.1", "griffiths": "10.3", "panofsky": "19-1", "thide": "4.3.2" }
+    },
+    {
+      "id": "ed.4.03",
+      "tema": 4,
+      "nombre": "Ecuación homogénea: campos armónicos",
+      "descripcion": "Soluciones armónicas, ecuación de Helmholtz, representación espectral.",
+      "prerequisitos": [
+        { "id": "em.10.07", "peso": 1.0 },
+        { "id": "ed.4.01", "peso": 0.5 }
+      ],
+      "fuentes": { "thide": "cap. 2", "jackson": "cap. 7" }
+    },
+    {
+      "id": "ed.4.04",
+      "tema": 4,
+      "nombre": "Campos en una guía de ondas",
+      "descripcion": "Separación de variables, modos TE/TM, frecuencia de corte, guía rectangular.",
+      "prerequisitos": [
+        { "id": "ed.4.03", "peso": 1.0 },
+        { "id": "em.10.09", "peso": 1.0 },
+        { "id": "em.4.04", "peso": 0.5 }
+      ],
+      "fuentes": { "jackson": "8.2 a 8.4", "wangsness": "26-2 a 26-4", "griffiths": "9.5", "panofsky": "13-6" }
+    },
+    {
+      "id": "ed.4.05",
+      "tema": 4,
+      "nombre": "Cavidades resonantes",
+      "descripcion": "Modos propios, frecuencias de resonancia, factor de calidad.",
+      "prerequisitos": [{ "id": "ed.4.04", "peso": 1.0 }],
+      "fuentes": { "jackson": "8.6, 8.7", "wangsness": "26-6", "panofsky": "13-3 a 13-5", "feynman": "II-23" }
+    },
+
+    {
+      "id": "ed.5.01",
+      "tema": 5,
+      "nombre": "Campos de una fuente localizada oscilante",
+      "descripcion": "Zonas cercana, intermedia y de radiación; campos de radiación.",
+      "prerequisitos": [
+        { "id": "ed.4.01", "peso": 1.0 },
+        { "id": "ed.4.03", "peso": 1.0 }
+      ],
+      "fuentes": { "jackson": "9.1", "panofsky": "14-3", "thide": "cap. 7" }
+    },
+    {
+      "id": "ed.5.02",
+      "tema": 5,
+      "nombre": "Radiación dipolar eléctrica",
+      "descripcion": "Aproximación de primer orden, patrón de radiación, potencia radiada.",
+      "prerequisitos": [
+        { "id": "ed.5.01", "peso": 1.0 },
+        { "id": "em.1.12", "peso": 0.5 }
+      ],
+      "fuentes": { "jackson": "9.2", "griffiths": "11.1.2", "thide": "8.2.2", "panofsky": "14-7" }
+    },
+    {
+      "id": "ed.5.03",
+      "tema": 5,
+      "nombre": "Radiación dipolar magnética y cuadrupolar",
+      "descripcion": "Aproximación de segundo orden: dipolo magnético y cuadrupolo eléctrico; potencias radiadas.",
+      "prerequisitos": [
+        { "id": "ed.5.02", "peso": 1.0 },
+        { "id": "em.6.09", "peso": 0.5 }
+      ],
+      "fuentes": { "jackson": "9.3", "griffiths": "11.1.3", "thide": "8.2.3, 8.2.4", "panofsky": "14-8" }
+    },
+    {
+      "id": "ed.5.04",
+      "tema": 5,
+      "nombre": "Antenas",
+      "descripcion": "Antena lineal alimentada en el centro, resistencia de radiación, patrones.",
+      "prerequisitos": [{ "id": "ed.5.02", "peso": 1.0 }],
+      "fuentes": { "jackson": "9.4", "wangsness": "27-6", "thide": "8.1" }
+    },
+
+    {
+      "id": "ed.6.01",
+      "tema": 6,
+      "nombre": "Campos de una carga acelerada",
+      "descripcion": "Campos de velocidad y de aceleración a partir de Liénard-Wiechert.",
+      "prerequisitos": [{ "id": "ed.4.02", "peso": 1.0 }],
+      "fuentes": { "jackson": "14.1", "griffiths": "10.3.2", "panofsky": "20-1" }
+    },
+    {
+      "id": "ed.6.02",
+      "tema": 6,
+      "nombre": "Potencia radiada: Larmor y su generalización relativista",
+      "descripcion": "Fórmula de Larmor, generalización de Liénard, dependencia con γ.",
+      "prerequisitos": [
+        { "id": "ed.6.01", "peso": 1.0 },
+        { "id": "ed.3.03", "peso": 1.0 }
+      ],
+      "fuentes": { "jackson": "14.2", "griffiths": "11.2.1", "panofsky": "20-2, 20-3" }
+    },
+    {
+      "id": "ed.6.03",
+      "tema": 6,
+      "nombre": "Distribución angular de la radiación",
+      "descripcion": "Patrones angulares para aceleración paralela y perpendicular a la velocidad; colimación relativista.",
+      "prerequisitos": [{ "id": "ed.6.02", "peso": 1.0 }],
+      "fuentes": { "jackson": "14.3, 14.4", "panofsky": "20-3, 20-4", "thide": "8.3.2" }
+    },
+    {
+      "id": "ed.6.04",
+      "tema": 6,
+      "nombre": "Bremsstrahlung y radiación de Cherenkov",
+      "descripcion": "Radiación de frenado en movimiento rectilíneo; radiación de cargas en medios (Cherenkov).",
+      "prerequisitos": [{ "id": "ed.6.03", "peso": 1.0 }],
+      "fuentes": { "jackson": "14.9, cap. 15", "panofsky": "20-6, 20-7", "thide": "8.3.3, 8.3.5" }
+    },
+    {
+      "id": "ed.6.05",
+      "tema": 6,
+      "nombre": "Radiación sincrotrónica",
+      "descripcion": "Movimiento circular relativista: espectro y distribución angular de la radiación sincrotrón.",
+      "prerequisitos": [{ "id": "ed.6.03", "peso": 1.0 }],
+      "fuentes": { "jackson": "14.6", "panofsky": "20-4", "thide": "8.3.4" }
+    },
+    {
+      "id": "ed.6.06",
+      "tema": 6,
+      "nombre": "Reacción de radiación",
+      "descripcion": "Fuerza de Abraham-Lorentz, autoenergía, límites del modelo clásico.",
+      "prerequisitos": [{ "id": "ed.6.02", "peso": 1.0 }],
+      "fuentes": { "jackson": "cap. 17", "griffiths": "11.2.2, 11.2.3", "panofsky": "cap. 21" }
+    },
+    {
+      "id": "ed.6.07",
+      "tema": 6,
+      "nombre": "Aceleradores y fuentes de radiación",
+      "descripcion": "Aplicaciones: aceleradores de partículas, fuentes de luz sincrotrón, pérdidas radiativas.",
+      "prerequisitos": [
+        { "id": "ed.6.04", "peso": 1.0 },
+        { "id": "ed.6.05", "peso": 1.0 }
+      ],
+      "fuentes": { "jackson": "cap. 15", "panofsky": "cap. 20" }
+    },
+
+    {
+      "id": "ed.7.01",
+      "tema": 7,
+      "nombre": "Movimiento en campos estáticos y uniformes",
+      "descripcion": "Tratamiento relativista del movimiento en E y B uniformes; deriva E×B.",
+      "prerequisitos": [
+        { "id": "ed.3.06", "peso": 1.0 },
+        { "id": "em.6.05", "peso": 1.0 }
+      ],
+      "fuentes": { "jackson": "12.7, 12.8", "panofsky": "cap. 23", "wangsness": "Ap. A" }
+    },
+    {
+      "id": "ed.7.02",
+      "tema": 7,
+      "nombre": "Movimiento en campos estáticos no uniformes",
+      "descripcion": "Derivas de gradiente y curvatura, espejos magnéticos, invariantes adiabáticos.",
+      "prerequisitos": [{ "id": "ed.7.01", "peso": 1.0 }],
+      "fuentes": { "jackson": "12.9, 12.10", "panofsky": "23-4" }
+    },
+    {
+      "id": "ed.7.03",
+      "tema": 7,
+      "nombre": "Movimiento en campos variables con el tiempo",
+      "descripcion": "Aceleración por campos inducidos, betatrón, calentamiento de partículas.",
+      "prerequisitos": [{ "id": "ed.7.02", "peso": 1.0 }],
+      "fuentes": { "wangsness": "A-4", "panofsky": "cap. 23" }
+    }
+  ]
+}

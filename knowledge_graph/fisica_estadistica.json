@@ -1,0 +1,16 @@
+{
+  "esquema_version": 1,
+  "materia": "Física Estadística",
+  "codigo_uva": "",
+  "curso": 3,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "fe.01", "tema": 1, "nombre": "Probabilidad, entropía y método MaxEnt", "descripcion": "Autoinformación, entropías de Boltzmann-Planck y Gibbs-Shannon, entropía máxima.", "prerequisitos": [{ "id": "m3.03", "peso": 1.0 }, { "id": "td.03", "peso": 1.0 }] },
+    { "id": "fe.02", "tema": 1, "nombre": "Conjuntos microcanónico y canónico", "descripcion": "Función de Massieu, fluctuaciones de energía, interpretación microscópica del primer principio.", "prerequisitos": [{ "id": "fe.01", "peso": 1.0 }] },
+    { "id": "fe.03", "tema": 1, "nombre": "Conjuntos grancanónico y generalizados", "descripcion": "Kramers-Landau, isotermo-isobárico, fluctuaciones de número y volumen.", "prerequisitos": [{ "id": "fe.02", "peso": 1.0 }] },
+    { "id": "fe.04", "tema": 1, "nombre": "Conexión micro-macro", "descripcion": "Problema de N cuerpos, leyes de escala, propiedades emergentes, MTE deductiva.", "prerequisitos": [{ "id": "fe.02", "peso": 1.0 }, { "id": "td.04", "peso": 1.0 }] },
+    { "id": "fe.05", "tema": 1, "nombre": "Modelos energéticos: cristal de Einstein y gas ideal", "descripcion": "Distinguibilidad, límite semiclásico, gas cuántico poliatómico.", "prerequisitos": [{ "id": "fe.02", "peso": 1.0 }, { "id": "fce.03", "peso": 0.5 }, { "id": "cu.02", "peso": 0.5 }] },
+    { "id": "fe.06", "tema": 1, "nombre": "Modelos entrópicos: el caucho", "descripcion": "Elasticidad entrópica, Hooke macroscópico desde la estadística, cálculo en varios conjuntos.", "prerequisitos": [{ "id": "fe.03", "peso": 1.0 }, { "id": "fe.05", "peso": 1.0 }] }
+  ]
+}

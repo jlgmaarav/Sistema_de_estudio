@@ -1,0 +1,12 @@
+{
+  "esquema_version": 1,
+  "materia": "Física Computacional",
+  "codigo_uva": "",
+  "curso": 1,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "fc.01", "tema": 1, "nombre": "Programación científica", "descripcion": "Fundamentos de programación aplicada a problemas físicos.", "prerequisitos": [] },
+    { "id": "fc.02", "tema": 1, "nombre": "Métodos numéricos elementales", "descripcion": "Integración numérica, resolución de ecuaciones, simulaciones sencillas.", "prerequisitos": [{ "id": "fc.01", "peso": 1.0 }, { "id": "am.03", "peso": 0.5 }] }
+  ]
+}

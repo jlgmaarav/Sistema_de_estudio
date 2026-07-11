@@ -1,0 +1,14 @@
+{
+  "esquema_version": 1,
+  "materia": "Métodos Matemáticos I",
+  "codigo_uva": "",
+  "curso": 2,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "m1.01", "tema": 1, "nombre": "Integral de Riemann en R^n", "descripcion": "Integrales múltiples, Fubini, cambio de variables.", "prerequisitos": [{ "id": "am.06", "peso": 1.0 }] },
+    { "id": "m1.02", "tema": 1, "nombre": "Curvas en E3", "descripcion": "Parámetro natural, triedro de Frenet, curvatura y torsión.", "prerequisitos": [{ "id": "am.06", "peso": 1.0 }] },
+    { "id": "m1.03", "tema": 1, "nombre": "Superficies en E3", "descripcion": "Formas fundamentales, geodésicas, curvaturas media y gaussiana, teorema Egregio.", "prerequisitos": [{ "id": "m1.02", "peso": 1.0 }] },
+    { "id": "m1.04", "tema": 1, "nombre": "Teoremas integrales", "descripcion": "Integrales de línea y superficie, lema de Poincaré, Green, Stokes, Gauss.", "prerequisitos": [{ "id": "m1.01", "peso": 1.0 }, { "id": "m1.03", "peso": 1.0 }] }
+  ]
+}

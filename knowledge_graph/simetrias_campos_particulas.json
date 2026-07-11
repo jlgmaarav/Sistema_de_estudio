@@ -1,0 +1,38 @@
+{
+  "esquema_version": 1,
+  "materia": "Simetrías, Campos y Partículas",
+  "codigo_uva": "",
+  "curso": 4,
+  "granularidad": "fina",
+  "temas": {
+    "1": "Bloque 1: Teoría clásica de campos",
+    "2": "Bloque 2: Ecuación de Klein-Gordon",
+    "3": "Bloque 3: Ecuación de Dirac",
+    "4": "Bloque 4: Introducción a la QFT"
+  },
+  "nodos": [
+    { "id": "sc.1.01", "tema": 1, "nombre": "De sistemas discretos a continuos", "descripcion": "Paso al continuo, densidad lagrangiana, el campo como sistema dinámico.", "prerequisitos": [{ "id": "mt.04", "peso": 1.0 }], "fuentes": { "guia": "Bloque 1" } },
+    { "id": "sc.1.02", "tema": 1, "nombre": "Euler-Lagrange para campos", "descripcion": "Ecuaciones de campo desde un principio variacional; ejemplos (cuerda, campo escalar).", "prerequisitos": [{ "id": "sc.1.01", "peso": 1.0 }], "fuentes": { "guia": "Bloque 1" } },
+    { "id": "sc.1.03", "tema": 1, "nombre": "Formalismo hamiltoniano de campos", "descripcion": "Momentos conjugados, densidad hamiltoniana, corchetes.", "prerequisitos": [{ "id": "sc.1.02", "peso": 1.0 }, { "id": "mt.02", "peso": 1.0 }], "fuentes": { "guia": "Bloque 1" } },
+    { "id": "sc.1.04", "tema": 1, "nombre": "Grupos de Lie: generadores y álgebras", "descripcion": "Grupos continuos, generadores infinitesimales, álgebra de Lie, exponenciación.", "prerequisitos": [{ "id": "al.04", "peso": 1.0 }, { "id": "gc.1.02", "peso": 0.5 }], "fuentes": { "guia": "Bloque 1" } },
+    { "id": "sc.1.05", "tema": 1, "nombre": "SO(3) y SU(2): representaciones", "descripcion": "Rotaciones y espín como representaciones, relación 2 a 1.", "prerequisitos": [{ "id": "sc.1.04", "peso": 1.0 }, { "id": "mc.4.05", "peso": 1.0 }], "fuentes": { "guia": "Bloque 1" } },
+    { "id": "sc.1.06", "tema": 1, "nombre": "Grupos de Lorentz y de Poincaré", "descripcion": "Estructura, generadores (boosts, rotaciones, traslaciones), representaciones.", "prerequisitos": [{ "id": "sc.1.05", "peso": 1.0 }, { "id": "gc.1.05", "peso": 1.0 }], "fuentes": { "guia": "Bloque 1" } },
+    { "id": "sc.1.07", "tema": 1, "nombre": "Teorema de Noether para campos", "descripcion": "Simetrías continuas y corrientes conservadas; tensor energía-momento canónico.", "prerequisitos": [{ "id": "sc.1.02", "peso": 1.0 }, { "id": "sc.1.04", "peso": 1.0 }], "fuentes": { "guia": "Bloque 1" } },
+    { "id": "sc.1.08", "tema": 1, "nombre": "Noether aplicado al campo electromagnético", "descripcion": "Lagrangiano de Maxwell, simetrías y corrientes del campo EM.", "prerequisitos": [{ "id": "sc.1.07", "peso": 1.0 }, { "id": "ed.1.03", "peso": 1.0 }, { "id": "gc.1.11", "peso": 0.5 }], "fuentes": { "guia": "Bloque 1" } },
+    { "id": "sc.2.01", "tema": 2, "nombre": "De Schrödinger a Klein-Gordon", "descripcion": "Motivación relativista, construcción de la ecuación KG.", "prerequisitos": [{ "id": "mc.2.04", "peso": 1.0 }, { "id": "gc.1.06", "peso": 1.0 }], "fuentes": { "guia": "Bloque 2" } },
+    { "id": "sc.2.02", "tema": 2, "nombre": "KG: soluciones libres", "descripcion": "Soluciones de partícula libre, espacio de momentos, energías negativas.", "prerequisitos": [{ "id": "sc.2.01", "peso": 1.0 }], "fuentes": { "guia": "Bloque 2" } },
+    { "id": "sc.2.03", "tema": 2, "nombre": "KG: problemas de interpretación", "descripcion": "Densidad no definida positiva, límites como ecuación de una partícula.", "prerequisitos": [{ "id": "sc.2.02", "peso": 1.0 }], "fuentes": { "guia": "Bloque 2" } },
+    { "id": "sc.2.04", "tema": 2, "nombre": "KG con campo electromagnético", "descripcion": "Acoplamiento mínimo, espectro del potencial coulombiano (átomos piónicos).", "prerequisitos": [{ "id": "sc.2.02", "peso": 1.0 }, { "id": "gc.1.11", "peso": 0.5 }], "fuentes": { "guia": "Bloque 2" } },
+    { "id": "sc.2.05", "tema": 2, "nombre": "La paradoja de Klein", "descripcion": "Escalón de potencial relativista y su interpretación.", "prerequisitos": [{ "id": "sc.2.03", "peso": 1.0 }, { "id": "sc.2.04", "peso": 0.5 }], "fuentes": { "guia": "Bloque 2" } },
+    { "id": "sc.3.01", "tema": 3, "nombre": "Construcción de la ecuación de Dirac", "descripcion": "Linealización, matrices gamma y su álgebra.", "prerequisitos": [{ "id": "sc.2.03", "peso": 1.0 }, { "id": "mc.1.09", "peso": 1.0 }], "fuentes": { "guia": "Bloque 3" } },
+    { "id": "sc.3.02", "tema": 3, "nombre": "Covariancia y corriente de Dirac", "descripcion": "Formalismo covariante, corriente conservada definida positiva, espín intrínseco.", "prerequisitos": [{ "id": "sc.3.01", "peso": 1.0 }, { "id": "sc.1.06", "peso": 1.0 }], "fuentes": { "guia": "Bloque 3" } },
+    { "id": "sc.3.03", "tema": 3, "nombre": "Dirac: soluciones libres", "descripcion": "Espinores de partícula libre, espacio de momentos, helicidad.", "prerequisitos": [{ "id": "sc.3.02", "peso": 1.0 }], "fuentes": { "guia": "Bloque 3" } },
+    { "id": "sc.3.04", "tema": 3, "nombre": "Zitterbewegung", "descripcion": "Interferencia de energías positivas y negativas, movimiento tembloroso.", "prerequisitos": [{ "id": "sc.3.03", "peso": 1.0 }], "fuentes": { "guia": "Bloque 3" } },
+    { "id": "sc.3.05", "tema": 3, "nombre": "Mar de Dirac y antipartículas", "descripcion": "Interpretación de las energías negativas, predicción del positrón.", "prerequisitos": [{ "id": "sc.3.03", "peso": 1.0 }], "fuentes": { "guia": "Bloque 3" } },
+    { "id": "sc.3.06", "tema": 3, "nombre": "Dirac con campo EM: momento magnético", "descripcion": "Acoplamiento mínimo, límite no relativista (Pauli), factor g=2.", "prerequisitos": [{ "id": "sc.3.03", "peso": 1.0 }, { "id": "mc.4.04", "peso": 1.0 }], "fuentes": { "guia": "Bloque 3" } },
+    { "id": "sc.3.07", "tema": 3, "nombre": "Correcciones relativistas al espectro coulombiano", "descripcion": "Estructura fina desde Dirac, comparación con el tratamiento perturbativo.", "prerequisitos": [{ "id": "sc.3.06", "peso": 1.0 }, { "id": "fa.1.06", "peso": 0.5 }], "fuentes": { "guia": "Bloque 3" } },
+    { "id": "sc.4.01", "tema": 4, "nombre": "Cuantización del campo electromagnético", "descripcion": "Modos del campo, osciladores, fotones.", "prerequisitos": [{ "id": "sc.1.08", "peso": 1.0 }, { "id": "mc.3.02", "peso": 1.0 }], "fuentes": { "guia": "Bloque 4" } },
+    { "id": "sc.4.02", "tema": 4, "nombre": "De la mecánica cuántica relativista a la QFT", "descripcion": "Por qué campos cuantizados: creación/destrucción de partículas, panorama de la QFT.", "prerequisitos": [{ "id": "sc.4.01", "peso": 1.0 }, { "id": "sc.3.05", "peso": 1.0 }], "fuentes": { "guia": "Bloque 4" } },
+    { "id": "sc.4.03", "tema": 4, "nombre": "Conexión con la física de partículas", "descripcion": "Campos y partículas del modelo estándar como representaciones de simetrías.", "prerequisitos": [{ "id": "sc.4.02", "peso": 1.0 }, { "id": "np.2.05", "peso": 0.5 }], "fuentes": { "guia": "Bloque 4" } }
+  ]
+}

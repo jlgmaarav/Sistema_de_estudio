@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca & Proyectos Personales</title>
+    
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Custom Style Sheet (reusing existing styles) -->
+    <link rel="stylesheet" href="/static/style.css">
+    
+    <!-- Custom Library Styles override for specific elements -->
+    <style>
+        .project-section-title {
+            font-size: 1.1rem;
+            color: var(--color-purple);
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 0.5rem;
+            margin: 1.5rem 0 1.0rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .book-list-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .library-book-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--border-radius-md);
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .library-book-card:hover {
+            background: var(--bg-surface-hover);
+            border-color: var(--color-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+        }
+        
+        .book-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+        
+        .book-card-meta {
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .book-card-project-badge {
+            align-self: flex-start;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: var(--border-radius-sm);
+            background: rgba(139, 92, 246, 0.15);
+            color: var(--color-purple);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            margin-top: 0.5rem;
+        }
+        
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .editor-textarea {
+            width: 100%;
+            height: 300px;
+            background: rgba(10, 11, 14, 0.8);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--border-radius-md);
+            color: var(--color-text-primary);
+            padding: 1rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            resize: vertical;
+        }
+        
+        .editor-textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+        
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .editor-status {
+            font-size: 0.85rem;
+            color: var(--color-green);
+            display: none;
+        }
+        
+        .project-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .btn-icon {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .modal-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        .modal-form-group label {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+        }
+        
+        .modal-form-group input, .modal-form-group textarea, .modal-form-group select {
+            background: rgba(10, 11, 14, 0.8);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--border-radius-sm);
+            color: var(--color-text-primary);
+            padding: 0.65rem;
+            font-family: inherit;
+        }
+        
+        .modal-form-group input:focus, .modal-form-group textarea:focus, .modal-form-group select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <i data-lucide="library" class="logo-icon" style="color: var(--color-purple); filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.3));"></i>
+                <span class="logo-text">Hub<span class="highlight" style="color: var(--color-purple);">Biblioteca</span></span>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-btn active" id="btn-tab-projects" onclick="switchTab('projects')">
+                    <i data-lucide="folder-kanban"></i> Proyectos
+                </button>
+                <button class="nav-btn" id="btn-tab-books" onclick="switchTab('books')">
+                    <i data-lucide="book-marked"></i> Biblioteca
+                </button>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <span class="status-indicator" style="background: var(--color-purple);"></span>
+                <span class="status-text">Bóveda Sincronizada</span>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- VIEW: Proyectos -->
+            <section id="view-projects" class="view-section active">
+                <div class="project-header-row">
+                    <div>
+                        <h1>Tus Proyectos</h1>
+                        <p class="subtitle">Organización de lecturas y tareas orientadas a objetivos específicos</p>
+                    </div>
+                    <button class="btn btn-primary btn-icon" onclick="openNewProjectModal()" style="background: var(--color-purple); border-color: var(--color-purple);">
+                        <i data-lucide="plus-circle"></i> Nuevo Proyecto
+                    </button>
+                </div>
+                
+                <div class="subjects-grid" id="projects-container">
+                    <!-- Loaded dynamically -->
+                    <div class="loading-spinner">Cargando proyectos...</div>
+                </div>
+                
+                <!-- PROJECT DETAIL OVERLAY/PANEL (Hidden by default) -->
+                <div id="project-detail-panel" class="detail-panel">
+                    <button class="close-btn" onclick="closeProjectDetail()"><i data-lucide="arrow-left"></i> Volver</button>
+                    
+                    <div class="subject-detail-header" style="margin-top: 1rem;">
+                        <h2 id="project-detail-title">Proyecto</h2>
+                        <span class="exam-date-badge" id="project-detail-tag" style="background: var(--color-purple-glow); color: var(--color-purple); border-color: rgba(139, 92, 246, 0.3);"></span>
+                    </div>
+                    
+                    <p id="project-detail-desc" style="color: var(--color-text-secondary); margin-bottom: 2rem; line-height: 1.6;"></p>
+                    
+                    <div class="subject-tabs">
+                        <button class="sub-tab active" id="btn-projtab-books" onclick="switchProjectSubTab('books')">Lecturas del Proyecto</button>
+                        <button class="sub-tab" id="btn-projtab-tasks" onclick="switchProjectSubTab('tasks')">Tareas y Notas</button>
+                    </div>
+                    
+                    <!-- Subtab: Libros -->
+                    <div class="subject-subtab-content active" id="project-subtab-books">
+                        <div id="project-books-container">
+                            <!-- Loaded dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- Subtab: Tareas y Notas (Editor) -->
+                    <div class="subject-subtab-content" id="project-subtab-tasks">
+                        <div class="editor-container">
+                            <div class="editor-header">
+                                <h3>Editor de Tareas del Proyecto (Markdown)</h3>
+                                <div style="display:flex; align-items:center; gap:1rem;">
+                                    <span class="editor-status" id="project-save-status"><i data-lucide="check-circle" style="width:14px;height:14px;display:inline;vertical-align:middle;"></i> Guardado</span>
+                                    <button class="btn btn-primary" onclick="saveProjectTasks()" style="background:var(--color-purple); border-color:var(--color-purple); padding:0.4rem 1rem; font-size:0.9rem;">
+                                        Guardar Notas
+                                    </button>
+                                </div>
+                            </div>
+                            <textarea class="editor-textarea" id="project-tasks-editor" placeholder="* Escribe tus tareas, notas o hitos de proyecto aquí..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- VIEW: Biblioteca -->
+            <section id="view-books" class="view-section">
+                <div class="project-header-row">
+                    <div>
+                        <h1>Tu Biblioteca</h1>
+                        <p class="subtitle">Fichas de lectura completas de todos tus libros de no ficción</p>
+                    </div>
+                    <button class="btn btn-primary btn-icon" onclick="openNewBookModal()" style="background: var(--color-purple); border-color: var(--color-purple);">
+                        <i data-lucide="plus-circle"></i> Nuevo Libro
+                    </button>
+                </div>
+                
+                <div class="book-list-grid" id="books-container">
+                    <!-- Loaded dynamically -->
+                    <div class="loading-spinner">Cargando biblioteca...</div>
+                </div>
+            </section>
+            
+        </main>
+        
+        <!-- BOOK DETAIL MODAL (Overlay) -->
+        <div id="book-modal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 800px;">
+                <button class="modal-close" onclick="closeBookModal()"><i data-lucide="x"></i></button>
+                
+                <div class="modal-header">
+                    <h2 id="modal-book-title">Título del Libro</h2>
+                    <div class="modal-meta-badges">
+                        <span class="badge" id="modal-book-author" style="background: var(--color-purple-glow); color: var(--color-purple);">Autor</span>
+                        <span class="badge" id="modal-book-category" style="background: var(--color-primary-glow); color: var(--color-primary);">Categoría</span>
+                        <span class="badge" id="modal-book-project" style="background: rgba(255,255,255,0.05); color: var(--color-text-secondary);">Proyecto</span>
+                    </div>
+                </div>
+                
+                <div class="modal-body-scroll">
+                    <!-- Markdown Notes Editor -->
+                    <div class="editor-container">
+                        <div class="editor-header">
+                            <h3>Notas y Resumen del Libro (Markdown)</h3>
+                            <div style="display:flex; align-items:center; gap:1rem;">
+                                <span class="editor-status" id="book-save-status"><i data-lucide="check-circle" style="width:14px;height:14px;display:inline;vertical-align:middle;"></i> Guardado</span>
+                                <button class="btn btn-primary" onclick="saveBookNotes()" style="background:var(--color-purple); border-color:var(--color-purple); padding:0.4rem 1rem; font-size:0.9rem;">
+                                    Guardar Cambios
+                                </button>
+                            </div>
+                        </div>
+                        <textarea class="editor-textarea" id="book-notes-editor" style="height: 350px;" placeholder="Escribe tus notas, resúmenes o citas clave del libro..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MODAL: Nuevo Proyecto -->
+        <div id="new-project-modal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 500px;">
+                <button class="modal-close" onclick="closeNewProjectModal()"><i data-lucide="x"></i></button>
+                <div class="modal-header">
+                    <h2>Crear Nuevo Proyecto</h2>
+                </div>
+                <div class="modal-body-scroll">
+                    <form id="new-project-form" onsubmit="handleCreateProject(event)">
+                        <div class="modal-form-group">
+                            <label for="proj-title">Título del Proyecto</label>
+                            <input type="text" id="proj-title" required placeholder="ej. Entender la IA desde cero">
+                        </div>
+                        <div class="modal-form-group">
+                            <label for="proj-tag">Etiqueta/Categoría Corta</label>
+                            <input type="text" id="proj-tag" placeholder="ej. IA, Juegos, Finanzas">
+                        </div>
+                        <div class="modal-form-group">
+                            <label for="proj-desc">Descripción</label>
+                            <textarea id="proj-desc" rows="4" placeholder="Breve resumen del objetivo de este proyecto..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width:100%; background:var(--color-purple); border-color:var(--color-purple); margin-top:0.5rem;">
+                            Crear Proyecto
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MODAL: Nuevo Libro -->
+        <div id="new-book-modal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 500px;">
+                <button class="modal-close" onclick="closeNewBookModal()"><i data-lucide="x"></i></button>
+                <div class="modal-header">
+                    <h2>Añadir Nuevo Libro</h2>
+                </div>
+                <div class="modal-body-scroll">
+                    <form id="new-book-form" onsubmit="handleCreateBook(event)">
+                        <div class="modal-form-group">
+                            <label for="book-title">Título del Libro</label>
+                            <input type="text" id="book-title" required placeholder="ej. Street Fighting Mathematics">
+                        </div>
+                        <div class="modal-form-group">
+                            <label for="book-author">Autor(es)</label>
+                            <input type="text" id="book-author" required placeholder="ej. Sanjoy Mahajan">
+                        </div>
+                        <div class="modal-form-group">
+                            <label for="book-cat">Categoría temática</label>
+                            <input type="text" id="book-cat" required placeholder="ej. Matemáticas, Sistemas Complejos">
+                        </div>
+                        <div class="modal-form-group">
+                            <label for="book-proj-select">Vincular a Proyecto</label>
+                            <select id="book-proj-select" onchange="toggleBookSectionInput()">
+                                <option value="">-- Sin Proyecto (Libro Suelto) --</option>
+                                <!-- Loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="modal-form-group" id="book-section-group" style="display:none;">
+                            <label for="book-section">Sección o Hito dentro del Proyecto</label>
+                            <input type="text" id="book-section" placeholder="ej. Construir Intuición, Fase 1">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width:100%; background:var(--color-purple); border-color:var(--color-purple); margin-top:0.5rem;">
+                            Añadir Libro a la Bóveda
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Custom Application Script for Biblioteca -->
+    <script src="/static/biblioteca.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "esquema_version": 1,
+  "materia": "Óptica",
+  "codigo_uva": "",
+  "curso": 3,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "op.01", "tema": 1, "nombre": "Óptica geométrica e instrumentos", "descripcion": "Fermat, óptica paraxial, láminas, prismas, espejos, aberraciones, instrumentos.", "prerequisitos": [{ "id": "fco.02", "peso": 1.0 }] },
+    { "id": "op.02", "tema": 1, "nombre": "Visión, radiometría, fotometría y color", "descripcion": "El ojo, magnitudes radiométricas y fotométricas, colorimetría.", "prerequisitos": [{ "id": "op.01", "peso": 1.0 }] },
+    { "id": "op.03", "tema": 1, "nombre": "Óptica electromagnética y polarización", "descripcion": "Ondas en dieléctricos, velocidad de fase/grupo, Stokes, Jones, Mueller.", "prerequisitos": [{ "id": "em.10.07", "peso": 1.0 }] },
+    { "id": "op.04", "tema": 1, "nombre": "Medios isótropos y anisótropos", "descripcion": "Fórmulas de Fresnel, reflexión total, medios conductores, tensor dieléctrico, birrefringencia.", "prerequisitos": [{ "id": "op.03", "peso": 1.0 }, { "id": "em.10.08", "peso": 1.0 }] },
+    { "id": "op.05", "tema": 1, "nombre": "Interferencias", "descripcion": "Young, ondas múltiples, Fabry-Perot, multicapas.", "prerequisitos": [{ "id": "op.03", "peso": 1.0 }] },
+    { "id": "op.06", "tema": 1, "nombre": "Difracción y óptica de Fourier", "descripcion": "Huygens-Fresnel, Kirchhoff, Fraunhofer, redes, la lente como transformada de Fourier.", "prerequisitos": [{ "id": "op.05", "peso": 1.0 }, { "id": "m2.04", "peso": 1.0 }] },
+    { "id": "op.07", "tema": 1, "nombre": "Óptica cuántica, láseres y óptica no lineal", "descripcion": "Fotones, emisión estimulada, cavidad láser, generación de armónicos, efectos Pockels y Kerr.", "prerequisitos": [{ "id": "op.03", "peso": 1.0 }, { "id": "cu.04", "peso": 0.5 }] }
+  ]
+}

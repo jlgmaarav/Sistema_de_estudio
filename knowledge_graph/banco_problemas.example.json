@@ -1,0 +1,30 @@
+{
+  "Electromagnetismo": {
+    "fuente": "Ejemplo (sustituye por tus propias transcripciones)",
+    "materia": "Electromagnetismo",
+    "problemas": [
+      {
+        "id": "EM-EJEMPLO-001",
+        "materia": "Electromagnetismo",
+        "num_tema": 1,
+        "tema_md": "Tema 1: Electrostática en el vacío",
+        "hoja": "1",
+        "numero": "1",
+        "titulo": "Campo de una esfera uniformemente cargada",
+        "enunciado": "Una esfera de radio $R$ tiene una carga total $Q$ distribuida uniformemente en su volumen. Halla el campo eléctrico $\\vec{E}(r)$ dentro y fuera de la esfera aplicando la ley de Gauss.",
+        "nodos": ["em.1.06", "em.1.07"]
+      },
+      {
+        "id": "EM-EJEMPLO-002",
+        "materia": "Electromagnetismo",
+        "num_tema": 1,
+        "tema_md": "Tema 1: Electrostática en el vacío",
+        "hoja": "1",
+        "numero": "2",
+        "titulo": "Potencial de un hilo infinito",
+        "enunciado": "Un hilo recto infinito tiene densidad lineal de carga $\\lambda$. Obtén el campo y el potencial a una distancia $r$ del hilo.",
+        "nodos": ["em.1.07", "em.1.09"]
+      }
+    ]
+  }
+}

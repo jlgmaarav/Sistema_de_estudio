@@ -1,0 +1,289 @@
+<title>Grafo Electrónica UVa</title>
+<style>
+:root {
+  --bg: #F7F9FB;
+  --surface: #FFFFFF;
+  --ink: #1C2733;
+  --muted: #5B6B7A;
+  --line: #D8E0E8;
+  --accent: #1D5FC2;
+  --accent-ink: #FFFFFF;
+  --accent-soft: rgba(29, 95, 194, 0.10);
+  --copper: #B4690E;
+  --copper-soft: rgba(180, 105, 14, 0.12);
+  --sel: #12345E;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0E141B;
+    --surface: #16202B;
+    --ink: #E2E9F0;
+    --muted: #8FA1B3;
+    --line: #26323F;
+    --accent: #6FA5F2;
+    --accent-ink: #0E141B;
+    --accent-soft: rgba(111, 165, 242, 0.14);
+    --copper: #E39A4E;
+    --copper-soft: rgba(227, 154, 78, 0.14);
+    --sel: #BDD7FF;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #F7F9FB; --surface: #FFFFFF; --ink: #1C2733; --muted: #5B6B7A;
+  --line: #D8E0E8; --accent: #1D5FC2; --accent-ink: #FFFFFF;
+  --accent-soft: rgba(29, 95, 194, 0.10); --copper: #B4690E;
+  --copper-soft: rgba(180, 105, 14, 0.12); --sel: #12345E;
+}
+:root[data-theme="dark"] {
+  --bg: #0E141B; --surface: #16202B; --ink: #E2E9F0; --muted: #8FA1B3;
+  --line: #26323F; --accent: #6FA5F2; --accent-ink: #0E141B;
+  --accent-soft: rgba(111, 165, 242, 0.14); --copper: #E39A4E;
+  --copper-soft: rgba(227, 154, 78, 0.14); --sel: #BDD7FF;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, "Segoe UI", sans-serif;
+  margin: 0;
+  line-height: 1.45;
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding: 28px 20px 80px; }
+header.top { margin-bottom: 20px; }
+h1 {
+  font-family: Charter, Georgia, "Times New Roman", serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  text-wrap: balance;
+}
+.sub { color: var(--muted); font-size: 0.92rem; margin: 0; }
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+  margin-top: 16px;
+}
+#buscar {
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 6px;
+  padding: 8px 12px; font-size: 0.9rem; width: 260px; max-width: 100%;
+}
+#buscar:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.leyenda { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.8rem; color: var(--muted); }
+.leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.dot.d-sel { background: var(--accent); }
+.dot.d-pre { background: transparent; border: 2px solid var(--accent); }
+.dot.d-anc { background: var(--accent-soft); border: 1px solid var(--accent); }
+.dot.d-dep { background: transparent; border: 2px solid var(--copper); }
+
+.cols { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+@media (max-width: 900px) { .cols { grid-template-columns: 1fr; } .panel { position: static !important; } }
+
+section.tema { margin-bottom: 18px; }
+.tema h2 {
+  font-family: Charter, Georgia, serif;
+  font-size: 1.02rem; font-weight: 700; margin: 0 0 8px;
+  padding-bottom: 4px; border-bottom: 1px solid var(--line);
+}
+.tema h2 small { color: var(--muted); font-weight: 400; font-size: 0.8rem; margin-left: 8px; }
+.pills { display: flex; flex-wrap: wrap; gap: 7px; }
+button.pill {
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 5px 12px; font-size: 0.82rem; cursor: pointer;
+  font-family: inherit; line-height: 1.3;
+  transition: border-color 120ms, background 120ms, opacity 120ms;
+}
+@media (prefers-reduced-motion: reduce) { button.pill { transition: none; } }
+button.pill .nid {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.68rem; color: var(--muted); margin-right: 6px;
+}
+button.pill:hover { border-color: var(--accent); }
+button.pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button.pill.sel { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.pill.sel .nid { color: var(--accent-ink); opacity: 0.75; }
+button.pill.pre { border: 2px solid var(--accent); background: var(--accent-soft); }
+button.pill.pre.blanda { border-style: dashed; }
+button.pill.anc { background: var(--accent-soft); }
+button.pill.dep { border: 2px solid var(--copper); background: var(--copper-soft); }
+button.pill.apagado { opacity: 0.28; }
+
+.panel {
+  position: sticky; top: 16px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 10px; padding: 18px 18px 20px;
+}
+.panel .vacio { color: var(--muted); font-size: 0.9rem; }
+.panel h3 {
+  font-family: Charter, Georgia, serif;
+  font-size: 1.15rem; margin: 2px 0 2px; text-wrap: balance;
+}
+.panel .meta {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.72rem; color: var(--muted);
+}
+.panel .temaLbl { font-size: 0.78rem; color: var(--accent); margin: 4px 0 10px; }
+.panel p.desc { font-size: 0.88rem; margin: 0 0 14px; }
+.panel h4 {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--muted); margin: 14px 0 6px; font-weight: 600;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+button.chip {
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  color: var(--ink); font-size: 0.78rem; padding: 3px 9px; cursor: pointer;
+  font-family: inherit; text-align: left;
+}
+button.chip:hover, button.chip:focus-visible { border-color: var(--accent); outline: none; }
+button.chip .peso { color: var(--muted); font-size: 0.7rem; }
+.chip.cPre { border-left: 3px solid var(--accent); }
+.chip.cDep { border-left: 3px solid var(--copper); }
+ul.fuentes { margin: 0; padding: 0 0 0 2px; list-style: none; font-size: 0.82rem; }
+ul.fuentes li { margin-bottom: 3px; }
+ul.fuentes .libro { color: var(--muted); }
+.stats { font-size: 0.78rem; color: var(--muted); margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Electrónica · grafo de conocimiento</h1>
+    <p class="sub" id="resumen"></p>
+    <div class="toolbar">
+      <input id="buscar" type="search" placeholder="Filtrar nodos… (ej. Gauss, dieléctrico)" aria-label="Filtrar nodos">
+      <div class="leyenda">
+        <span><span class="dot d-sel"></span> seleccionado</span>
+        <span><span class="dot d-pre"></span> prerrequisito directo</span>
+        <span><span class="dot d-anc"></span> ancestro</span>
+        <span><span class="dot d-dep"></span> lo necesita</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="cols">
+    <main id="temas"></main>
+    <aside class="panel" id="panel">
+      <p class="vacio">Haz clic en un nodo para ver sus prerrequisitos, qué temas dependen de él y dónde estudiarlo en la bibliografía.</p>
+    </aside>
+  </div>
+</div>
+
+<script>
+const GRAFO = {"esquema_version": 1, "materia": "Electrónica", "codigo_uva": "45772", "temas": {"1": "Tema 1: Propiedades electrónicas de los materiales semiconductores", "2": "Tema 2: El diodo de unión PN", "3": "Tema 3: Aplicaciones de la unión PN", "4": "Tema 4: El transistor bipolar de unión (BJT)", "5": "Tema 5: La estructura MIS y el transistor MOSFET"}, "nodos": [{"id": "el.1.01", "tema": 1, "nombre": "Materiales semiconductores", "descripcion": "Semiconductores vs conductores/aislantes; intrínsecos vs extrínsecos; elementos y compuestos.", "prerequisitos": [], "fuentes": {"apuntes": "1.1"}}, {"id": "el.1.02", "tema": 1, "nombre": "Modelo de bandas y portadores", "descripcion": "Estructura cristalina, banda de valencia/conducción, gap; electrones y huecos como portadores. (Apoya en bandas de FES.)", "prerequisitos": [{"id": "el.1.01", "peso": 1.0}], "fuentes": {"apuntes": "1.2.1, 1.2.2"}}, {"id": "el.1.03", "tema": 1, "nombre": "Concentración intrínseca de portadores", "descripcion": "n_i, dependencia con temperatura y gap.", "prerequisitos": [{"id": "el.1.02", "peso": 1.0}], "fuentes": {"apuntes": "1.2.3"}}, {"id": "el.1.04", "tema": 1, "nombre": "Dopado: semiconductores tipo N y tipo P", "descripcion": "Impurezas donadoras y aceptadoras, niveles en el gap, centros profundos.", "prerequisitos": [{"id": "el.1.02", "peso": 1.0}], "fuentes": {"apuntes": "1.3, 1.4.1"}}, {"id": "el.1.05", "tema": 1, "nombre": "Estadística de Fermi-Dirac y nivel de Fermi", "descripcion": "Concentraciones de equilibrio, producto np = n_i², cálculo del nivel de Fermi con dopado.", "prerequisitos": [{"id": "el.1.03", "peso": 1.0}, {"id": "el.1.04", "peso": 1.0}], "fuentes": {"apuntes": "1.4.2, 1.5"}}, {"id": "el.1.06", "tema": 1, "nombre": "Transporte por arrastre: movilidad y conducción", "descripcion": "Masa efectiva, movilidad, densidad de corriente de conducción J_C.", "prerequisitos": [{"id": "el.1.02", "peso": 1.0}, {"id": "em.5.01", "peso": 0.5}, {"id": "em.5.03", "peso": 0.5}], "fuentes": {"apuntes": "1.6.1 a 1.6.3"}}, {"id": "el.1.07", "tema": 1, "nombre": "Difusión de portadores", "descripcion": "Corriente de difusión, relación de Einstein.", "prerequisitos": [{"id": "el.1.06", "peso": 1.0}], "fuentes": {"apuntes": "1.6.4"}}, {"id": "el.1.08", "tema": 1, "nombre": "Generación, recombinación y cuasi-niveles de Fermi", "descripcion": "Semiconductor fuera del equilibrio, tiempos de vida, cuasi-niveles de Fermi.", "prerequisitos": [{"id": "el.1.05", "peso": 1.0}], "fuentes": {"apuntes": "1.7, 1.8"}}, {"id": "el.1.09", "tema": 1, "nombre": "Ecuaciones fundamentales de los dispositivos", "descripcion": "Ecuación de continuidad para portadores y ecuación de Poisson aplicadas a semiconductores.", "prerequisitos": [{"id": "el.1.06", "peso": 1.0}, {"id": "el.1.07", "peso": 1.0}, {"id": "el.1.08", "peso": 1.0}, {"id": "em.5.02", "peso": 1.0}, {"id": "em.4.01", "peso": 1.0}], "fuentes": {"apuntes": "1.9"}}, {"id": "el.2.01", "tema": 2, "nombre": "La unión PN en equilibrio: la ZCE", "descripcion": "Formación de la zona de carga espacial; distribución de carga, campo y potencial electrostático.", "prerequisitos": [{"id": "el.1.09", "peso": 1.0}, {"id": "em.1.09", "peso": 0.5}], "fuentes": {"apuntes": "2.1"}}, {"id": "el.2.02", "tema": 2, "nombre": "Diagrama de bandas de la unión PN", "descripcion": "Nivel de Fermi constante en equilibrio, curvatura de bandas, potencial de difusión.", "prerequisitos": [{"id": "el.2.01", "peso": 1.0}, {"id": "el.1.05", "peso": 1.0}], "fuentes": {"apuntes": "2.2"}}, {"id": "el.2.03", "tema": 2, "nombre": "Campo eléctrico y anchura de la ZCE", "descripcion": "Resolución de Poisson en la unión abrupta; E_max y anchura en función del dopado y la tensión.", "prerequisitos": [{"id": "el.2.01", "peso": 1.0}], "fuentes": {"apuntes": "2.3"}}, {"id": "el.2.04", "tema": 2, "nombre": "Polarización directa: bandas y flujo de portadores", "descripcion": "Reducción de la barrera, inyección de minoritarios, cuasi-niveles de Fermi en la unión.", "prerequisitos": [{"id": "el.2.02", "peso": 1.0}, {"id": "el.1.08", "peso": 1.0}], "fuentes": {"apuntes": "2.4.1 a 2.4.4"}}, {"id": "el.2.05", "tema": 2, "nombre": "Polarización directa: concentraciones y corriente", "descripcion": "Perfil de minoritarios inyectados, cálculo de la corriente directa, diagrama de corrientes.", "prerequisitos": [{"id": "el.2.04", "peso": 1.0}, {"id": "el.1.07", "peso": 1.0}], "fuentes": {"apuntes": "2.4.5 a 2.4.8"}}, {"id": "el.2.06", "tema": 2, "nombre": "Polarización inversa", "descripcion": "Aumento de barrera y ZCE, extracción de minoritarios, corriente de saturación inversa.", "prerequisitos": [{"id": "el.2.04", "peso": 1.0}, {"id": "el.2.03", "peso": 1.0}], "fuentes": {"apuntes": "2.5"}}, {"id": "el.2.07", "tema": 2, "nombre": "Característica I-V y ruptura de la unión", "descripcion": "Ecuación del diodo, desviaciones reales, ruptura Zener y por avalancha.", "prerequisitos": [{"id": "el.2.05", "peso": 1.0}, {"id": "el.2.06", "peso": 1.0}], "fuentes": {"apuntes": "2.6"}}, {"id": "el.3.01", "tema": 3, "nombre": "El diodo como componente de circuito", "descripcion": "Rectificación, recorte, modelos del diodo en circuitos.", "prerequisitos": [{"id": "el.2.07", "peso": 1.0}], "fuentes": {"apuntes": "3.1"}}, {"id": "el.3.02", "tema": 3, "nombre": "Diodos especiales: varactor, túnel, PIN, IMPATT", "descripcion": "Principio físico y aplicación de cada variante de la unión PN.", "prerequisitos": [{"id": "el.2.07", "peso": 1.0}, {"id": "em.2.05", "peso": 0.5}], "fuentes": {"apuntes": "3.2"}}, {"id": "el.3.03", "tema": 3, "nombre": "Optoelectrónica: LED, láser y fotodetectores", "descripcion": "Emisión y absorción en la unión PN, materiales de gap directo.", "prerequisitos": [{"id": "el.2.07", "peso": 1.0}], "fuentes": {"apuntes": "3.3"}}, {"id": "el.4.01", "tema": 4, "nombre": "El transistor NPN en activa: bandas y minoritarios", "descripcion": "Dos uniones acopladas, diagrama de bandas en activa, perfil de minoritarios en la base.", "prerequisitos": [{"id": "el.2.04", "peso": 1.0}, {"id": "el.1.08", "peso": 1.0}], "fuentes": {"apuntes": "4.1"}}, {"id": "el.4.02", "tema": 4, "nombre": "Configuraciones y ganancias del BJT", "descripcion": "Base/emisor/colector común; eficacia de emisor γ, factor de transporte B, multiplicación M; α y β.", "prerequisitos": [{"id": "el.4.01", "peso": 1.0}], "fuentes": {"apuntes": "4.2, 4.3"}}, {"id": "el.4.03", "tema": 4, "nombre": "Diagrama y ecuaciones de corrientes del BJT", "descripcion": "Relaciones entre corrientes en activa, ecuaciones fundamentales del transistor.", "prerequisitos": [{"id": "el.4.02", "peso": 1.0}], "fuentes": {"apuntes": "4.4"}}, {"id": "el.4.04", "tema": 4, "nombre": "Características estáticas y efecto Early", "descripcion": "Curvas en base común y emisor común, modulación de la anchura de base.", "prerequisitos": [{"id": "el.4.03", "peso": 1.0}], "fuentes": {"apuntes": "4.5"}}, {"id": "el.4.05", "tema": 4, "nombre": "Regímenes de funcionamiento del BJT", "descripcion": "Activa directa/inversa, saturación, corte; lectura de las características estáticas.", "prerequisitos": [{"id": "el.4.03", "peso": 1.0}], "fuentes": {"apuntes": "4.6"}}, {"id": "el.4.06", "tema": 4, "nombre": "Modelos del BJT: Ebers-Moll y Giacoletto", "descripcion": "Modelo de gran señal y modelo de pequeña señal del transistor bipolar.", "prerequisitos": [{"id": "el.4.05", "peso": 1.0}], "fuentes": {"apuntes": "4.7"}}, {"id": "el.4.07", "tema": 4, "nombre": "El transistor bipolar real", "descripcion": "Estructura tecnológica y efectos de segundo orden.", "prerequisitos": [{"id": "el.4.05", "peso": 1.0}, {"id": "el.4.06", "peso": 0.5}], "fuentes": {"apuntes": "4.8"}}, {"id": "el.5.01", "tema": 5, "nombre": "La estructura MIS ideal", "descripcion": "Metal-aislante-semiconductor: componentes, materiales, diagrama de bandas en equilibrio.", "prerequisitos": [{"id": "el.1.05", "peso": 1.0}, {"id": "el.2.02", "peso": 0.5}], "fuentes": {"apuntes": "5.1"}}, {"id": "el.5.02", "tema": 5, "nombre": "Regímenes de la estructura MIS", "descripcion": "Acumulación, vaciamiento e inversión según la polarización de puerta.", "prerequisitos": [{"id": "el.5.01", "peso": 1.0}], "fuentes": {"apuntes": "5.2"}}, {"id": "el.5.03", "tema": 5, "nombre": "Característica capacidad-tensión de la MIS", "descripcion": "Comportamiento capacitivo en cada régimen, curvas C-V para tipo P y N.", "prerequisitos": [{"id": "el.5.02", "peso": 1.0}, {"id": "em.2.05", "peso": 0.5}], "fuentes": {"apuntes": "5.3"}}, {"id": "el.5.04", "tema": 5, "nombre": "La estructura MIS real", "descripcion": "Cargas en el óxido, diferencia de funciones de trabajo, tensión de banda plana.", "prerequisitos": [{"id": "el.5.03", "peso": 1.0}], "fuentes": {"apuntes": "5.4"}}, {"id": "el.5.05", "tema": 5, "nombre": "El transistor MOSFET", "descripcion": "Formación del canal, tensión umbral, regímenes óhmico y saturación, corriente de canal.", "prerequisitos": [{"id": "el.5.02", "peso": 1.0}, {"id": "el.1.06", "peso": 1.0}], "fuentes": {"apuntes": "5.5"}}, {"id": "el.5.06", "tema": 5, "nombre": "Tipos de MOSFET y tecnología CMOS", "descripcion": "Acumulación vs vaciamiento, canal N vs P, símbolos, inversor CMOS.", "prerequisitos": [{"id": "el.5.05", "peso": 1.0}], "fuentes": {"apuntes": "5.6"}}]};
+
+const nodos = GRAFO.nodos;
+const porId = Object.fromEntries(nodos.map(n => [n.id, n]));
+const dependientes = {};
+nodos.forEach(n => (n.prerequisitos || []).forEach(p => {
+  (dependientes[p.id] = dependientes[p.id] || []).push(n.id);
+}));
+
+const NOMBRES_LIBROS = {
+  wangsness: "Wangsness", griffiths: "Griffiths", jackson: "Jackson",
+  feynman: "Feynman", panofsky: "Panofsky", thide: "Thidé",
+  problemas: "Problemas (López/Núñez)", apuntes: "Apuntes UVa"
+};
+function nombreDe(id) {
+  return porId[id] ? porId[id].nombre : id + " (otra asignatura)";
+}
+
+document.getElementById("resumen").textContent =
+  nodos.length + " nodos · " +
+  nodos.reduce((a, n) => a + (n.prerequisitos || []).length, 0) + " aristas de prerrequisito · " +
+  Object.keys(GRAFO.temas).length + " temas · guía docente " + GRAFO.codigo_uva + " (UVa)";
+
+const contTemas = document.getElementById("temas");
+Object.keys(GRAFO.temas).sort((a, b) => +a - +b).forEach(t => {
+  const sec = document.createElement("section");
+  sec.className = "tema";
+  const nds = nodos.filter(n => String(n.tema) === t);
+  sec.innerHTML = "<h2>" + GRAFO.temas[t] + "<small>" + nds.length + " nodos</small></h2>";
+  const pills = document.createElement("div");
+  pills.className = "pills";
+  nds.forEach(n => {
+    const b = document.createElement("button");
+    b.className = "pill";
+    b.dataset.id = n.id;
+    b.innerHTML = '<span class="nid">' + n.id.replace("em.", "") + "</span>" + n.nombre;
+    b.addEventListener("click", () => seleccionar(n.id));
+    pills.appendChild(b);
+  });
+  sec.appendChild(pills);
+  contTemas.appendChild(sec);
+});
+
+function ancestros(id) {
+  const res = new Set();
+  const cola = [id];
+  while (cola.length) {
+    const actual = porId[cola.pop()];
+    if (!actual) continue;
+    (actual.prerequisitos || []).forEach(p => {
+      if (!res.has(p.id)) { res.add(p.id); cola.push(p.id); }
+    });
+  }
+  return res;
+}
+
+let seleccionado = null;
+
+function seleccionar(id) {
+  const n = porId[id];
+  if (!n) return; // prerrequisito de otra asignatura: no está en este visor
+  seleccionado = id;
+  const directos = new Map((n.prerequisitos || []).map(p => [p.id, p.peso]));
+  const anc = ancestros(id);
+  const deps = dependientes[id] || [];
+
+  document.querySelectorAll("button.pill").forEach(b => {
+    const bid = b.dataset.id;
+    b.classList.remove("sel", "pre", "anc", "dep", "blanda");
+    if (bid === id) b.classList.add("sel");
+    else if (directos.has(bid)) {
+      b.classList.add("pre");
+      if (directos.get(bid) < 1) b.classList.add("blanda");
+    }
+    else if (anc.has(bid)) b.classList.add("anc");
+    else if (deps.includes(bid)) b.classList.add("dep");
+  });
+
+  const fuentes = Object.entries(n.fuentes || {}).map(([k, v]) =>
+    "<li><span class='libro'>" + (NOMBRES_LIBROS[k] || k) + ":</span> " + v + "</li>").join("");
+
+  const chipsPre = (n.prerequisitos || []).map(p =>
+    "<button class='chip cPre' data-go='" + p.id + "'>" + nombreDe(p.id) +
+    (p.peso < 1 ? " <span class='peso'>(" + p.peso + ")</span>" : "") + "</button>").join("") ||
+    "<span class='vacio'>Ninguno — nodo raíz.</span>";
+
+  const chipsDep = deps.map(d =>
+    "<button class='chip cDep' data-go='" + d + "'>" + porId[d].nombre + "</button>").join("") ||
+    "<span class='vacio'>Ninguno (final de rama).</span>";
+
+  document.getElementById("panel").innerHTML =
+    "<div class='meta'>" + n.id + "</div>" +
+    "<h3>" + n.nombre + "</h3>" +
+    "<div class='temaLbl'>" + GRAFO.temas[String(n.tema)] + "</div>" +
+    "<p class='desc'>" + n.descripcion + "</p>" +
+    "<h4>Prerrequisitos directos</h4><div class='chips'>" + chipsPre + "</div>" +
+    "<h4>Lo necesitan</h4><div class='chips'>" + chipsDep + "</div>" +
+    "<h4>Dónde estudiarlo</h4><ul class='fuentes'>" + fuentes + "</ul>" +
+    "<div class='stats'>" + anc.size + " nodos en su cadena de prerrequisitos · desbloquea " +
+    deps.length + " directamente</div>";
+
+  document.querySelectorAll("#panel button.chip").forEach(c =>
+    c.addEventListener("click", () => {
+      seleccionar(c.dataset.go);
+      const pill = document.querySelector("button.pill[data-id='" + c.dataset.go + "']");
+      if (pill) pill.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    }));
+}
+
+document.getElementById("buscar").addEventListener("input", e => {
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll("button.pill").forEach(b => {
+    const n = porId[b.dataset.id];
+    const texto = (n.id + " " + n.nombre + " " + n.descripcion).toLowerCase();
+    b.classList.toggle("apagado", q !== "" && !texto.includes(q));
+  });
+});
+</script>

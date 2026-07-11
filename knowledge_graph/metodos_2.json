@@ -1,0 +1,18 @@
+{
+  "esquema_version": 1,
+  "materia": "Métodos Matemáticos II",
+  "codigo_uva": "",
+  "curso": 2,
+  "granularidad": "media",
+  "temas": { "1": "Temario (libro del profesor; cubre Métodos II y parte de IV)" },
+  "nodos": [
+    { "id": "m2.01", "tema": 1, "nombre": "Función Gamma y funciones especiales", "descripcion": "Productos infinitos, Gamma, beta, zeta, integrales elípticas, fórmula de Stirling.", "prerequisitos": [{ "id": "am.04", "peso": 1.0 }, { "id": "am.05", "peso": 1.0 }], "fuentes": { "libro_metodos": "cap. 1" } },
+    { "id": "m2.02", "tema": 1, "nombre": "Distribuciones y delta de Dirac", "descripcion": "Funciones de prueba, distribuciones, definición y propiedades de la delta.", "prerequisitos": [{ "id": "am.04", "peso": 1.0 }], "fuentes": { "libro_metodos": "cap. 2 y 12" } },
+    { "id": "m2.03", "tema": 1, "nombre": "Series de Fourier", "descripcion": "Coeficientes, convergencia en media/puntual/uniforme, fenómeno de Gibbs.", "prerequisitos": [{ "id": "am.04", "peso": 1.0 }], "fuentes": { "libro_metodos": "cap. 3" } },
+    { "id": "m2.04", "tema": 1, "nombre": "Transformada de Fourier", "descripcion": "Teorema integral, propiedades, convolución, Parseval/Plancherel.", "prerequisitos": [{ "id": "m2.03", "peso": 1.0 }, { "id": "m2.02", "peso": 0.5 }], "fuentes": { "libro_metodos": "cap. 4 y 13" } },
+    { "id": "m2.05", "tema": 1, "nombre": "Transformada de Laplace", "descripcion": "Propiedades, convolución, fórmula de inversión, resolución de EDOs.", "prerequisitos": [{ "id": "m2.04", "peso": 1.0 }, { "id": "m2.01", "peso": 0.5 }], "fuentes": { "libro_metodos": "cap. 5" } },
+    { "id": "m2.06", "tema": 1, "nombre": "EDOs: métodos elementales y sistemas lineales", "descripcion": "Métodos de integración, existencia y unicidad, sistemas lineales, coeficientes constantes.", "prerequisitos": [{ "id": "am.03", "peso": 1.0 }, { "id": "al.04", "peso": 1.0 }], "fuentes": { "libro_metodos": "cap. 6-9" } },
+    { "id": "m2.07", "tema": 1, "nombre": "Soluciones en serie: Frobenius y funciones de Bessel", "descripcion": "Puntos singulares, método de Frobenius, Bessel, hipergeométricas.", "prerequisitos": [{ "id": "m2.06", "peso": 1.0 }, { "id": "am.04", "peso": 1.0 }], "fuentes": { "libro_metodos": "cap. 10" } },
+    { "id": "m2.08", "tema": 1, "nombre": "Polinomios ortogonales y armónicos esféricos", "descripcion": "Rodrigues, recurrencias, Hermite, Laguerre, Legendre, Chebyshev, armónicos esféricos.", "prerequisitos": [{ "id": "m2.07", "peso": 1.0 }], "fuentes": { "libro_metodos": "cap. 11" } }
+  ]
+}

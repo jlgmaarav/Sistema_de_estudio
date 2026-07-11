@@ -1,0 +1,13 @@
+{
+  "esquema_version": 1,
+  "materia": "Métodos Matemáticos IV",
+  "codigo_uva": "",
+  "curso": 2,
+  "granularidad": "gruesa",
+  "temas": { "1": "Temario (cursada — nodos a nivel de bloque)" },
+  "nodos": [
+    { "id": "m4.01", "tema": 1, "nombre": "EDPs de primer orden", "descripcion": "Problema de Cauchy, método de las características, integrales primeras.", "prerequisitos": [{ "id": "m2.06", "peso": 1.0 }] },
+    { "id": "m4.02", "tema": 1, "nombre": "Análisis armónico aplicado", "descripcion": "Series e integral de Fourier aplicadas a problemas físicos.", "prerequisitos": [{ "id": "m2.03", "peso": 1.0 }, { "id": "m2.04", "peso": 1.0 }] },
+    { "id": "m4.03", "tema": 1, "nombre": "EDPs de segundo orden: ondas, difusión y Laplace", "descripcion": "Clasificación, condiciones de contorno, separación de variables en las tres ecuaciones clásicas.", "prerequisitos": [{ "id": "m4.01", "peso": 1.0 }, { "id": "m4.02", "peso": 1.0 }] }
+  ]
+}
