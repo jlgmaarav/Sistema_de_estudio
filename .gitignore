@@ -27,3 +27,9 @@ Problemas/**/*.pdf
 knowledge_graph/banco_problemas.json
 knowledge_graph/perfil.json
 knowledge_graph/examenes.json
+
+# Material de profesores y notas de desarrollo — NO en repo público
+Problemas/
+Guiones Asignaturas/
+task.md
+Índices para knowleadge graph.txt

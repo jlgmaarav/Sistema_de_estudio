@@ -8,6 +8,19 @@ espaciada — usando IA generativa (Gemini) como corrector, clasificador y gener
 (reMarkable/papel) → subes la foto → la IA transcribe tu manuscrito, lo corrige paso a paso,
 clasifica tus errores y actualiza tu perfil de conocimiento → el plan de mañana ya lo sabe.
 
+## Cómo se ha construido
+
+Un proyecto complejo (motor de mastery learning, app web Flask, pipeline de visión + corrección con
+IA, integración con reMarkable) desarrollado íntegramente con herramientas de IA de última generación:
+
+- **[Claude Code](https://claude.com/claude-code)** (modelos **Fable 5** y **Opus 4.8**) — desarrollo
+  principal: arquitectura, motor del knowledge graph, app web, pipeline de corrección y toda la lógica.
+- **Antigravity** (**Gemini 3.1 Pro** y **Gemini 3.5 Flash**) — apoyo en diseño y prototipado.
+
+En tiempo de ejecución, la corrección de los ejercicios manuscritos la hace **Gemini** (3.5 Flash como
+principal, con respaldo a un modelo más ligero). Sirve como referencia de qué se puede construir hoy
+combinando estas herramientas.
+
 ## Los 7 principios del método (y dónde viven)
 
 | Principio | Implementación |
@@ -48,6 +61,21 @@ app.py ──► app web (Flask): plan del día, sesión guiada, mapa, quizzes,
            simulacros, editor de exámenes, subidas — cero edición de código
 ```
 
+## Estructura del proyecto
+
+```
+├── app.py  watcher.py  corregir.py  sync_remarkable.py   # puntos de entrada
+├── app_biblioteca.py                                     # app aparte (estudio no-carrera)
+├── gemini_client · schemas · analizar · file_manager     # pipeline de IA y notas
+├── config · templates · buscar · generar_dashboard       # utilidades y app
+├── knowledge_graph/    # motor (perfil, planificar, gamificación…) + 28 grafos JSON
+├── remarkable_sync/    # sincronización con el reMarkable
+├── static/ · templates/   # frontend de la app web
+├── tests/             # pytest (motor del knowledge graph)
+├── docs/              # documentación de diseño
+└── *.bat              # lanzadores para Windows (Corregir, iniciar_*)
+```
+
 ## Uso
 
 ```bash
@@ -76,7 +104,7 @@ CLI equivalente: `python knowledge_graph/perfil.py estado|frontera|vencidos|regi
 El motor es agnóstico al contenido. `knowledge_graph/PROTOCOLO_NUEVA_MATERIA.md` documenta el
 bootstrap "quiero aprender X" (póker, programación, IA...): 5 inputs del usuario → la IA construye
 el grafo, el banco y las metas en una sesión. Incluye el diagnóstico epistémico previo
-(Bernstein/Maton, ver `SKILL.md`) para saber qué parte del dominio es jerárquica.
+(Bernstein/Maton, ver [`docs/SKILL.md`](docs/SKILL.md)) para saber qué parte del dominio es jerárquica.
 
 ## Documentación
 
