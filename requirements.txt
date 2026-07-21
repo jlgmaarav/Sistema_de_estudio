@@ -1,5 +1,7 @@
 google-genai
 faster-whisper
+sounddevice
+soundfile
 pillow
 python-dotenv
 pydantic

@@ -70,7 +70,7 @@ app.py ──► app web (Flask): plan del día, sesión guiada, mapa, quizzes,
 ### Estudio por voz (método Feynman)
 
 ```
-grabaciones/  ←– audio de tu narración mientras resuelves
+grabar.py (micro del portátil)  ó  móvil ──► grabaciones/  (tu narración)
   │  transcribir.py ──► Whisper (faster-whisper, local y gratis): voz → texto
   ▼
 corregir_voz.py ──► Claude (claude -p, tu suscripción, sin API de pago):
@@ -86,14 +86,14 @@ watcher._procesar_una_solucion ──► mismas fichas Obsidian + grafo/XP + app
 ├── app.py  watcher.py  corregir.py  sync_remarkable.py   # puntos de entrada
 ├── app_biblioteca.py                                     # app aparte (estudio no-carrera)
 ├── gemini_client · schemas · analizar · file_manager     # pipeline de IA y notas
-├── transcribir.py · corregir_voz.py                      # estudio por voz (Whisper + Claude)
+├── grabar.py · transcribir.py · corregir_voz.py          # estudio por voz (Whisper + Claude)
 ├── config · templates · buscar · generar_dashboard       # utilidades y app
 ├── knowledge_graph/    # motor (perfil, planificar, gamificación…) + 28 grafos JSON
 ├── remarkable_sync/    # sincronización con el reMarkable
 ├── static/ · templates/   # frontend de la app web
 ├── tests/             # pytest (motor del knowledge graph)
 ├── docs/              # documentación de diseño
-└── *.bat              # lanzadores para Windows (Corregir, voz, transcribir, iniciar_*)
+└── *.bat              # lanzadores para Windows (Corregir, estudiar, voz, grabar, transcribir, iniciar_*)
 ```
 
 ## Uso
@@ -114,12 +114,14 @@ reMarkable → una sola llamada a Gemini por hoja, detecta varios problemas → 
 El resultado aparece en la pestaña **Correcciones** de la app (Obsidian queda solo como registro).
 La pestaña **Cómo resolver** tiene el método de Pólya a mano mientras trabajas.
 
-**Estudio por voz (método Feynman):** graba con el móvil mientras resuelves y narras tu razonamiento
-(incluidos los caminos equivocados), deja el audio en `grabaciones/` y ejecuta **`voz.bat`**. **Whisper**
-transcribe tu voz en local (gratis, sin internet) y **Claude** (Opus 4.8, respaldo a Sonnet si se agota el
-límite) la corrige con rigor de profesor —marca cada salto no justificado, distingue error conceptual de
-matemático y etiqueta los fallos por nodo—, actualizando el mapa igual que el reMarkable. Solo transcribir:
-`transcribir.bat`. No requiere API de pago: usa tu suscripción de Claude Code.
+**Estudio por voz (método Feynman):** narra tu razonamiento mientras resuelves (incluidos los caminos
+equivocados). Lo más simple, **todo desde el portátil**: ejecuta **`estudiar.bat`** — graba tu voz (Enter
+para parar), la transcribe y la corrige de un tirón. **Whisper** transcribe en local (gratis, sin internet)
+y **Claude** (Opus 4.8, con respaldo a Sonnet si se agota el límite) corrige con rigor de profesor —marca
+cada salto no justificado, distingue error conceptual de matemático y etiqueta los fallos por nodo—,
+actualizando el mapa igual que el reMarkable. También puedes grabar con el móvil y dejar el audio en
+`grabaciones/`. Comandos sueltos: `grabar.bat` (solo graba), `transcribir.bat` (solo transcribe),
+`voz.bat` (corrige la grabación más nueva). No requiere API de pago: usa tu suscripción de Claude Code.
 
 > Ejecuta **un solo** watcher a la vez (un cerrojo lo garantiza). `Corregir.bat` a demanda es lo recomendado.
 
