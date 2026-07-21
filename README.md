@@ -2,11 +2,16 @@
 
 Sistema personal de estudio para el Grado en Física (UVa) que implementa la metodología de
 [Math Academy](https://www.mathacademy.com/) — knowledge graph + mastery learning + repetición
-espaciada — usando IA generativa (Gemini) como corrector, clasificador y generador de lecciones.
+espaciada — usando IA generativa (Gemini y Claude) como corrector, clasificador y generador de lecciones.
 
 **El bucle completo:** el mapa dice dónde estás → el plan dice qué estudiar hoy → resuelves a mano
 (reMarkable/papel) → subes la foto → la IA transcribe tu manuscrito, lo corrige paso a paso,
 clasifica tus errores y actualiza tu perfil de conocimiento → el plan de mañana ya lo sabe.
+
+**Dos formas de entrada:** subir la **foto** del manuscrito (corrige **Gemini**), o **narrar en alto**
+tu razonamiento mientras resuelves —método Feynman— y dejar que **Whisper** transcriba tu voz y
+**Claude** la corrija con rigor de profesor: marca los saltos no justificados, distingue error
+conceptual de matemático y etiqueta los fallos por nodo del grafo. Ambas actualizan el mismo mapa.
 
 ## Cómo se ha construido
 
@@ -17,9 +22,10 @@ IA, integración con reMarkable) desarrollado íntegramente con herramientas de 
   principal: arquitectura, motor del knowledge graph, app web, pipeline de corrección y toda la lógica.
 - **Antigravity** (**Gemini 3.1 Pro** y **Gemini 3.5 Flash**) — apoyo en diseño y prototipado.
 
-En tiempo de ejecución, la corrección de los ejercicios manuscritos la hace **Gemini** (3.5 Flash como
-principal, con respaldo a un modelo más ligero). Sirve como referencia de qué se puede construir hoy
-combinando estas herramientas.
+En tiempo de ejecución hay dos correctores: los **manuscritos** (foto) los corrige **Gemini** (3.5 Flash
+principal, con respaldo a un modelo más ligero); la **narración por voz** la corrige **Claude** (Opus 4.8,
+con respaldo a Sonnet) a través de Claude Code, usando la suscripción y sin API de pago. Sirve como
+referencia de qué se puede construir hoy combinando estas herramientas.
 
 ## Los 7 principios del método (y dónde viven)
 
@@ -61,19 +67,33 @@ app.py ──► app web (Flask): plan del día, sesión guiada, mapa, quizzes,
            simulacros, editor de exámenes, subidas — cero edición de código
 ```
 
+### Estudio por voz (método Feynman)
+
+```
+grabaciones/  ←– audio de tu narración mientras resuelves
+  │  transcribir.py ──► Whisper (faster-whisper, local y gratis): voz → texto
+  ▼
+corregir_voz.py ──► Claude (claude -p, tu suscripción, sin API de pago):
+  │                  corrección de profesor exigente → mismo AnalysisResponse
+  ▼
+watcher._procesar_una_solucion ──► mismas fichas Obsidian + grafo/XP + app
+                                    (idéntico al flujo del reMarkable)
+```
+
 ## Estructura del proyecto
 
 ```
 ├── app.py  watcher.py  corregir.py  sync_remarkable.py   # puntos de entrada
 ├── app_biblioteca.py                                     # app aparte (estudio no-carrera)
 ├── gemini_client · schemas · analizar · file_manager     # pipeline de IA y notas
+├── transcribir.py · corregir_voz.py                      # estudio por voz (Whisper + Claude)
 ├── config · templates · buscar · generar_dashboard       # utilidades y app
 ├── knowledge_graph/    # motor (perfil, planificar, gamificación…) + 28 grafos JSON
 ├── remarkable_sync/    # sincronización con el reMarkable
 ├── static/ · templates/   # frontend de la app web
 ├── tests/             # pytest (motor del knowledge graph)
 ├── docs/              # documentación de diseño
-└── *.bat              # lanzadores para Windows (Corregir, iniciar_*)
+└── *.bat              # lanzadores para Windows (Corregir, voz, transcribir, iniciar_*)
 ```
 
 ## Uso
@@ -93,6 +113,13 @@ iniciar_centro_estudio.bat   # servidor web (http://localhost:5000)
 reMarkable → una sola llamada a Gemini por hoja, detecta varios problemas → corrección paso a paso).
 El resultado aparece en la pestaña **Correcciones** de la app (Obsidian queda solo como registro).
 La pestaña **Cómo resolver** tiene el método de Pólya a mano mientras trabajas.
+
+**Estudio por voz (método Feynman):** graba con el móvil mientras resuelves y narras tu razonamiento
+(incluidos los caminos equivocados), deja el audio en `grabaciones/` y ejecuta **`voz.bat`**. **Whisper**
+transcribe tu voz en local (gratis, sin internet) y **Claude** (Opus 4.8, respaldo a Sonnet si se agota el
+límite) la corrige con rigor de profesor —marca cada salto no justificado, distingue error conceptual de
+matemático y etiqueta los fallos por nodo—, actualizando el mapa igual que el reMarkable. Solo transcribir:
+`transcribir.bat`. No requiere API de pago: usa tu suscripción de Claude Code.
 
 > Ejecuta **un solo** watcher a la vez (un cerrojo lo garantiza). `Corregir.bat` a demanda es lo recomendado.
 
@@ -120,5 +147,6 @@ Para respetar copyright ajeno y la privacidad, estos archivos están en `.gitign
 - `knowledge_graph/banco_problemas.json` — transcripciones de exámenes/hojas de profesores. Se incluye `banco_problemas.example.json` con el formato.
 - `knowledge_graph/perfil.json`, `examenes.json`, `correcciones.json` — tu progreso, fechas y feedback personales.
 - `.env` (tu API key), la bóveda de Obsidian, los PDFs de guías y hojas de problemas.
+- `grabaciones/` — tus audios de narración por voz y sus transcripciones.
 
 *Los grafos de conocimiento y el código son obra propia.*

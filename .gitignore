@@ -15,6 +15,9 @@ remarkable_sync_state.json
 watcher.lock
 Inbox/
 
+# Grabaciones de voz (audios personales) y sus transcripciones
+grabaciones/
+
 # PDFs personales sueltos en la raíz (calendarios, etc.)
 /*.pdf
 
