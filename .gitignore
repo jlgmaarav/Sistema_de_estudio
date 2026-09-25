@@ -85,3 +85,13 @@ NOTA_PARA_CODEX_OTRO_PORTATIL.md
 /iniciar_watcher.bat
 /remarkable_sync/
 /sync_remarkable.py
+
+# Utilidades privadas de backup, auditoría y captura local
+/backup_completo.py
+/comprobar.bat
+/comprobar_audio.py
+/micro.bat
+/micro.json
+/knowledge_graph/auditar_*.py
+/knowledge_graph/importar_examenes_electromagnetismo.py
+/knowledge_graph/incorporar_material_electrodinamica.py
