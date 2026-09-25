@@ -87,12 +87,16 @@ def generar_revision(grafo: dict, por_id_global: dict, dependientes: dict, ruta_
         lineas.append("")
         lineas.append("| Id | Nodo | Prerrequisitos (peso) | Fuentes | Revisión |")
         lineas.append("|---|---|---|---|---|")
+        alineacion = grafo.get("auditoria", {}).get("alineacion_apuntes", {}).get("nodos", {})
         for n in por_tema[tema_id]:
             prs = ", ".join(
                 f"{p['id']}" + ("" if p["peso"] == 1.0 else f" ({p['peso']})")
                 for p in n.get("prerequisitos", [])
             ) or "—"
             fts = "; ".join(f"{k.capitalize()} {v}" for k, v in n.get("fuentes", {}).items())
+            evidencia = alineacion.get(n["id"])
+            if evidencia:
+                fts += ("; " if fts else "") + f"Apuntes pp. {evidencia['paginas']} [{evidencia['cobertura']}]"
             lineas.append(f"| {n['id']} | **{n['nombre']}** — {n['descripcion']} | {prs} | {fts} | |")
         lineas.append("")
 

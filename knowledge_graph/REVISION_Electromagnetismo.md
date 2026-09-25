@@ -159,3 +159,26 @@ Los prerrequisitos de otra asignatura aparecen con su id completo (ej. `em.4.01`
 - Nodos raíz (sin prerrequisitos): em.1.01
 - Nodos sin dependientes en todo el sistema: em.1.05, em.2.02, em.2.03, em.2.06, em.3.06, em.3.08, em.3.09, em.4.03, em.4.06, em.5.04, em.6.08, em.7.03, em.7.05, em.7.07, em.8.03, em.8.06, em.8.07, em.9.02, em.9.05, em.9.07
 - Aristas: 184 (6 hacia otras asignaturas)
+
+## Auditoría operativa del banco de problemas (2026-09-15)
+
+El banco local contiene **409 problemas**: **229 de hojas de clase** y **180 de
+exámenes**. La recopilación completa de examen queda desglosada en **134
+cuestiones** y **46 problemas**, con identificador y página de origen.
+
+Las 51 transcripciones de examen que ya existían conservan su enunciado
+completo. Las 83 cuestiones nuevas apuntan a su página porque el PDF de
+cuestiones es un escaneado; el segundo PDF sí contiene los 46 problemas de la
+recopilación y queda registrado como fuente maestra.
+
+Cada problema incluye ahora:
+
+- `criterio_preparacion`: se desbloquea cuando todos sus nodos requeridos alcanzan dominio efectivo ≥ 0.7.
+- `fuente_archivo`: material local concreto donde consultar el enunciado.
+- `tipo`: `calculo`, `conceptual`, `grafico`, `circuito` o `mixto`.
+- `tipo_problema`: `clase`, `examen_cuestion` o `examen_problema`.
+- `clasificacion`: momento de realización y confianza de la asignación.
+
+La distribución por familia es: 207 de cálculo, 33 conceptuales, 12 gráficos,
+29 de circuitos y 14 mixtos. Las 409 entradas apuntan a fuentes locales y no se
+ha borrado ni modificado ningún material de Drive.

@@ -2,7 +2,7 @@
 
 Cómo pasar de "quiero aprender X desde cero hasta nivel experto" a tener el sistema completo
 (grafo + perfil + plan + banco + lecciones + quizzes) funcionando. Este protocolo lo ejecuta
-la IA (Claude) en una sesión; el usuario solo aporta los 5 inputs del checklist.
+Gemini Web en una sesión con el modelo obligatorio verificado; el usuario solo aporta los 5 inputs del checklist.
 
 Todo el motor es agnóstico al contenido: los grafos JSON, `perfil.py`, `planificar.py`,
 `clasificar_problemas.py`, `lecciones.py`, el mapa y la app funcionan igual para
@@ -44,7 +44,7 @@ Desde ese momento el plan diario, las lecciones mínimas, el crédito implícito
 
 - Prefijo de id corto y único por materia (revisar los ocupados: am al fmt fco fce fc qm m1-m4 mo td fm em cu fe fl gc mt op ed el fa np es mc sc).
 - `curso`: en materias no académicas = nivel (1 fundamentos, 2 intermedio, 3 avanzado, 4 experto). Ordena y colorea el mapa.
-- La corrección por foto (Inbox/watcher) funciona para cualquier cosa escrita a mano; para materias digitales (código) el canal natural son los botones ✓/✗ y el quiz.
+- La corrección de ejercicios se hace narrando en voz alta: Whisper transcribe y Gemini Web analiza con el modelo verificado; para materias digitales (código) el canal natural son los botones ✓/✗ y el quiz.
 
 ---
 

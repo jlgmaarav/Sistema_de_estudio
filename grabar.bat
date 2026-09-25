@@ -5,7 +5,8 @@ REM  Narra mientras resuelves; pulsa ENTER para parar.
 REM  (solo graba; para corregir usa voz.bat o estudiar.bat)
 REM ============================================================
 cd /d "%~dp0"
-call venv\Scripts\python.exe grabar.py
+set "STUDY_PY=%USERPROFILE%\SistemaEstudioRuntime\venv\Scripts\python.exe"
+call "%STUDY_PY%" grabar.py
 echo.
 echo Pulsa una tecla para cerrar.
 pause >nul

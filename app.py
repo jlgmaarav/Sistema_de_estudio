@@ -1,32 +1,211 @@
 import os
+import json
 import re
 import sys
+import subprocess
+import threading
+import uuid
 from flask import Flask, jsonify, request, send_from_directory, render_template
 from flask_cors import CORS
 from datetime import datetime
-from google import genai
-from google.genai import types
+from werkzeug.utils import secure_filename
 
 import config
 import file_manager
-import gemini_client
 import templates
 import generar_dashboard
-import buscar
+import buscar_web
+import study_sessions as study_flow
+import study_context
+import apuntes
+import repeticion
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 CORS(app)
+app.config['MAX_CONTENT_LENGTH'] = 250 * 1024 * 1024
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+VOICE_DIR = os.path.join(BASE_DIR, 'grabaciones')
+VOICE_EXTENSIONS = {'.m4a', '.mp3', '.wav', '.ogg', '.opus', '.flac', '.aac', '.wma', '.mp4', '.webm'}
+_voice_jobs = {}
+_voice_jobs_lock = threading.Lock()
+_context_export_lock = threading.Lock()
+_context_export_timer = None
+
+
+def _refresh_context_snapshot():
+    """Regenera la copia portable después de una mutación del sistema."""
+    global _context_export_timer
+    try:
+        study_context.export_context(include_documents=True)
+    except Exception as exc:
+        # La instantánea es una salida derivada: nunca debe romper una acción
+        # que ya ha guardado correctamente el perfil o el grafo.
+        print(f"Aviso: no se pudo actualizar el contexto IA: {exc}")
+    finally:
+        with _context_export_lock:
+            _context_export_timer = None
+
+
+def _schedule_context_snapshot():
+    """Agrupa varias escrituras seguidas en una sola exportación."""
+    global _context_export_timer
+    with _context_export_lock:
+        if _context_export_timer and _context_export_timer.is_alive():
+            _context_export_timer.cancel()
+        _context_export_timer = threading.Timer(1.0, _refresh_context_snapshot)
+        _context_export_timer.daemon = True
+        _context_export_timer.start()
+
+
+@app.after_request
+def refresh_context_after_mutation(response):
+    if (
+        request.path.startswith('/api/')
+        and request.path != '/api/context/export'
+        and request.method in {'POST', 'PUT', 'PATCH', 'DELETE'}
+        and response.status_code < 400
+    ):
+        _schedule_context_snapshot()
+    return response
+
+
+def _agenda_academica():
+    """Serializa la única agenda académica: los repasos del perfil de nodos."""
+    nodos = kg_perfil.cargar_grafos()
+    perfil_d = kg_perfil.cargar_perfil()
+    pendientes = kg_perfil.pendientes_repaso(perfil_d, nodos)
+    salida = []
+    for item in pendientes:
+        try:
+            proxima = datetime.strptime(item["proxima"], "%Y-%m-%d").strftime("%d/%m/%Y")
+        except (KeyError, TypeError, ValueError):
+            proxima = "—"
+        salida.append({
+            "tipo": "concepto",
+            "id": item["id"],
+            "nombre": item["nombre"],
+            "tema": "Concepto",
+            "asignatura": item["materia"],
+            "estado": "vencido" if item["retraso"] else "hoy",
+            "proxima_revision": proxima,
+            "retraso": item["retraso"],
+            "dominio_efectivo": item["dominio_efectivo"],
+        })
+    return salida
 
 # Ensure folders exist
 config.init_vault_structure()
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', gemini_model=config.GEMINI_REQUIRED_MODEL)
 
 @app.route('/assets/<path:filename>')
 def serve_asset(filename):
     return send_from_directory(config.ASSETS_DIR, filename)
+
+
+def _set_voice_job(job_id, **changes):
+    with _voice_jobs_lock:
+        job = _voice_jobs.get(job_id)
+        if job:
+            job.update(changes)
+
+
+def _wait_gemini_voice_result(job_id, result_path, transcript_path):
+    """Compatibilidad con un resultado JSON dejado por una integración externa."""
+    script = os.path.join(BASE_DIR, 'corregir_voz.py')
+    creationflags = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
+    for _ in range(900):  # una hora: suficiente para una corrección con calma
+        if os.path.exists(result_path):
+            try:
+                proc = subprocess.run(
+                    [sys.executable, script, '--importar-gemini', result_path, transcript_path,
+                     '--modelo', config.GEMINI_REQUIRED_MODEL],
+                    cwd=BASE_DIR, capture_output=True, text=True, encoding='utf-8', errors='replace',
+                    creationflags=creationflags,
+                )
+                if proc.returncode:
+                    raise RuntimeError((proc.stdout or proc.stderr or 'No se pudo importar el resultado')[-800:])
+                _set_voice_job(job_id, estado='completado',
+                               mensaje='Corrección de Gemini terminada. El feedback y el grafo ya están actualizados.',
+                               salida=(proc.stdout or '')[-1200:])
+            except Exception as exc:
+                _set_voice_job(job_id, estado='error', mensaje=str(exc))
+            return
+        threading.Event().wait(4)
+    _set_voice_job(job_id, estado='error', mensaje='Gemini no dejó el resultado en una hora.')
+
+
+def _run_voice_job(job_id, audio_path):
+    """Transcribe and correct a browser recording without blocking Flask."""
+    script = os.path.join(BASE_DIR, 'corregir_voz.py')
+    creationflags = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
+    _set_voice_job(job_id, estado='procesando', mensaje='Whisper está transcribiendo tu razonamiento…')
+    try:
+        proc = subprocess.Popen(
+            [sys.executable, script, audio_path],
+            cwd=BASE_DIR,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding='utf-8',
+            errors='replace',
+            creationflags=creationflags,
+        )
+        salida, _ = proc.communicate()
+        if proc.returncode != 0:
+            detalle = (salida or '').strip().splitlines()
+            raise RuntimeError(detalle[-1] if detalle else 'El análisis de voz terminó con un error.')
+        marker = next((line for line in (salida or '').splitlines() if line.startswith('GEMINI_HANDOFF:')), None)
+        if marker:
+            partes = marker.split(':', 1)[1].split('|', 2)
+            encargo, resultado = partes[:2]
+            detalle = partes[2] if len(partes) > 2 else 'Prompt preparado para Gemini.'
+            _set_voice_job(
+                job_id, estado='esperando_gemini', encargo=encargo, resultado=resultado,
+                transcripcion=os.path.splitext(audio_path)[0] + '.txt',
+                mensaje=f'Gemini está abierto. {detalle} Pega el prompt, envíalo y devuelve aquí su JSON.',
+                salida=(salida or '').strip()[-1200:],
+            )
+        else:
+            _set_voice_job(
+                job_id,
+                estado='completado',
+                mensaje='Análisis terminado. El feedback y el grafo ya están actualizados.',
+                salida=(salida or '').strip()[-1200:],
+            )
+    except Exception as exc:
+        _set_voice_job(job_id, estado='error', mensaje=str(exc))
+
+
+@app.route('/api/hub', methods=['GET'])
+def get_hub_status():
+    """Estado mínimo que necesita la pantalla central para guiar el siguiente paso."""
+    try:
+        inbox = []
+        if os.path.isdir(config.INBOX_DIR):
+            inbox = [
+                name for name in os.listdir(config.INBOX_DIR)
+                if os.path.isfile(os.path.join(config.INBOX_DIR, name))
+            ]
+        try:
+            import correcciones as kg_corr
+            correcciones = kg_corr.cargar()
+        except Exception:
+            correcciones = []
+        with _voice_jobs_lock:
+            voz = list(_voice_jobs.values())[-5:]
+        return jsonify({
+            'inbox_pendientes': len(inbox),
+            'correcciones_pendientes': len(correcciones),
+            'ultimas_correcciones': correcciones[-3:][::-1],
+            'trabajos_voz': voz,
+            'estudio': study_flow.insights(),
+        })
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
 
 @app.route('/api/dashboard', methods=['GET'])
 def get_dashboard():
@@ -54,23 +233,17 @@ def get_dashboard():
         incorrectos = total_intentos - correctos
         tasa_exito = (correctos / total_intentos * 100) if total_intentos > 0 else 0.0
         
-        # Agenda de repaso para hoy o retrasados
+        # La agenda académica procede únicamente del perfil de nodos. Los
+        # ejercicios fallados se mantienen en una cola local separada.
         hoy = datetime.now().date()
-        agenda = []
-        for ex in data["ejercicios"]:
-            try:
-                ex_date = datetime.strptime(ex["proxima_revision"], "%d/%m/%Y").date()
-            except ValueError:
-                ex_date = hoy
-            if ex_date <= hoy:
-                agenda.append(ex)
-                
-        def get_date_key(x):
-            try:
-                return datetime.strptime(x["proxima_revision"], "%d/%m/%Y")
-            except ValueError:
-                return datetime.now()
-        agenda.sort(key=get_date_key)
+        agenda = _agenda_academica()
+        reintentos = [
+            ex for ex in data["ejercicios"]
+            if repeticion.reintento_pendiente(ex, hoy)
+        ]
+        reintentos.sort(
+            key=lambda x: repeticion.fecha_reintento_de_ejercicio(x) or hoy
+        )
         
         # Tipos de errores
         error_counts = {}
@@ -95,6 +268,7 @@ def get_dashboard():
                 "tasa_exito": round(tasa_exito, 1)
             },
             "agenda": agenda,
+            "reintentos_ejercicios": reintentos,
             "error_counts": error_counts,
             "conceptos_debiles": conceptos_debiles,
             "intentos_recientes": intentos_recientes
@@ -150,6 +324,15 @@ def get_subjects():
         return jsonify(list(subjects.values()))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/study/subjects', methods=['GET'])
+def get_study_subjects():
+    """Tarjetas de asignatura para la puerta de entrada del dashboard."""
+    try:
+        return jsonify(study_context.subject_summaries())
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
 
 @app.route('/api/subjects/<subject_name>', methods=['GET'])
 def get_subject_detail(subject_name):
@@ -237,7 +420,8 @@ def get_exercise_detail(exerc_id):
         topic = parse_yaml_field(content, "tema")
         concepts = parse_yaml_list(content, "conceptos")
         state = parse_yaml_field(content, "estado")
-        proxima = parse_yaml_field(content, "proxima_revision")
+        proxima_reintento = parse_yaml_field(content, "proxima_reintento")
+        proxima_legacy = parse_yaml_field(content, "proxima_revision")
         tiene_error = parse_yaml_field(content, "tiene_error") == "true"
         
         # Extraer enunciado original (imagen/pdf)
@@ -291,7 +475,11 @@ def get_exercise_detail(exerc_id):
             "tema": topic,
             "conceptos": concepts,
             "estado": state,
-            "proxima_revision": proxima,
+            "proxima_reintento": proxima_reintento,
+            "proxima_revision_legacy": proxima_legacy,
+            # Alias de lectura para clientes antiguos; ya no expone la fecha
+            # antigua como si fuera una tarea pendiente.
+            "proxima_revision": proxima_reintento,
             "tiene_error": tiene_error,
             "enunciado": enunciado,
             "enunciado_asset": enunciado_asset,
@@ -306,55 +494,39 @@ def search_vault():
         query = request.args.get("q", "")
         if not query:
             return jsonify({"results": ""})
+        handoff = buscar_web.prepare_search_handoff(query)
+        return jsonify({"mode": "gemini_web", **handoff})
             
-        # Ejecutar la búsqueda en memoria de forma similar a buscar.py
-        catalog_text = buscar.build_lightweight_catalog()
-        client = genai.Client(api_key=config.GEMINI_API_KEY)
-        
-        prompt = (
-            "Eres un buscador inteligente y asistente de estudio de Física.\n\n"
-            "Se te proporciona:\n"
-            "1. La base de datos (catálogo) de los apuntes y ejercicios de Física del estudiante:\n"
-            f"{catalog_text}\n\n"
-            "2. La consulta de búsqueda del estudiante en lenguaje natural:\n"
-            f"'{query}'\n\n"
-            "Tu tarea es:\n"
-            "- Identificar los ejercicios, intentos, conceptos y errores que sean más relevantes para la consulta.\n"
-            "- Devolver una nota formateada en Markdown titulada '# Resultados de Búsqueda: {query}' con la lista de resultados.\n"
-            "- Para cada resultado, proporciona un enlace interno de Obsidian (ej: [[ejercicio_001]], [[intento_002]], [[error_001]], [[Concepto]]) y una brevísima explicación (1 o 2 líneas) de su relevancia.\n"
-            "- Agrupa los resultados por categorías (ej: Ejercicios recomendados, Errores relacionados, Conceptos clave).\n\n"
-            "Devuelve únicamente la nota Markdown completa. No agregues introducciones ni explicaciones fuera del bloque de Markdown."
-        )
-        
-        response = client.models.generate_content(
-            model=config.GEMINI_MODEL,
-            contents=[prompt],
-            config=types.GenerateContentConfig(temperature=0.2),
-        )
-        
-        markdown_result = response.text
-        markdown_result = re.sub(r'^```markdown\s*\n', '', markdown_result)
-        markdown_result = re.sub(r'\n```$', '', markdown_result)
-        
-        # Reemplazar enlaces dobles [[algo]] por enlaces interactivos o etiquetas con estilo
-        # E.g., [[ejercicio_001]] -> <a href="#/exercise/ejercicio_001" class="obsidian-link">ejercicio_001</a>
-        def link_repl(match):
-            name = match.group(1)
-            if name.startswith("ejercicio_"):
-                return f'<a href="#" onclick="viewExercise(\'{name}\'); return false;" class="obsidian-link">{name}</a>'
-            elif name.startswith("intento_"):
-                return f'<span class="obsidian-badge attempt">{name}</span>'
-            elif name.startswith("error_"):
-                return f'<span class="obsidian-badge error">{name}</span>'
-            else:
-                # Es una asignatura o concepto
-                return f'<span class="obsidian-badge concept">{name}</span>'
-                
-        html_result = re.sub(r'\[\[(.*?)\]\]', link_repl, markdown_result)
-        
-        return jsonify({"markdown": markdown_result, "html": html_result})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/search/import', methods=['POST'])
+def import_search_result():
+    """Recibe y renderiza localmente la respuesta pegada desde Gemini Web."""
+    try:
+        payload = request.get_json(silent=True) or {}
+        query = str(payload.get("query", "")).strip()
+        markdown_result = str(payload.get("markdown") or payload.get("respuesta") or "").strip()
+        if not markdown_result:
+            return jsonify({"error": "Pega primero la respuesta Markdown de Gemini Web."}), 400
+        if len(markdown_result) > 200_000:
+            return jsonify({"error": "La respuesta de Gemini es demasiado grande."}), 413
+
+        buscar_web.HANDOFF_DIR.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        result_path = buscar_web.HANDOFF_DIR / f"busqueda_{stamp}_resultado.md"
+        result_path.write_text(markdown_result, encoding="utf-8")
+        return jsonify({
+            "mode": "gemini_web_result",
+            "query": query,
+            "markdown": buscar_web._strip_fences(markdown_result),
+            "html": buscar_web.markdown_to_html(markdown_result),
+            "result_path": str(result_path),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 def parse_yaml_field(content: str, field_name: str) -> str:
     match = re.search(rf'^{field_name}:\s*["\']?(.*?)["\']?\s*$', content, re.MULTILINE)
@@ -402,7 +574,9 @@ def edit_exercise(exerc_id):
         new_topic = data.get("tema")
         new_concepts = data.get("conceptos", [])
         new_state = data.get("estado", "nuevo")
-        new_proxima = data.get("proxima_revision")
+        new_proxima = data.get("proxima_reintento")
+        if new_proxima is None:
+            new_proxima = data.get("proxima_revision", "")
         new_enunciado = data.get("enunciado", "")
         
         # Locate the current file
@@ -422,6 +596,7 @@ def edit_exercise(exerc_id):
         old_topic = parse_yaml_field(content, "tema")
         old_enunciado_asset = parse_yaml_field(content, "enunciado_asset")
         old_tiene_error = parse_yaml_field(content, "tiene_error") == "true"
+        old_nodos = parse_yaml_list(content, "nodos")
         old_tipo_recurso = parse_yaml_field(content, "tipo_recurso") or "ejercicio"
         old_origen = parse_yaml_field(content, "origen")
         old_fecha_origen = parse_yaml_field(content, "fecha_origen")
@@ -465,11 +640,12 @@ def edit_exercise(exerc_id):
             enunciado_transcrito=new_enunciado,
             attempt_id="", # Inject attempts manually below
             estado=new_state,
-            proxima_revision=new_proxima,
+            proxima_reintento=new_proxima,
             tipo_recurso=old_tipo_recurso,
             origen=old_origen,
             fecha_origen=old_fecha_origen,
-            warning_transcripcion=warning_transcripcion
+            warning_transcripcion=warning_transcripcion,
+            nodos=old_nodos
         )
         
         # Inject attempts back
@@ -523,10 +699,13 @@ def delete_exercise(exerc_id):
 
 @app.route('/api/exercise/<exerc_id>/review', methods=['POST'])
 def review_exercise(exerc_id):
-    from datetime import timedelta
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         rating = data.get("rating") # 'facil', 'duda', 'fallo'
+        try:
+            calidad = repeticion.calidad_de_rating(rating)
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
         
         # Buscar la nota del ejercicio
         target_path = None
@@ -542,60 +721,63 @@ def review_exercise(exerc_id):
             content = f.read()
             
         current_state = parse_yaml_field(content, "estado") or "nuevo"
+        new_state = repeticion.estado_ejercicio(current_state, calidad)
+        next_retry = repeticion.fecha_reintento(calidad)
         
-        hoy = datetime.now()
-        if rating == 'facil':
-            if current_state == "nuevo":
-                new_state = "revisado"
-                delta_days = 3
-            elif current_state == "revisado":
-                new_state = "dominado"
-                delta_days = 10
-            else: # dominado
-                new_state = "dominado"
-                delta_days = 30
-        elif rating == 'duda':
-            new_state = "revisado"
-            delta_days = 2
-        else: # fallo
-            new_state = "nuevo"
-            delta_days = 1
-            
-        next_revision = (hoy + timedelta(days=delta_days)).strftime("%d/%m/%Y")
-        
-        # Modificar archivo de ejercicio en el vault
+        # El estado del ejercicio y la cola de reintento son metadatos locales;
+        # no son la agenda académica del sistema.
         content = re.sub(r'^estado:\s*\w+', f'estado: {new_state}', content, flags=re.MULTILINE)
-        content = re.sub(r'^proxima_revision:\s*[\d/]+', f'proxima_revision: {next_revision}', content, flags=re.MULTILINE)
+        retry_line = f'proxima_reintento: {next_retry}'
+        if re.search(r'^proxima_reintento:', content, flags=re.MULTILINE):
+            content = re.sub(r'^proxima_reintento:.*$', retry_line, content, flags=re.MULTILINE)
+        elif re.search(r'^proxima_revision:', content, flags=re.MULTILINE):
+            # Migración perezosa: al tocar una nota antigua se sustituye el
+            # campo ambiguo por el campo explícito de reintento local.
+            content = re.sub(r'^proxima_revision:.*$', retry_line, content, flags=re.MULTILINE)
+        else:
+            content = re.sub(r'^(fecha_creacion:.*)$', r'\1\n' + retry_line, content,
+                             flags=re.MULTILINE, count=1)
         
-        # Actualizar la línea de estado en el cuerpo del markdown
-        content = re.sub(
-            r'- \*\*Estado de Repaso:\*\* `\w+` \(Próxima revisión: [\d/]+\)',
-            f'- **Estado de Repaso:** `{new_state.upper()}` (Próxima revisión: {next_revision})',
-            content
+        # Actualizar el resumen visible de la nota.
+        resumen = (
+            f'- **Estado del ejercicio:** `{new_state.upper()}`\n'
+            f'- **Reintento local:** `{next_retry or "no programado"}`'
         )
-        
+        content = re.sub(
+            r'- \*\*(?:Estado de Repaso|Estado del ejercicio):\*\*.*(?:\n- \*\*Reintento local:\*\*.*)?',
+            resumen,
+            content,
+        )
+
+        mensajes_kg = []
+        nodos_kg = parse_yaml_list(content, "nodos")
+        if not nodos_kg:
+            subj = parse_yaml_field(content, "asignatura")
+            conceptos = [re.sub(r'[\[\]"]', '', c) for c in parse_yaml_list(content, "conceptos")]
+            nodos_kg = kg_perfil.resolver_conceptos(subj, conceptos)
+        if nodos_kg:
+            mensajes_kg = kg_perfil.registrar_y_guardar(
+                nodos_kg,
+                calidad >= 0.5,
+                origen=f'autoeval:{exerc_id}',
+                calidad=calidad,
+            )
+
         with open(target_path, 'w', encoding='utf-8') as f:
             f.write(content)
 
         generar_dashboard.run()
 
-        # Unificación con el knowledge graph: la autoevaluación también
-        # alimenta el perfil (fácil = éxito; duda/fallo = fallo).
-        try:
-            nodos_kg = parse_yaml_list(content, "nodos")
-            if not nodos_kg:
-                subj = parse_yaml_field(content, "asignatura")
-                conceptos = [re.sub(r'[\[\]"]', '', c) for c in parse_yaml_list(content, "conceptos")]
-                nodos_kg = kg_perfil.resolver_conceptos(subj, conceptos)
-            if nodos_kg:
-                kg_perfil.registrar_y_guardar(nodos_kg, rating == 'facil', origen=f'autoeval:{exerc_id}')
-        except Exception as e_kg:
-            print(f"Aviso: no se pudo actualizar el perfil desde el autoevaluador: {e_kg}")
-
         return jsonify({
             "success": True,
             "new_state": new_state,
-            "proxima_revision": next_revision
+            "proxima_reintento": next_retry,
+            # Alias de respuesta para clientes antiguos; no es fecha
+            # académica y desaparecerá cuando se retire la interfaz antigua.
+            "proxima_revision": next_retry,
+            "calidad": calidad,
+            "nodos_actualizados": nodos_kg,
+            "mensajes_kg": mensajes_kg,
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -612,6 +794,7 @@ if KG_DIR not in sys.path:
 import perfil as kg_perfil
 import gamificacion as kg_gamificacion
 import planificar as kg_planificar
+import problemas as kg_problemas
 
 @app.route('/kg/mapa')
 def kg_mapa():
@@ -622,13 +805,477 @@ def kg_plan():
     try:
         fecha = request.args.get('fecha')
         minutos = request.args.get('minutos', type=int)
+        energia = request.args.get('energia', type=int)
+        foco = request.args.get('foco', type=int)
+        materia_forzada = request.args.get('materia') or None
         hoy = datetime.strptime(fecha, '%Y-%m-%d').date() if fecha else None
-        r = kg_planificar.calcular(hoy=hoy, minutos=minutos)
+        r = kg_planificar.calcular(hoy=hoy, minutos=minutos, energia=energia, foco=foco, materia_forzada=materia_forzada)
         if not fecha:
             kg_planificar.guardar_plan(r['md'])
         return jsonify(r)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/study/prepare', methods=['GET'])
+def study_prepare():
+    """Devuelve el plan enriquecido con preview, PACER y el estado RAIL."""
+    try:
+        fecha = request.args.get('fecha')
+        minutos = request.args.get('minutos', type=int)
+        energia = request.args.get('energia', type=int)
+        foco = request.args.get('foco', type=int)
+        hoy = datetime.strptime(fecha, '%Y-%m-%d').date() if fecha else None
+        calculo = kg_planificar.calcular(hoy=hoy, minutos=minutos, energia=energia, foco=foco)
+        nodos = kg_perfil.cargar_grafos()
+        perfil_d = kg_perfil.cargar_perfil()
+        return jsonify({
+            'plan': calculo['plan'],
+            'viabilidad': calculo['viabilidad'],
+            'minutos': calculo['minutos'],
+            'preview': study_flow.build_preview(calculo['plan'], nodos, perfil_d),
+            'skill': study_flow.rail_snapshot(),
+        })
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/study/walk/prepare', methods=['GET'])
+def study_walk_prepare():
+    """Prepara el contexto del paseo/bus, respetando la asignatura elegida."""
+    try:
+        mode = request.args.get('mode', 'walk_review')
+        if mode not in study_flow.WALK_MODES:
+            return jsonify({'error': 'Tipo de paseo no válido'}), 400
+        fecha = request.args.get('fecha')
+        minutos = request.args.get('minutos', type=int)
+        materia_forzada = request.args.get('materia') or None
+        if not materia_forzada:
+            return jsonify({'error': 'Elige primero una asignatura; el paseo no selecciona una automáticamente.'}), 400
+        pack = study_context.build_study_pack(
+            materia=materia_forzada,
+            minutos=minutos or 60,
+            objetivo=(
+                'cuestiones y ejercicios; teoría solo para cubrir huecos'
+                if materia_forzada.strip().casefold() == 'electromagnetismo'
+                else 'microteoría y ejercicios'
+            ),
+        )
+        preview = pack.get('nodes', [])
+        context = {'available_minutes': minutos or 60, 'materia': materia_forzada}
+        note_context = apuntes.context_for_nodes([item.get('id') for item in preview])
+        return jsonify({
+            'mode': mode,
+            'mode_info': study_flow.walk_mode_info(mode),
+            'materia': materia_forzada,
+            'preview': preview,
+            'problem_ids': pack.get('problem_ids', []),
+            'minutos': context['available_minutes'],
+            'prompt': study_flow.build_walk_prompt(mode, context, preview, note_context=note_context),
+        })
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+def _apply_walk_report(session_id, report):
+    """Cierra una vez el paseo y aplica sus valoraciones conservadoras al grafo."""
+    session = study_flow.get_session(session_id)
+    if session.get('status') == 'completed':
+        return session, []
+    session = study_flow.finish_walk_session(session_id, report)
+    applied = []
+    seen = set()
+    for item in session.get('walk_report', {}).get('nodos', []):
+        node_id = item.get('id')
+        if not node_id or node_id in seen:
+            continue
+        seen.add(node_id)
+        quality = min(0.85, max(0.0, float(item.get('calidad', 0))))
+        exito = quality >= 0.5
+        mensajes = kg_perfil.registrar_y_guardar(
+            [node_id], exito, origen='paseo_voz', calidad=quality
+        )
+        applied.append({'id': node_id, 'calidad': quality, 'exito': exito, 'mensajes': mensajes})
+    try:
+        graph_nodes = kg_perfil.cargar_grafos()
+        note_result = apuntes.apply_walk_report(
+            session, session.get('walk_report', {}), graph_nodes
+        )
+        # La generación es local y solo escribe los nodos recién trabajados.
+        latex_files = []
+        pdf_files = []
+        for materia in note_result.get('subjects', []):
+            generated = apuntes.generate(materia, graph_nodes)
+            latex_files.extend(generated.get('files', []))
+            pdf_files.extend(generated.get('pdf_files', []))
+        session['apuntes'] = {**note_result, 'latex_files': latex_files, 'pdf_files': pdf_files}
+        session['latex_files'] = latex_files
+        session['pdf_files'] = pdf_files
+    except Exception as exc:
+        # Un fallo de LaTeX/apuntes nunca debe impedir cerrar el paseo ni actualizar el grafo.
+        session['apuntes_error'] = str(exc)
+    return session, applied
+
+
+@app.route('/api/study/walks/<session_id>/remote-instructions', methods=['GET'])
+def study_walk_remote_instructions(session_id):
+    """Prepara el encargo del paseo para Remote o para un cierre manual."""
+    try:
+        session = study_flow.get_session(session_id)
+        if session.get('session_type') not in study_flow.WALK_MODES:
+            return jsonify({'error': 'La sesión indicada no es un paseo de voz'}), 400
+        pack = study_context.build_study_pack(
+            materia=session.get('materia', ''),
+            minutos=session.get('context', {}).get('available_minutes', 60),
+            objetivo=session.get('context', {}).get('goal', 'microteoría y ejercicios'),
+            session=session,
+        )
+        preview = pack.get('nodes', [])
+        transport = request.args.get('transport', 'remote').strip().lower()
+        use_remote_file = transport != 'notebooklm'
+        report_path = study_flow.walk_report_path(session_id) if use_remote_file else None
+        note_context = apuntes.context_for_nodes(session.get('plan_ids', []))
+        prompt = study_flow.build_walk_prompt(
+            session['session_type'], session.get('context', {}), preview,
+            report_path=report_path, note_context=note_context
+        )
+        if use_remote_file:
+            study_flow.save_active_walk_context(session, prompt, report_path)
+        return jsonify({'transport': transport, 'prompt': study_flow.build_walk_prompt(
+            session['session_type'], session.get('context', {}), preview,
+            report_path=report_path, note_context=note_context
+        ), 'report_path': report_path, 'active_context_path': study_flow.ACTIVE_WALK_PATH if use_remote_file else None})
+    except KeyError as exc:
+        return jsonify({'error': str(exc)}), 404
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/study/walks/<session_id>/status', methods=['GET'])
+def study_walk_status(session_id):
+    """Importa automáticamente el cierre que Work Remote deja en el proyecto."""
+    try:
+        session = study_flow.get_session(session_id)
+        if session.get('status') == 'completed':
+            return jsonify({'ready': True, 'session': session, 'applied': []})
+        report_path = study_flow.walk_report_path(session_id)
+        if not os.path.exists(report_path):
+            return jsonify({'ready': False})
+        if os.path.getsize(report_path) > 200 * 1024:
+            return jsonify({'error': 'El informe remoto es demasiado grande'}), 400
+        with open(report_path, 'r', encoding='utf-8') as f:
+            report = json.load(f)
+        if not isinstance(report, dict):
+            return jsonify({'error': 'El informe remoto debe ser un objeto JSON'}), 400
+        session, applied = _apply_walk_report(session_id, report)
+        return jsonify({'ready': True, 'session': session, 'applied': applied, 'insights': study_flow.insights()})
+    except KeyError as exc:
+        return jsonify({'error': str(exc)}), 404
+    except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:
+        return jsonify({'error': f'No se pudo leer el informe remoto: {exc}'}), 400
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/study/sessions', methods=['POST'])
+def study_start_session():
+    try:
+        data = request.get_json(silent=True) or {}
+        if not isinstance(data.get('plan_ids'), list) or not data['plan_ids']:
+            return jsonify({'error': 'La sesión necesita al menos un nodo del plan.'}), 400
+        return jsonify({'success': True, 'session': study_flow.start_session(data)})
+    except (TypeError, ValueError) as exc:
+        return jsonify({'error': str(exc)}), 400
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/study/sessions/<session_id>/events', methods=['POST'])
+def study_session_event(session_id):
+    try:
+        data = request.get_json(silent=True) or {}
+        return jsonify({'success': True, 'event': study_flow.record_event(session_id, data)})
+    except KeyError as exc:
+        return jsonify({'error': str(exc)}), 404
+    except (TypeError, ValueError) as exc:
+        return jsonify({'error': str(exc)}), 400
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/study/sessions/<session_id>/finish', methods=['POST'])
+def study_finish_session(session_id):
+    try:
+        data = request.get_json(silent=True) or {}
+        return jsonify({'success': True, 'session': study_flow.finish_session(session_id, data), 'insights': study_flow.insights()})
+    except KeyError as exc:
+        return jsonify({'error': str(exc)}), 404
+    except (TypeError, ValueError) as exc:
+        return jsonify({'error': str(exc)}), 400
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/study/walks/<session_id>/close', methods=['POST'])
+def study_close_walk(session_id):
+    """Recibe solo el informe final de voz y aplica sus valoraciones al grafo."""
+    try:
+        data = request.get_json(silent=True) or {}
+        report = data.get('report', data)
+        session, applied = _apply_walk_report(session_id, report)
+        return jsonify({
+            'success': True,
+            'session': session,
+            'applied': applied,
+            'insights': study_flow.insights(),
+        })
+    except KeyError as exc:
+        return jsonify({'error': str(exc)}), 404
+    except (TypeError, ValueError) as exc:
+        return jsonify({'error': str(exc)}), 400
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/study/insights', methods=['GET'])
+def study_insights():
+    return jsonify(study_flow.insights())
+
+
+@app.route('/api/apuntes', methods=['GET'])
+def apuntes_estado():
+    """Estado de los apuntes personales, sin exponer el contenido en la interfaz."""
+    return jsonify(apuntes.summary())
+
+
+@app.route('/api/apuntes/generar', methods=['POST'])
+def apuntes_generar():
+    """Regenera el LaTeX de una asignatura o de todo el grafo."""
+    try:
+        data = request.get_json(silent=True) or {}
+        materia = data.get('materia') or None
+        graph_nodes = kg_perfil.cargar_grafos()
+        return jsonify({'success': True, **apuntes.generate(materia, graph_nodes)})
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/study/work/start', methods=['POST'])
+def study_work_start():
+    """Abre una sesión desde una tarjeta de asignatura para usarla en Work."""
+    try:
+        data = request.get_json(silent=True) or {}
+        materia = str(data.get('materia', '')).strip()
+        if not materia:
+            return jsonify({'error': 'Selecciona una asignatura para iniciar la sesión.'}), 400
+        study_context.auto_import_ready_work_report()
+        active = study_context.active_study_status()
+        if active.get('active'):
+            return jsonify({
+                'error': f"Ya hay una sesión activa de {active.get('materia') or 'otra asignatura'}. Cierra esa sesión antes de iniciar otra."
+            }), 409
+        pack = study_context.build_study_pack(
+            materia=materia,
+            minutos=data.get('available_minutes', data.get('minutos', 60)),
+            objetivo=data.get('goal', data.get('objetivo', 'aprender')),
+            node_ids=data.get('node_ids'),
+        )
+        if not pack.get('plan_ids'):
+            return jsonify({'error': 'No hay conceptos seleccionables para iniciar esta sesión todavía.'}), 400
+        session = study_flow.start_session({
+            'session_type': 'work_guided',
+            'materia': materia,
+            'plan_ids': pack['plan_ids'],
+            'problem_ids': pack.get('problem_ids', []),
+            'available_minutes': pack['session']['available_minutes'],
+            'goal': pack['session']['goal'],
+            'energy': data.get('energy', 3),
+            'focus': data.get('focus', 3),
+            'obstacle': data.get('obstacle', ''),
+            'preview_ack': True,
+        })
+        pack = study_context.build_study_pack(
+            materia=materia,
+            minutos=pack['session']['available_minutes'],
+            objetivo=pack['session']['goal'],
+            session=session,
+        )
+        study_context.reset_active_study_report()
+        study_context.save_active_study_context(pack)
+        return jsonify({'success': True, 'session': session, 'pack': pack, 'prompt': pack['prompt']})
+    except (TypeError, ValueError) as exc:
+        return jsonify({'error': str(exc)}), 400
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/study/work/status', methods=['GET'])
+def study_work_status():
+    try:
+        auto_import = study_context.auto_import_ready_work_report()
+        status = study_context.active_study_status()
+        if auto_import.get('imported'):
+            status['auto_imported'] = True
+            _schedule_context_snapshot()
+        elif auto_import.get('error'):
+            status['auto_import_error'] = auto_import['error']
+        return jsonify(status)
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/study/work/context', methods=['GET'])
+def study_work_context():
+    try:
+        context = study_context.load_active_study_context()
+        if not context:
+            return jsonify({'error': 'No hay una sesión de Work preparada.'}), 404
+        return jsonify(context)
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/study/work/report', methods=['GET'])
+def study_work_report():
+    try:
+        status = study_context.active_study_status()
+        if not status.get('report_ready'):
+            return jsonify({'error': 'Todavía no hay un cierre de Work listo para importar.'}), 404
+        return jsonify(study_context.load_active_study_report())
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/study/work/finish', methods=['POST'])
+def study_work_finish():
+    """Importa el informe final que Work escribe en el buzón de la sesión."""
+    try:
+        data = request.get_json(silent=True) or {}
+        session_id = str(data.get('session_id', '')).strip()
+        report = data.get('report')
+        if not session_id and isinstance(report, dict):
+            session_id = str(report.get('session_id', '')).strip()
+        if not session_id:
+            return jsonify({'error': 'Falta el identificador de la sesión.'}), 400
+        if report is None:
+            report = data
+        return jsonify({'success': True, **study_context.finish_work_report(session_id, report)})
+    except KeyError as exc:
+        return jsonify({'error': str(exc)}), 404
+    except (TypeError, ValueError) as exc:
+        return jsonify({'error': str(exc)}), 400
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+def _context_bool(value, default=True):
+    """Interpreta flags de query/body sin que ``bool('false')`` dé True."""
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() not in {'0', 'false', 'no', 'off'}
+
+
+@app.route('/api/context/summary', methods=['GET'])
+def context_summary():
+    """Resumen ligero para saber qué contexto está disponible."""
+    try:
+        return jsonify(study_context.context_summary())
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/context', methods=['GET'])
+def get_context():
+    """Entrega el contexto vivo completo o una selección por asignatura/nodos.
+
+    ``format=md`` devuelve un documento autónomo para adjuntarlo a ChatGPT o
+    Gemini. La respuesta JSON conserva la misma información de forma
+    estructurada y es la opción recomendada para futuras integraciones.
+    """
+    try:
+        materia = request.args.get('materia') or None
+        node_ids = [item.strip() for item in request.args.get('nodos', '').split(',') if item.strip()]
+        include_documents = _context_bool(request.args.get('include_documents'), True)
+        context = study_context.build_context(
+            materia=materia,
+            node_ids=node_ids or None,
+            include_documents=include_documents,
+        )
+        formato = (request.args.get('format') or 'json').strip().lower()
+        if formato in {'md', 'markdown'}:
+            body = study_context.context_to_markdown(context)
+            response = app.response_class(body, mimetype='text/markdown')
+            if _context_bool(request.args.get('download'), False):
+                response.headers['Content-Disposition'] = 'attachment; filename="contexto_ia.md"'
+            return response
+
+        body = json.dumps(context, ensure_ascii=False, indent=2)
+        response = app.response_class(body, mimetype='application/json')
+        if _context_bool(request.args.get('download'), False):
+            response.headers['Content-Disposition'] = 'attachment; filename="contexto_ia.json"'
+        return response
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/context/export', methods=['GET', 'POST'])
+def export_context():
+    """Actualiza las dos copias portables del contexto en knowledge_graph."""
+    try:
+        payload = request.get_json(silent=True) or {} if request.method == 'POST' else {}
+        materia = payload.get('materia') or request.args.get('materia') or None
+        raw_ids = payload.get('node_ids', payload.get('nodos', request.args.get('nodos', '')))
+        if isinstance(raw_ids, str):
+            node_ids = [item.strip() for item in raw_ids.split(',') if item.strip()]
+        elif isinstance(raw_ids, list):
+            node_ids = [str(item).strip() for item in raw_ids if str(item).strip()]
+        else:
+            node_ids = None
+        include_documents = _context_bool(
+            payload.get('include_documents', request.args.get('include_documents')),
+            True,
+        )
+        return jsonify(study_context.export_context(
+            materia=materia,
+            node_ids=node_ids,
+            include_documents=include_documents,
+        ))
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/context/events', methods=['POST'])
+def apply_context_event():
+    """Recibe una actualización estructurada de un tutor externo."""
+    try:
+        event = request.get_json(silent=True) or {}
+        result = study_context.apply_event(event)
+        return jsonify({
+            'success': True,
+            'event': result,
+            'context_summary': study_context.context_summary(),
+        })
+    except KeyError as exc:
+        return jsonify({'error': str(exc)}), 404
+    except (TypeError, ValueError) as exc:
+        return jsonify({'error': str(exc)}), 400
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/study/pacer', methods=['POST'])
+def study_pacer_override():
+    try:
+        data = request.get_json(silent=True) or {}
+        if not data.get('node_id'):
+            return jsonify({'error': 'Falta node_id'}), 400
+        return jsonify({'success': True, 'pacer': study_flow.set_pacer_override(data['node_id'], data.get('code'))})
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
 
 @app.route('/api/kg/examenes', methods=['GET', 'POST'])
 def kg_examenes():
@@ -639,16 +1286,102 @@ def kg_examenes():
             if not isinstance(data, dict) or 'examenes' not in data:
                 return jsonify({"error": "Formato inválido: falta 'examenes'"}), 400
             for ex in data['examenes']:
-                datetime.strptime(ex['fecha'], '%Y-%m-%d')  # valida fechas
+                oficial = datetime.strptime(ex['fecha'], '%Y-%m-%d')
+                if ex.get('fecha_preparacion'):
+                    preparacion = datetime.strptime(ex['fecha_preparacion'], '%Y-%m-%d')
+                    if preparacion > oficial:
+                        raise ValueError('La fecha de preparación no puede ser posterior al examen')
+            data['examenes'] = [kg_planificar.normalizar_examen(ex) for ex in data['examenes']]
             with open(ruta, 'w', encoding='utf-8') as f:
                 _json.dump(data, f, ensure_ascii=False, indent=2)
             return jsonify({"success": True})
         with open(ruta, 'r', encoding='utf-8') as f:
-            return jsonify(_json.load(f))
+            data = _json.load(f)
+        data['examenes'] = [kg_planificar.normalizar_examen(ex) for ex in data.get('examenes', [])]
+        return jsonify(data)
     except ValueError as e:
         return jsonify({"error": f"Fecha inválida (usa YYYY-MM-DD): {e}"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/kg/cuadernos', methods=['GET', 'POST'])
+def kg_cuadernos():
+    ruta = os.path.join(KG_DIR, 'cuadernos_gemini.json')
+    try:
+        if request.method == 'POST':
+            data = request.get_json(silent=True) or {}
+            if not isinstance(data, dict):
+                return jsonify({'error': 'Formato inválido: se espera un objeto'}), 400
+            with open(ruta, 'w', encoding='utf-8') as f:
+                _json.dump(data, f, ensure_ascii=False, indent=2)
+            return jsonify({'success': True})
+        if not os.path.exists(ruta):
+            return jsonify({})
+        with open(ruta, 'r', encoding='utf-8') as f:
+            return jsonify(_json.load(f))
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+@app.route('/api/cuadernos/abrir_materiales', methods=['POST'])
+def cuadernos_abrir_materiales():
+    try:
+        import subprocess
+        data = request.get_json(silent=True) or {}
+        materia = data.get('materia', '')
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'CUADERNOS_GEMINI_STUDY'))
+        carpeta = None
+        ruta_cfg = os.path.join(KG_DIR, 'cuadernos_gemini.json')
+        if os.path.exists(ruta_cfg):
+            with open(ruta_cfg, 'r', encoding='utf-8') as f:
+                cfg = _json.load(f)
+                if materia in cfg:
+                    carpeta = cfg[materia].get('carpeta_materiales')
+        target = os.path.join(base_dir, carpeta) if carpeta else base_dir
+        if not os.path.exists(target):
+            target = base_dir
+        subprocess.Popen(f'explorer "{target}"')
+        return jsonify({'success': True, 'path': target})
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+@app.route('/api/biblioteca/resolver', methods=['POST'])
+def biblioteca_resolver():
+    try:
+        data = request.get_json(silent=True) or {}
+        nodo_id = data.get('nodo_id')
+        problema_id = data.get('problema_id')
+        calidad = float(data.get('calidad', 1.0))
+        exito = calidad >= 0.5
+        segundos = data.get('segundos')
+        comentarios = data.get('comentarios', '').strip()
+        if segundos is not None:
+            try:
+                segundos = float(segundos)
+            except (TypeError, ValueError):
+                segundos = None
+
+        if not nodo_id and not problema_id:
+            return jsonify({'error': 'Falta nodo_id o problema_id'}), 400
+
+        if problema_id:
+            # El problema conoce todos sus nodos requeridos. Así una resolución
+            # no actualiza solo el nodo que abrió la tarjeta, sino el conjunto
+            # completo que debe quedar demostrado.
+            perfil = kg_perfil.cargar_perfil()
+            resultado = kg_problemas.registrar_feedback(
+                perfil, kg_perfil.cargar_grafos(), kg_problemas.cargar_banco(), problema_id,
+                veredicto=data.get('veredicto'), calidad=calidad,
+                comentarios=comentarios, segundos=segundos,
+                origen='biblioteca_silencio',
+            )
+            kg_perfil.guardar_perfil(perfil)
+        elif nodo_id:
+            kg_perfil.registrar_y_guardar([nodo_id], exito, origen='biblioteca_silencio',
+                                          segundos=segundos, calidad=calidad)
+
+        return jsonify({'success': True, 'mensaje': 'Resolución en biblioteca guardada en el grafo.'})
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
 
 @app.route('/api/kg/perfil', methods=['GET'])
 def kg_perfil_estado():
@@ -676,7 +1409,15 @@ def kg_perfil_estado():
             'materias': materias,
             'vencidos': kg_perfil.vencidos(perfil_d, nodos)[:30],
             'frontera': kg_perfil.frontera(perfil_d, nodos)[:30],
+            'problemas': kg_problemas.resumen_para_plan(
+                perfil_d, nodos, kg_problemas.cargar_banco(), limite=12
+            ),
+            'retroalimentacion': kg_problemas.debilidades(perfil_d, nodos, limite=12),
             'gamificacion': kg_gamificacion.estado(perfil_d, hoy),
+            'objetivo_academico': perfil_d.get('objetivo_academico', {
+                'meta': 'Matrícula de Honor (10.0) en todas las asignaturas',
+                'modo_evaluacion': 'maxima_exigencia_tribunal'
+            })
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -806,9 +1547,7 @@ def kg_correcciones_revertir():
 
 @app.route('/api/corregir', methods=['POST'])
 def corregir_lo_nuevo():
-    """Lanza en segundo plano la sincronización del reMarkable + el procesado de
-    lo nuevo (sync -> watcher). No bloquea: el usuario refresca las correcciones
-    cuando termine."""
+    """Lanza en segundo plano el procesado de los archivos nuevos del Inbox."""
     try:
         import subprocess
         base = os.path.dirname(os.path.abspath(__file__))
@@ -819,9 +1558,103 @@ def corregir_lo_nuevo():
         subprocess.Popen([sys.executable, script],
                          cwd=base, creationflags=creationflags,
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return jsonify({"success": True, "mensaje": "Sincronizando y corrigiendo en segundo plano. Refresca en un par de minutos."})
+        return jsonify({"success": True, "mensaje": "Procesando lo nuevo en segundo plano. Refresca en un par de minutos."})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/voz', methods=['POST'])
+def recibir_grabacion_voz():
+    """Guarda una grabación del navegador y lanza su análisis Feynman en segundo plano."""
+    try:
+        archivo = request.files.get('audio')
+        if not archivo or not archivo.filename:
+            return jsonify({'error': 'No se recibió ninguna grabación.'}), 400
+        extension = os.path.splitext(archivo.filename)[1].lower() or '.webm'
+        if extension not in VOICE_EXTENSIONS:
+            return jsonify({'error': f'Formato de audio no admitido: {extension}'}), 400
+        os.makedirs(VOICE_DIR, exist_ok=True)
+        job_id = uuid.uuid4().hex[:12]
+        nombre = secure_filename(archivo.filename) or 'grabacion.webm'
+        nombre = f"sesion_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{job_id}_{nombre}"
+        ruta = os.path.join(VOICE_DIR, nombre)
+        archivo.save(ruta)
+        _voice_jobs[job_id] = {
+            'id': job_id,
+            'estado': 'en_cola',
+            'mensaje': 'Grabación recibida. Preparando el análisis…',
+            'archivo': nombre,
+            'modelo_requerido': config.GEMINI_REQUIRED_MODEL,
+            'creado': datetime.now().isoformat(timespec='seconds'),
+        }
+        threading.Thread(target=_run_voice_job, args=(job_id, ruta), daemon=True).start()
+        return jsonify({'success': True, 'job_id': job_id, 'mensaje': 'Grabación recibida. Whisper la está transcribiendo; después se abrirá Gemini.'})
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/voz/<job_id>', methods=['GET'])
+def estado_grabacion_voz(job_id):
+    with _voice_jobs_lock:
+        job = _voice_jobs.get(job_id)
+    if not job:
+        return jsonify({'error': 'No encuentro ese análisis de voz.'}), 404
+    return jsonify(job)
+
+
+@app.route('/api/voz/<job_id>/gemini', methods=['POST'])
+def importar_respuesta_gemini(job_id):
+    """Recibe la respuesta copiada desde Gemini Web y la integra tras validarla."""
+    with _voice_jobs_lock:
+        job = _voice_jobs.get(job_id)
+    if not job:
+        return jsonify({'error': 'No encuentro ese análisis de voz.'}), 404
+    if job.get('estado') != 'esperando_gemini':
+        return jsonify({'error': 'Este análisis no está esperando una respuesta de Gemini.'}), 409
+
+    data = request.get_json(silent=True) or {}
+    respuesta = str(data.get('respuesta', '')).strip()
+    if not respuesta:
+        return jsonify({'error': 'Pega primero la respuesta JSON de Gemini.'}), 400
+
+    modelo_esperado = job.get('modelo_requerido') or config.GEMINI_REQUIRED_MODEL
+    modelo_recibido = str(data.get('modelo', '')).strip()
+    if data.get('modelo_verificado') is not True or modelo_recibido != modelo_esperado:
+        return jsonify({
+            'error': 'Modelo de Gemini no verificado.',
+            'detalle': f'Comprueba que Gemini Web muestra exactamente «{modelo_esperado}» y vuelve a intentarlo.',
+            'modelo_requerido': modelo_esperado,
+        }), 409
+
+    resultado = job.get('resultado')
+    transcript_path = job.get('transcripcion')
+    if not resultado or not transcript_path:
+        return jsonify({'error': 'Faltan las rutas internas de este análisis.'}), 500
+    try:
+        os.makedirs(os.path.dirname(resultado), exist_ok=True)
+        with open(resultado, 'w', encoding='utf-8') as f:
+            f.write(respuesta)
+        script = os.path.join(BASE_DIR, 'corregir_voz.py')
+        creationflags = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
+        proc = subprocess.run(
+            [sys.executable, script, '--importar-gemini', resultado, transcript_path,
+             '--modelo', modelo_recibido],
+            cwd=BASE_DIR, capture_output=True, text=True, encoding='utf-8',
+            errors='replace', creationflags=creationflags,
+        )
+        if proc.returncode:
+            detalle = (proc.stdout or proc.stderr or 'JSON no válido')[-1200:]
+            _set_voice_job(job_id, estado='esperando_gemini', mensaje=f'Gemini devolvió un formato no válido: {detalle}')
+            return jsonify({'error': 'La respuesta no tiene el formato esperado.', 'detalle': detalle}), 422
+        _set_voice_job(
+            job_id, estado='completado',
+            mensaje='Corrección de Gemini terminada. El feedback y el grafo ya están actualizados.',
+            salida=(proc.stdout or '')[-1200:],
+        )
+        return jsonify({'success': True, 'mensaje': 'Respuesta de Gemini validada e integrada.'})
+    except Exception as exc:
+        _set_voice_job(job_id, estado='error', mensaje=str(exc))
+        return jsonify({'error': str(exc)}), 500
 
 @app.route('/api/kg/quiz', methods=['GET'])
 def kg_quiz():
@@ -851,12 +1684,69 @@ def kg_simulacro():
 @app.route('/api/kg/problema', methods=['POST'])
 def kg_problema():
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         pid = data.get('id')
         if not pid:
             return jsonify({"error": "Falta el id del problema"}), 400
-        kg_perfil.marcar_problema_y_guardar(pid, bool(data.get('exito', True)))
-        return jsonify({"success": True})
+        banco = kg_problemas.cargar_banco()
+        if kg_problemas.buscar_problema(banco, pid)[1] is None:
+            return jsonify({"error": f"No existe el problema {pid} en el banco"}), 404
+        perfil = kg_perfil.cargar_perfil()
+        nodos = kg_perfil.cargar_grafos()
+        veredicto = data.get('veredicto')
+        if not veredicto and 'calidad' not in data:
+            veredicto = 'resuelto' if bool(data.get('exito', True)) else 'incorrecto'
+        calidad = data.get('calidad')
+        if calidad is not None:
+            try:
+                calidad = float(calidad)
+            except (TypeError, ValueError):
+                calidad = None
+        segundos = data.get('segundos')
+        if segundos is not None:
+            try:
+                segundos = float(segundos)
+            except (TypeError, ValueError):
+                segundos = None
+        resultado = kg_problemas.registrar_feedback(
+            perfil, nodos, banco, pid, veredicto=veredicto, calidad=calidad,
+            nodos_hueco=data.get('nodos_hueco_teorico') or data.get('nodos_hueco') or [],
+            nodos_error=data.get('nodos_error') or [],
+            comentarios=str(data.get('comentarios', '') or ''),
+            segundos=segundos, origen=str(data.get('origen', 'web')),
+        )
+        kg_perfil.guardar_perfil(perfil)
+        return jsonify({"success": True, **resultado})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/kg/problemas/estado', methods=['GET'])
+def kg_problemas_estado():
+    """Semáforo de preparación: qué problemas están desbloqueados y por qué."""
+    try:
+        materia = request.args.get('materia') or None
+        limite = request.args.get('limite', default=100, type=int)
+        estado = kg_problemas.estado_banco(
+            kg_perfil.cargar_perfil(), kg_perfil.cargar_grafos(),
+            kg_problemas.cargar_banco(), materia=materia, limite=max(1, min(limite, 500)),
+        )
+        return jsonify(estado)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/kg/retroalimentacion', methods=['GET'])
+def kg_retroalimentacion():
+    try:
+        materia = request.args.get('materia') or None
+        limite = request.args.get('limite', default=12, type=int)
+        return jsonify({
+            "debilidades": kg_problemas.debilidades(
+                kg_perfil.cargar_perfil(), kg_perfil.cargar_grafos(),
+                materia=materia, limite=max(1, min(limite, 100)),
+            )
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

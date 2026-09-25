@@ -2,6 +2,7 @@ import os
 import re
 from datetime import datetime
 import config
+import repeticion
 
 def slugify(text: str) -> str:
     """Convierte texto en un formato limpio para nombres de archivos de Windows."""
@@ -65,7 +66,12 @@ def scan_vault():
                     asignatura = parse_yaml_field(content, "asignatura")
                     tema = parse_yaml_field(content, "tema")
                     estado = parse_yaml_field(content, "estado")
-                    proxima = parse_yaml_field(content, "proxima_revision")
+                    # ``proxima_revision`` es el nombre antiguo. Se conserva
+                    # como dato histórico para migración, pero ya no alimenta
+                    # ninguna cola: la agenda académica pertenece al perfil
+                    # de nodos del knowledge graph.
+                    proxima_reintento = parse_yaml_field(content, "proxima_reintento")
+                    proxima_legacy = parse_yaml_field(content, "proxima_revision")
                     tiene_error = parse_yaml_field(content, "tiene_error") == "true"
                     
                     stats["ejercicios"].append({
@@ -73,7 +79,11 @@ def scan_vault():
                         "asignatura": asignatura,
                         "tema": tema,
                         "estado": estado if estado else "nuevo",
-                        "proxima_revision": proxima,
+                        "proxima_reintento": proxima_reintento,
+                        "proxima_revision_legacy": proxima_legacy,
+                        # Compatibilidad de lectura: solo el campo nuevo se
+                        # expone como fecha operativa.
+                        "proxima_revision": proxima_reintento,
                         "tiene_error": tiene_error,
                         "path": path
                     })
@@ -160,23 +170,24 @@ def run():
     incorrectos = total_intentos - correctos
     tasa_exito = (correctos / total_intentos * 100) if total_intentos > 0 else 0.0
     
-    # 1. Agenda (Ejercicios pendientes para hoy o retrasados)
+    # 1. Agenda académica: única y basada en el perfil de nodos.
     hoy = datetime.now().date()
     agenda = []
-    for ex in data["ejercicios"]:
-        try:
-            ex_date = datetime.strptime(ex["proxima_revision"], "%d/%m/%Y").date()
-        except ValueError:
-            ex_date = hoy
-        if ex_date <= hoy:
-            agenda.append(ex)
-            
-    def get_date_key(x):
-        try:
-            return datetime.strptime(x["proxima_revision"], "%d/%m/%Y")
-        except ValueError:
-            return datetime.now()
-    agenda.sort(key=get_date_key)
+    try:
+        import sys
+        kg_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "knowledge_graph")
+        if kg_dir not in sys.path:
+            sys.path.insert(0, kg_dir)
+        import perfil as kg_perfil
+        nodos = kg_perfil.cargar_grafos()
+        perfil_d = kg_perfil.cargar_perfil()
+        agenda = kg_perfil.pendientes_repaso(perfil_d, nodos, hoy)
+    except Exception as exc:
+        print(f"Aviso: no se pudo cargar la agenda académica del grafo: {exc}")
+
+    # Cola local, separada del calendario conceptual.
+    reintentos = [ex for ex in data["ejercicios"] if repeticion.reintento_pendiente(ex, hoy)]
+    reintentos.sort(key=lambda x: repeticion.fecha_reintento_de_ejercicio(x) or hoy)
     
     # 2. Análisis Transversal de Errores
     error_counts = {}
@@ -230,12 +241,18 @@ def run():
         subject_rows.append(f"| [[{slugify(subj)}|{subj}]] | {s['ejercicios']} | {s['intentos']} | {tasa:.1f}% de éxito |")
     subject_table = "\n".join(subject_rows) if subject_rows else "| *Ninguna asignatura registrada* | - | - | - |"
     
-    ej_rows = []
-    for ex in agenda:
-        estado = ex.get("estado", "nuevo")
-        est_lbl = "Dominado 🟢" if estado == "dominado" else "Revisado 🟡" if estado == "revisado" else "Nuevo 🔵"
-        ej_rows.append(f"| [[{ex['id']}]] | [[{slugify(ex['asignatura'])}|{ex['asignatura']}]] | [[{slugify(ex['tema'])}|{ex['tema']}]] | `{est_lbl}` | {ex['proxima_revision']} |")
-    ej_table = "\n".join(ej_rows) if ej_rows else "| *No tienes ejercicios de física pendientes de repaso hoy. ¡Buen trabajo!* | - | - | - | - |"
+    agenda_rows = []
+    for item in agenda:
+        fecha = datetime.strptime(item["proxima"], "%Y-%m-%d").strftime("%d/%m/%Y")
+        estado = f"{item['retraso']} d de retraso" if item["retraso"] else "hoy"
+        agenda_rows.append(f"| `{item['id']}` | {item['materia']} | {item['nombre']} | {estado} | {fecha} |")
+    agenda_table = "\n".join(agenda_rows) if agenda_rows else "| *No hay conceptos pendientes de repaso académico hoy.* | - | - | - | - |"
+
+    retry_rows = []
+    for ex in reintentos:
+        fecha = ex.get("proxima_reintento") or "—"
+        retry_rows.append(f"| [[{ex['id']}]] | [[{slugify(ex['asignatura'])}|{ex['asignatura']}]] | [[{slugify(ex['tema'])}|{ex['tema']}]] | {fecha} |")
+    retry_table = "\n".join(retry_rows) if retry_rows else "| *No hay reintentos locales pendientes.* | - | - | - |"
     
     # Renderizar plantilla completa
     dashboard_content = f"""# 📊 Panel de Control (Dashboard de Estudio)
@@ -245,9 +262,14 @@ def run():
 ---
 
 ## 📅 Agenda de Repaso Académica (Física)
-| Ejercicio | Asignatura | Tema | Estado | Próxima Revisión |
+| Nodo | Asignatura | Concepto | Estado | Próxima Revisión |
 | :--- | :--- | :--- | :---: | :---: |
-{ej_table}
+{agenda_table}
+
+## 🔁 Reintentos locales de ejercicios
+| Ejercicio | Asignatura | Tema | Próximo reintento |
+| :--- | :--- | :--- | :---: |
+{retry_table}
 
 ---
 

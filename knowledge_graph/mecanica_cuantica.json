@@ -8,55 +8,995 @@
     "1": "Tema 1: Formalismo matemático",
     "2": "Tema 2: Postulados",
     "3": "Tema 3: Oscilador armónico",
-    "4": "Tema 4: Momento cinético",
+    "4": "Tema 4: Momento angular, espín y rotaciones",
     "5": "Tema 5: Dispersión y colisiones",
     "6": "Tema 6: Métodos aproximados",
-    "7": "Tema 7: Partículas idénticas"
+    "7": "Tema 7: Partículas idénticas (Tema 8 en el desarrollo manuscrito)"
   },
   "nodos": [
-    { "id": "mc.1.01", "tema": 1, "nombre": "Espacio de funciones de onda y bases", "descripcion": "Espacio vectorial de funciones de onda, bases discretas, ondas planas y deltas de Dirac.", "prerequisitos": [{ "id": "cu.04", "peso": 1.0 }, { "id": "al.05", "peso": 1.0 }, { "id": "m2.02", "peso": 1.0 }], "fuentes": { "guia": "Tema 1", "libro": "Cohen-Tannoudji II" } },
-    { "id": "mc.1.02", "tema": 1, "nombre": "Espacio de estados y notación de Dirac", "descripcion": "Kets, bras y operadores lineales; el espacio de estados abstracto.", "prerequisitos": [{ "id": "mc.1.01", "peso": 1.0 }], "fuentes": { "guia": "Tema 1" } },
-    { "id": "mc.1.03", "tema": 1, "nombre": "Conjugación hermítica y representaciones", "descripcion": "Adjunto, representación matricial de kets, bras y operadores en una base.", "prerequisitos": [{ "id": "mc.1.02", "peso": 1.0 }], "fuentes": { "guia": "Tema 1" } },
-    { "id": "mc.1.04", "tema": 1, "nombre": "Ecuaciones de autovalores y observables", "descripcion": "Espectro de operadores hermíticos, observables, degeneración.", "prerequisitos": [{ "id": "mc.1.03", "peso": 1.0 }, { "id": "al.04", "peso": 1.0 }], "fuentes": { "guia": "Tema 1" } },
-    { "id": "mc.1.05", "tema": 1, "nombre": "Observables que conmutan y CCOC", "descripcion": "Teoremas de compatibilidad, conjunto completo de observables que conmutan.", "prerequisitos": [{ "id": "mc.1.04", "peso": 1.0 }], "fuentes": { "guia": "Tema 1" } },
-    { "id": "mc.1.06", "tema": 1, "nombre": "Representaciones de posición y momento", "descripcion": "Observables X y P, cambio entre representaciones, relación con la transformada de Fourier.", "prerequisitos": [{ "id": "mc.1.04", "peso": 1.0 }, { "id": "m2.04", "peso": 1.0 }], "fuentes": { "guia": "Tema 1" } },
-    { "id": "mc.1.07", "tema": 1, "nombre": "Producto tensorial de espacios de estados", "descripcion": "Espacios compuestos, separación de variables.", "prerequisitos": [{ "id": "mc.1.05", "peso": 1.0 }], "fuentes": { "guia": "Tema 1" } },
-    { "id": "mc.1.08", "tema": 1, "nombre": "Álgebra de operadores", "descripcion": "Traza, conmutadores, funciones y derivación de operadores, operadores unitarios.", "prerequisitos": [{ "id": "mc.1.04", "peso": 1.0 }], "fuentes": { "guia": "Tema 1" } },
-    { "id": "mc.1.09", "tema": 1, "nombre": "Paridad, descomposición espectral y matrices de Pauli", "descripcion": "Operador paridad, proyectores espectrales, álgebra de Pauli.", "prerequisitos": [{ "id": "mc.1.08", "peso": 1.0 }], "fuentes": { "guia": "Tema 1" } },
-    { "id": "mc.2.01", "tema": 2, "nombre": "Postulados de la medida", "descripcion": "Postulados fundamentales, principio de descomposición espectral, probabilidades.", "prerequisitos": [{ "id": "mc.1.05", "peso": 1.0 }], "fuentes": { "guia": "Tema 2" } },
-    { "id": "mc.2.02", "tema": 2, "nombre": "Reducción del paquete y reglas de cuantificación", "descripcion": "Colapso en espectros discretos y continuos, construcción de observables.", "prerequisitos": [{ "id": "mc.2.01", "peso": 1.0 }], "fuentes": { "guia": "Tema 2" } },
-    { "id": "mc.2.03", "tema": 2, "nombre": "Valores medios e incompatibilidad", "descripcion": "Valor medio, desviación cuadrática, medida de observables compatibles e incompatibles.", "prerequisitos": [{ "id": "mc.2.01", "peso": 1.0 }], "fuentes": { "guia": "Tema 2" } },
-    { "id": "mc.2.04", "tema": 2, "nombre": "Análisis de la ecuación de Schrödinger", "descripcion": "Determinismo, superposición, conservación de la probabilidad, ecuación de continuidad.", "prerequisitos": [{ "id": "mc.2.01", "peso": 1.0 }, { "id": "cu.02", "peso": 1.0 }], "fuentes": { "guia": "Tema 2" } },
-    { "id": "mc.2.05", "tema": 2, "nombre": "Ehrenfest y sistemas conservativos", "descripcion": "Evolución de valores medios, límite clásico, estados estacionarios, frecuencias de Bohr, relación energía-tiempo.", "prerequisitos": [{ "id": "mc.2.04", "peso": 1.0 }], "fuentes": { "guia": "Tema 2" } },
-    { "id": "mc.2.06", "tema": 2, "nombre": "Operador de evolución", "descripcion": "Evolución unitaria, propiedades del propagador.", "prerequisitos": [{ "id": "mc.2.05", "peso": 1.0 }, { "id": "mc.1.08", "peso": 1.0 }], "fuentes": { "guia": "Tema 2" } },
-    { "id": "mc.2.07", "tema": 2, "nombre": "Operador densidad", "descripcion": "Estados puros y mezcla, trazas parciales, medidas sobre subsistemas, correlaciones.", "prerequisitos": [{ "id": "mc.2.06", "peso": 1.0 }, { "id": "mc.1.07", "peso": 1.0 }], "fuentes": { "guia": "Tema 2" } },
-    { "id": "mc.2.08", "tema": 2, "nombre": "Imágenes de Schrödinger y Heisenberg", "descripcion": "Descripciones equivalentes de la evolución temporal.", "prerequisitos": [{ "id": "mc.2.06", "peso": 1.0 }], "fuentes": { "guia": "Tema 2" } },
-    { "id": "mc.2.09", "tema": 2, "nombre": "Sistemas de dos niveles: fórmula de Rabi", "descripcion": "Ruptura de degeneración por acoplamiento, oscilaciones de Rabi.", "prerequisitos": [{ "id": "mc.2.06", "peso": 1.0 }, { "id": "mc.1.09", "peso": 1.0 }], "fuentes": { "guia": "Tema 2" } },
-    { "id": "mc.3.01", "tema": 3, "nombre": "Oscilador armónico: operadores escalera", "descripcion": "Aproximación armónica, operadores creación/aniquilación/número, hamiltoniano.", "prerequisitos": [{ "id": "mc.1.08", "peso": 1.0 }, { "id": "cu.02", "peso": 1.0 }], "fuentes": { "guia": "Tema 3" } },
-    { "id": "mc.3.02", "tema": 3, "nombre": "Espectro y estados propios del oscilador", "descripcion": "Autovalores, funciones de onda estacionarias, interpretación de a y a†.", "prerequisitos": [{ "id": "mc.3.01", "peso": 1.0 }], "fuentes": { "guia": "Tema 3" } },
-    { "id": "mc.3.03", "tema": 3, "nombre": "Elementos de matriz y evolución en el oscilador", "descripcion": "Valores medios de X, P, energías; evolución temporal de valores medios.", "prerequisitos": [{ "id": "mc.3.02", "peso": 1.0 }], "fuentes": { "guia": "Tema 3" } },
-    { "id": "mc.3.04", "tema": 3, "nombre": "Oscilador 3D y oscilador cargado", "descripcion": "Oscilador isótropo tridimensional; oscilador cargado en campo eléctrico uniforme.", "prerequisitos": [{ "id": "mc.3.03", "peso": 1.0 }, { "id": "mc.1.07", "peso": 1.0 }], "fuentes": { "guia": "Tema 3" } },
-    { "id": "mc.4.01", "tema": 4, "nombre": "Álgebra del momento angular", "descripcion": "Relaciones de conmutación, operadores escalera J±, espectro de J² y Jz.", "prerequisitos": [{ "id": "mc.1.05", "peso": 1.0 }, { "id": "cu.05", "peso": 1.0 }], "fuentes": { "guia": "Tema 4" } },
-    { "id": "mc.4.02", "tema": 4, "nombre": "Base estándar y momento angular orbital", "descripcion": "Construcción de la base |j,m⟩, armónicos esféricos como caso orbital.", "prerequisitos": [{ "id": "mc.4.01", "peso": 1.0 }, { "id": "m2.08", "peso": 0.5 }], "fuentes": { "guia": "Tema 4" } },
-    { "id": "mc.4.03", "tema": 4, "nombre": "Espín 1/2: postulados de Pauli y espinores", "descripcion": "Espacio de estados con espín, espinores, ejemplos.", "prerequisitos": [{ "id": "mc.4.02", "peso": 1.0 }, { "id": "mc.1.09", "peso": 1.0 }], "fuentes": { "guia": "Tema 4" } },
-    { "id": "mc.4.04", "tema": 4, "nombre": "Partículas con espín en campos magnéticos", "descripcion": "Precesión de espín, acoplamiento magnético.", "prerequisitos": [{ "id": "mc.4.03", "peso": 1.0 }, { "id": "em.6.05", "peso": 0.5 }], "fuentes": { "guia": "Tema 4" } },
-    { "id": "mc.4.05", "tema": 4, "nombre": "Momento angular y rotaciones", "descripcion": "Operadores de rotación, relación con el grupo de rotaciones, caso espín 1/2.", "prerequisitos": [{ "id": "mc.4.03", "peso": 1.0 }], "fuentes": { "guia": "Tema 4" } },
-    { "id": "mc.4.06", "tema": 4, "nombre": "Composición de dos espines 1/2", "descripcion": "Singlete y triplete como caso modelo de composición.", "prerequisitos": [{ "id": "mc.4.03", "peso": 1.0 }, { "id": "mc.1.07", "peso": 1.0 }], "fuentes": { "guia": "Tema 4" } },
-    { "id": "mc.4.07", "tema": 4, "nombre": "Composición general: Clebsch-Gordan", "descripcion": "Autovalores y autovectores del momento total, coeficientes de Clebsch-Gordan, l⊕s, tres momentos.", "prerequisitos": [{ "id": "mc.4.06", "peso": 1.0 }], "fuentes": { "guia": "Tema 4" } },
-    { "id": "mc.4.08", "tema": 4, "nombre": "Operadores tensoriales: Wigner-Eckart", "descripcion": "Operadores vectoriales y tensoriales irreducibles, teorema de Wigner-Eckart.", "prerequisitos": [{ "id": "mc.4.07", "peso": 1.0 }], "fuentes": { "guia": "Tema 4" } },
-    { "id": "mc.5.01", "tema": 5, "nombre": "Sección eficaz y amplitud de dispersión", "descripcion": "Dispersión elástica, estados estacionarios de dispersión, amplitud.", "prerequisitos": [{ "id": "mc.2.05", "peso": 1.0 }, { "id": "mo.03", "peso": 1.0 }], "fuentes": { "guia": "Tema 5" } },
-    { "id": "mc.5.02", "tema": 5, "nombre": "Teorema óptico y paquetes de onda", "descripcion": "Formulación con paquetes, dispersión por sistemas de partículas, teorema óptico.", "prerequisitos": [{ "id": "mc.5.01", "peso": 1.0 }], "fuentes": { "guia": "Tema 5" } },
-    { "id": "mc.5.03", "tema": 5, "nombre": "Ecuación integral de dispersión", "descripcion": "Funciones de Green entrante y saliente, expresión integral de la amplitud.", "prerequisitos": [{ "id": "mc.5.01", "peso": 1.0 }, { "id": "m2.02", "peso": 0.5 }], "fuentes": { "guia": "Tema 5" } },
-    { "id": "mc.5.04", "tema": 5, "nombre": "Aproximación de Born", "descripcion": "Serie de Born, validez, ejemplos (Yukawa, coulombiano apantallado).", "prerequisitos": [{ "id": "mc.5.03", "peso": 1.0 }, { "id": "m2.04", "peso": 0.5 }], "fuentes": { "guia": "Tema 5" } },
-    { "id": "mc.5.05", "tema": 5, "nombre": "Método de ondas parciales: desfasajes", "descripcion": "Ondas esféricas vs planas, parámetro de impacto, desfasajes.", "prerequisitos": [{ "id": "mc.5.01", "peso": 1.0 }, { "id": "mc.4.02", "peso": 1.0 }], "fuentes": { "guia": "Tema 5" } },
-    { "id": "mc.5.06", "tema": 5, "nombre": "Ondas parciales: aplicaciones y resonancias", "descripcion": "Esfera dura, pozos, resonancias de baja energía.", "prerequisitos": [{ "id": "mc.5.05", "peso": 1.0 }], "fuentes": { "guia": "Tema 5" } },
-    { "id": "mc.6.01", "tema": 6, "nombre": "Perturbaciones estacionarias no degeneradas", "descripcion": "Series perturbativas de energías y estados, validez.", "prerequisitos": [{ "id": "mc.2.05", "peso": 1.0 }], "fuentes": { "guia": "Tema 6" } },
-    { "id": "mc.6.02", "tema": 6, "nombre": "Perturbaciones degeneradas", "descripcion": "Diagonalización en el subespacio degenerado, rupturas de degeneración.", "prerequisitos": [{ "id": "mc.6.01", "peso": 1.0 }], "fuentes": { "guia": "Tema 6" } },
-    { "id": "mc.6.03", "tema": 6, "nombre": "Método variacional", "descripcion": "Principio variacional, funciones de prueba, cotas a la energía del fundamental.", "prerequisitos": [{ "id": "mc.6.01", "peso": 1.0 }], "fuentes": { "guia": "Tema 6" } },
-    { "id": "mc.6.04", "tema": 6, "nombre": "Aproximación WKB", "descripcion": "Aproximación semiclásica, reglas de conexión, efecto túnel.", "prerequisitos": [{ "id": "mc.6.01", "peso": 1.0 }, { "id": "cu.02", "peso": 1.0 }], "fuentes": { "guia": "Tema 6" } },
-    { "id": "mc.6.05", "tema": 6, "nombre": "Perturbaciones dependientes del tiempo", "descripcion": "Probabilidades de transición a primer orden, perturbación armónica.", "prerequisitos": [{ "id": "mc.6.01", "peso": 1.0 }, { "id": "mc.2.08", "peso": 1.0 }], "fuentes": { "guia": "Tema 6" } },
-    { "id": "mc.6.06", "tema": 6, "nombre": "Regla de oro de Fermi", "descripcion": "Transiciones a un continuo, densidad de estados finales.", "prerequisitos": [{ "id": "mc.6.05", "peso": 1.0 }], "fuentes": { "guia": "Tema 6" } },
-    { "id": "mc.7.01", "tema": 7, "nombre": "Postulado de simetrización", "descripcion": "Indistinguibilidad, fermiones y bosones, degeneración de intercambio.", "prerequisitos": [{ "id": "mc.2.01", "peso": 1.0 }, { "id": "mc.1.07", "peso": 1.0 }, { "id": "cu.06", "peso": 1.0 }], "fuentes": { "guia": "Tema 7" } },
-    { "id": "mc.7.02", "tema": 7, "nombre": "Determinantes de Slater y aplicaciones", "descripcion": "Construcción de estados antisimétricos, consecuencias físicas del intercambio.", "prerequisitos": [{ "id": "mc.7.01", "peso": 1.0 }], "fuentes": { "guia": "Tema 7" } }
-  ]
+    {
+      "id": "mc.1.01",
+      "tema": 1,
+      "nombre": "Traza de un operador",
+      "descripcion": "Definición de traza, cálculo en una base, invariancia y propiedad cíclica; incluye la discusión de degeneración.",
+      "prerequisitos": [
+        {
+          "id": "cu.04",
+          "peso": 1.0
+        },
+        {
+          "id": "al.05",
+          "peso": 1.0
+        },
+        {
+          "id": "m2.02",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 1",
+        "libro": "Cohen-Tannoudji II"
+      }
+    },
+    {
+      "id": "mc.1.02",
+      "tema": 1,
+      "nombre": "Funciones de operadores",
+      "descripcion": "Construcción de funciones de operadores a partir de su espectro y de las representaciones matriciales.",
+      "prerequisitos": [
+        {
+          "id": "mc.1.01",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 1"
+      }
+    },
+    {
+      "id": "mc.1.03",
+      "tema": 1,
+      "nombre": "Diferenciación de operadores",
+      "descripcion": "Derivada temporal de operadores, regla del producto y ejemplos de diferenciación de productos y funciones de operadores.",
+      "prerequisitos": [
+        {
+          "id": "mc.1.02",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 1"
+      }
+    },
+    {
+      "id": "mc.1.04",
+      "tema": 1,
+      "nombre": "Operadores unitarios y operadores transformados",
+      "descripcion": "Operadores unitarios, cambio de base y transformación unitaria de estados y observables.",
+      "prerequisitos": [
+        {
+          "id": "mc.1.03",
+          "peso": 1.0
+        },
+        {
+          "id": "al.04",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 1"
+      }
+    },
+    {
+      "id": "mc.1.05",
+      "tema": 1,
+      "nombre": "Bases ortonormales y representaciones matriciales",
+      "descripcion": "Bases ortonormales, componentes de kets y bras, matrices de operadores y matrices unitarias de cambio de base.",
+      "prerequisitos": [
+        {
+          "id": "mc.1.04",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 1"
+      }
+    },
+    {
+      "id": "mc.1.06",
+      "tema": 1,
+      "nombre": "Autovalores, degeneración y observables",
+      "descripcion": "Ecuaciones de autovalores, espectro, degeneración y lectura de los observables en una base propia.",
+      "prerequisitos": [
+        {
+          "id": "mc.1.05",
+          "peso": 1.0
+        },
+        {
+          "id": "m2.04",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 1"
+      }
+    },
+    {
+      "id": "mc.1.07",
+      "tema": 1,
+      "nombre": "Descomposición espectral y proyectores",
+      "descripcion": "Proyectores asociados a subespacios propios y descomposición espectral de operadores.",
+      "prerequisitos": [
+        {
+          "id": "mc.1.06",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 1"
+      }
+    },
+    {
+      "id": "mc.1.08",
+      "tema": 1,
+      "nombre": "Operador paridad y simetría discreta",
+      "descripcion": "Definición del operador paridad, autovalores ±1, subespacios par e impar y transformación de observables.",
+      "prerequisitos": [
+        {
+          "id": "mc.1.07",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 1"
+      }
+    },
+    {
+      "id": "mc.1.09",
+      "tema": 1,
+      "nombre": "Reglas de selección por paridad y matrices de Pauli",
+      "descripcion": "Anulación de elementos de matriz por paridad; se conserva la conexión operativa con las matrices de Pauli usadas después para espín 1/2.",
+      "prerequisitos": [
+        {
+          "id": "mc.1.08",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 1"
+      }
+    },
+    {
+      "id": "mc.2.01",
+      "tema": 2,
+      "nombre": "Postulados: estados, observables y medida",
+      "descripcion": "Estado como rayo del espacio de Hilbert, observables hermíticos y regla general de medida.",
+      "prerequisitos": [
+        {
+          "id": "mc.1.05",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 2"
+      }
+    },
+    {
+      "id": "mc.2.02",
+      "tema": 2,
+      "nombre": "Probabilidades y reducción del estado",
+      "descripcion": "Descomposición espectral, probabilidades de resultados, espectros discreto y continuo y reducción tras la medida.",
+      "prerequisitos": [
+        {
+          "id": "mc.2.01",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 2"
+      }
+    },
+    {
+      "id": "mc.2.03",
+      "tema": 2,
+      "nombre": "Incertidumbre, compatibilidad y CCOC",
+      "descripcion": "Valores medios, desviaciones, relaciones de incertidumbre, medida simultánea y conjuntos completos de observables que conmutan.",
+      "prerequisitos": [
+        {
+          "id": "mc.2.01",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 2"
+      }
+    },
+    {
+      "id": "mc.2.04",
+      "tema": 2,
+      "nombre": "Dinámica de Schrödinger, continuidad y corriente",
+      "descripcion": "Ecuación de Schrödinger, determinismo y superposición; conservación de probabilidad, ecuación de continuidad, corriente y potencial vector.",
+      "prerequisitos": [
+        {
+          "id": "mc.2.01",
+          "peso": 1.0
+        },
+        {
+          "id": "cu.02",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 2"
+      }
+    },
+    {
+      "id": "mc.2.05",
+      "tema": 2,
+      "nombre": "Ehrenfest, límite clásico y sistemas conservativos",
+      "descripcion": "Teorema de Ehrenfest, campo de velocidades, comparación clásica-cuántica y evolución de sistemas conservativos.",
+      "prerequisitos": [
+        {
+          "id": "mc.2.04",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 2"
+      }
+    },
+    {
+      "id": "mc.2.06",
+      "tema": 2,
+      "nombre": "Representación de energía y estados estacionarios",
+      "descripcion": "Constantes del movimiento, base de energía, estados estacionarios, frecuencias de Bohr y evolución de fases relativas.",
+      "prerequisitos": [
+        {
+          "id": "mc.2.05",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.1.08",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 2"
+      }
+    },
+    {
+      "id": "mc.2.07",
+      "tema": 2,
+      "nombre": "Operador densidad y mezclas estadísticas",
+      "descripcion": "Estados puros y mezclas, propiedades de la matriz densidad, valor medio, positividad y ensamble canónico.",
+      "prerequisitos": [
+        {
+          "id": "mc.2.06",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.1.07",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 2"
+      }
+    },
+    {
+      "id": "mc.2.08",
+      "tema": 2,
+      "nombre": "Productos tensoriales, subsistemas y entrelazamiento",
+      "descripcion": "Estados producto y estados correlacionados, observables de subsistemas, traza parcial y entrelazamiento.",
+      "prerequisitos": [
+        {
+          "id": "mc.2.07",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.1.07",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 2"
+      }
+    },
+    {
+      "id": "mc.2.09",
+      "tema": 2,
+      "nombre": "Operador de evolución, imágenes y sistemas de dos niveles",
+      "descripcion": "Evolución unitaria y operador de evolución; imágenes de Schrödinger y Heisenberg; aplicación al sistema de dos niveles y oscilaciones de Rabi.",
+      "prerequisitos": [
+        {
+          "id": "mc.2.06",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.1.09",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 2"
+      }
+    },
+    {
+      "id": "mc.3.01",
+      "tema": 3,
+      "nombre": "Oscilador 1-D: variables adimensionales y operadores escalera",
+      "descripcion": "Hamiltoniano adimensional, operadores creación y aniquilación, operador número y álgebra de conmutación.",
+      "prerequisitos": [
+        {
+          "id": "mc.1.08",
+          "peso": 1.0
+        },
+        {
+          "id": "cu.02",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 3"
+      }
+    },
+    {
+      "id": "mc.3.02",
+      "tema": 3,
+      "nombre": "Espectro, estado fundamental y funciones de Hermite",
+      "descripcion": "Cuantización del operador número, energía del oscilador, estado fundamental, construcción de autoestados y funciones de Hermite.",
+      "prerequisitos": [
+        {
+          "id": "mc.3.01",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 3"
+      }
+    },
+    {
+      "id": "mc.3.03",
+      "tema": 3,
+      "nombre": "Valores medios, incertidumbre y evolución del oscilador",
+      "descripcion": "Elementos de matriz, valores medios de X y P, incertidumbre, teorema del virial y evolución temporal.",
+      "prerequisitos": [
+        {
+          "id": "mc.3.02",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 3"
+      }
+    },
+    {
+      "id": "mc.3.04",
+      "tema": 3,
+      "nombre": "Osciladores 2-D/3-D, campo eléctrico y equilibrio térmico",
+      "descripcion": "Degeneración del oscilador 2-D y 3-D, oscilador cargado en campo eléctrico, desplazamiento y polarización, función de partición, límites térmicos e inversión de población.",
+      "prerequisitos": [
+        {
+          "id": "mc.3.03",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.1.07",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 3"
+      }
+    },
+    {
+      "id": "mc.4.01",
+      "tema": 4,
+      "nombre": "Álgebra del momento angular",
+      "descripcion": "Relaciones de conmutación, operadores escalera, espectro de J² y Jz y bases estándar del momento angular.",
+      "prerequisitos": [
+        {
+          "id": "mc.1.05",
+          "peso": 1.0
+        },
+        {
+          "id": "cu.05",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 4"
+      }
+    },
+    {
+      "id": "mc.4.02",
+      "tema": 4,
+      "nombre": "Momento angular orbital y grupo de rotaciones",
+      "descripcion": "Partícula sin espín, armónicos esféricos, representación unitaria de rotaciones, generadores y rotaciones finitas.",
+      "prerequisitos": [
+        {
+          "id": "mc.4.01",
+          "peso": 1.0
+        },
+        {
+          "id": "m2.08",
+          "peso": 0.5
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 4"
+      }
+    },
+    {
+      "id": "mc.4.03",
+      "tema": 4,
+      "nombre": "Espín 1/2, espacios de espín y espinores",
+      "descripcion": "Espacio de estados de espín 1/2, representación en bases de espín y coordenadas, espinores, operadores de Pauli y medidas parciales.",
+      "prerequisitos": [
+        {
+          "id": "mc.4.02",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.1.09",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 4"
+      }
+    },
+    {
+      "id": "mc.4.04",
+      "tema": 4,
+      "nombre": "Momento magnético, precesión de Larmor y dos niveles",
+      "descripcion": "Acoplamiento del espín a un campo magnético, momento magnético, precesión de Larmor, dinámica de dos niveles y transición entre niveles.",
+      "prerequisitos": [
+        {
+          "id": "mc.4.03",
+          "peso": 1.0
+        },
+        {
+          "id": "em.6.05",
+          "peso": 0.5
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 4"
+      }
+    },
+    {
+      "id": "mc.4.05",
+      "tema": 4,
+      "nombre": "Rotaciones y transformación de observables",
+      "descripcion": "Rotaciones globales y del espacio completo, transformación de operadores y observables escalares y vectoriales.",
+      "prerequisitos": [
+        {
+          "id": "mc.4.03",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 4"
+      }
+    },
+    {
+      "id": "mc.4.06",
+      "tema": 4,
+      "nombre": "Suma de dos momentos angulares",
+      "descripcion": "Producto tensorial y base acoplada; estados singlete y triplete como caso de dos espines 1/2.",
+      "prerequisitos": [
+        {
+          "id": "mc.4.03",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.1.07",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 4"
+      }
+    },
+    {
+      "id": "mc.4.07",
+      "tema": 4,
+      "nombre": "Acoplamiento general y coeficientes de Clebsch–Gordan",
+      "descripcion": "Valores permitidos de J, degeneraciones, construcción de multipletes y coeficientes de Clebsch–Gordan para momentos angulares acoplados.",
+      "prerequisitos": [
+        {
+          "id": "mc.4.06",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 4"
+      }
+    },
+    {
+      "id": "mc.4.08",
+      "tema": 4,
+      "nombre": "Wigner–Eckart, reglas de selección y Landé",
+      "descripcion": "Componentes esféricas de operadores vectoriales, teorema de Wigner–Eckart, reglas de selección, proyección/factor de Landé y aplicación al acoplamiento LS de átomos multielectrónicos.",
+      "prerequisitos": [
+        {
+          "id": "mc.4.07",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 4"
+      }
+    },
+    {
+      "id": "mc.5.01",
+      "tema": 5,
+      "nombre": "Scattering: sección eficaz, amplitud y estados asintóticos",
+      "descripcion": "Dispersión elástica, dispositivo experimental, sección eficaz diferencial, estados estacionarios y forma asintótica de la amplitud.",
+      "prerequisitos": [
+        {
+          "id": "mc.2.05",
+          "peso": 1.0
+        },
+        {
+          "id": "mo.03",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 5"
+      }
+    },
+    {
+      "id": "mc.5.02",
+      "tema": 5,
+      "nombre": "Flujo, interferencia y teorema óptico",
+      "descripcion": "Flujo de probabilidad, término de interferencia entre onda incidente y dispersada, paquetes de onda y teorema óptico.",
+      "prerequisitos": [
+        {
+          "id": "mc.5.01",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 5"
+      }
+    },
+    {
+      "id": "mc.5.03",
+      "tema": 5,
+      "nombre": "Ecuación integral y funciones de Green",
+      "descripcion": "Funciones de Green entrante y saliente, condición asintótica y ecuación integral para la función y la amplitud de scattering.",
+      "prerequisitos": [
+        {
+          "id": "mc.5.01",
+          "peso": 1.0
+        },
+        {
+          "id": "m2.02",
+          "peso": 0.5
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 5"
+      }
+    },
+    {
+      "id": "mc.5.04",
+      "tema": 5,
+      "nombre": "Aproximación de Born y rango de validez",
+      "descripcion": "Primera aproximación y serie de Born, criterio de validez y aplicación a potenciales de Yukawa y Coulomb apantallado.",
+      "prerequisitos": [
+        {
+          "id": "mc.5.03",
+          "peso": 1.0
+        },
+        {
+          "id": "m2.04",
+          "peso": 0.5
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 5"
+      }
+    },
+    {
+      "id": "mc.5.05",
+      "tema": 5,
+      "nombre": "Ondas parciales, parámetro de impacto y desfasajes",
+      "descripcion": "Expansión en ondas parciales, cambio entre ondas planas y esféricas, parámetro de impacto, comportamiento asintótico y desplazamientos de fase.",
+      "prerequisitos": [
+        {
+          "id": "mc.5.01",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.4.02",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 5"
+      }
+    },
+    {
+      "id": "mc.5.06",
+      "tema": 5,
+      "nombre": "Aplicaciones de ondas parciales y resonancias",
+      "descripcion": "Scattering por esfera impenetrable y pozos, resonancias de baja energía y aplicaciones a Yukawa y Rutherford.",
+      "prerequisitos": [
+        {
+          "id": "mc.5.05",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 5"
+      }
+    },
+    {
+      "id": "mc.6.01",
+      "tema": 6,
+      "nombre": "Perturbaciones estacionarias no degeneradas",
+      "descripcion": "Expansión en potencias, correcciones de energía y estado, condiciones de normalización y validez para niveles no degenerados.",
+      "prerequisitos": [
+        {
+          "id": "mc.2.05",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 6"
+      }
+    },
+    {
+      "id": "mc.6.02",
+      "tema": 6,
+      "nombre": "Perturbaciones estacionarias degeneradas",
+      "descripcion": "Selección de la base adecuada, diagonalización de la perturbación en el subespacio degenerado y desdoblamiento de niveles.",
+      "prerequisitos": [
+        {
+          "id": "mc.6.01",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 6"
+      }
+    },
+    {
+      "id": "mc.6.03",
+      "tema": 6,
+      "nombre": "Método variacional (incluido en el resumen del tema)",
+      "descripcion": "Principio variacional, funciones de prueba y cota superior a la energía fundamental; figura en el resumen del Tema 6, sin desarrollo manuscrito identificable en el escaneo.",
+      "prerequisitos": [
+        {
+          "id": "mc.6.01",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 6"
+      }
+    },
+    {
+      "id": "mc.6.04",
+      "tema": 6,
+      "nombre": "Aproximación WKB (incluida en el resumen del tema)",
+      "descripcion": "Aproximación semiclásica, reglas de conexión y efecto túnel; figura en el resumen del Tema 6, sin desarrollo manuscrito identificable en el escaneo.",
+      "prerequisitos": [
+        {
+          "id": "mc.6.01",
+          "peso": 1.0
+        },
+        {
+          "id": "cu.02",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 6"
+      }
+    },
+    {
+      "id": "mc.6.05",
+      "tema": 6,
+      "nombre": "Perturbaciones dependientes del tiempo",
+      "descripcion": "Amplitudes y probabilidades de transición, aproximación a primer orden, reglas de selección y perturbación monocromática/armónica.",
+      "prerequisitos": [
+        {
+          "id": "mc.6.01",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.2.08",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 6"
+      }
+    },
+    {
+      "id": "mc.6.06",
+      "tema": 6,
+      "nombre": "Regla de oro de Fermi y transiciones al continuo",
+      "descripcion": "Continuo de estados finales, densidad de estados, emisión espontánea, aproximación resonante y tasa de transición.",
+      "prerequisitos": [
+        {
+          "id": "mc.6.05",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 6"
+      }
+    },
+    {
+      "id": "mc.7.01",
+      "tema": 7,
+      "nombre": "Indistinguibilidad, permutaciones y simetrización",
+      "descripcion": "Partículas idénticas frente a distinguibles, degeneración de intercambio, operador permutación, subespacios simétrico y antisimétrico, bosones y fermiones.",
+      "prerequisitos": [
+        {
+          "id": "mc.2.01",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.1.07",
+          "peso": 1.0
+        },
+        {
+          "id": "cu.06",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 7"
+      }
+    },
+    {
+      "id": "mc.7.02",
+      "tema": 7,
+      "nombre": "Postulado de simetrización y determinantes de Slater",
+      "descripcion": "Proyectores de simetrización y antisimetrización, conexión espín–estadística, construcción de estados físicos y determinantes de Slater.",
+      "prerequisitos": [
+        {
+          "id": "mc.7.01",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 7"
+      }
+    },
+    {
+      "id": "mc.5.07",
+      "tema": 5,
+      "nombre": "Scattering inelástico y absorción",
+      "descripcion": "Canales elásticos e inelásticos, absorción como pérdida de flujo del canal incidente y efecto sobre amplitudes y secciones eficaces.",
+      "prerequisitos": [
+        {
+          "id": "mc.5.01",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 5, dispersión con absorción",
+        "libro": "Cohen-Tannoudji II, VIII"
+      }
+    },
+    {
+      "id": "mc.6.07",
+      "tema": 6,
+      "nombre": "Perturbaciones al oscilador armónico bidimensional",
+      "descripcion": "Aplicación de la perturbación estacionaria al espectro degenerado del oscilador armónico bidimensional; nodo operativo conservado para los problemas asociados.",
+      "prerequisitos": [
+        {
+          "id": "mc.6.02",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.3.04",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 6, aplicación al oscilador armónico bidimensional",
+        "apuntes_manuscritos": "MECANICA CUANTICA. TEORIA.pdf, pp. 113–119",
+        "libro": "Cohen-Tannoudji II, XI"
+      }
+    },
+    {
+      "id": "mc.7.03",
+      "tema": 7,
+      "nombre": "Átomos multielectrónicos y aproximación de campo central",
+      "descripcion": "Aplicación del acoplamiento de momentos angulares y de la simetrización a configuraciones electrónicas, repulsión electrostática y término de intercambio.",
+      "prerequisitos": [
+        {
+          "id": "mc.7.02",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.4.08",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 7, átomos multielectrónicos",
+        "libro": "Cohen-Tannoudji II, XIV y complemento AXIV/BXIV"
+      }
+    },
+    {
+      "id": "mc.7.04",
+      "tema": 7,
+      "nombre": "Colisión y scattering de partículas idénticas",
+      "descripcion": "Suma o diferencia de amplitudes de intercambio según la simetría, interferencia y secciones eficaces en la colisión de partículas idénticas.",
+      "prerequisitos": [
+        {
+          "id": "mc.7.01",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.5.01",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 7, colisión entre dos partículas idénticas",
+        "libro": "Cohen-Tannoudji II, complemento DXIV"
+      }
+    },
+    {
+      "id": "mc.7.05",
+      "tema": 7,
+      "nombre": "Números de ocupación y gases cuánticos ideales",
+      "descripcion": "Bases de números de ocupación, partículas idénticas independientes, condensación de Bose–Einstein y nivel de Fermi.",
+      "prerequisitos": [
+        {
+          "id": "mc.7.01",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.7.02",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 7",
+        "apuntes_manuscritos": "MECANICA CUANTICA. TEORIA.pdf, pp. 234–238"
+      }
+    },
+    {
+      "id": "mc.6.08",
+      "tema": 6,
+      "nombre": "Decaimiento de un estado discreto acoplado al continuo",
+      "descripcion": "Evolución de un estado discreto acoplado a un continuo, decaimiento exponencial, anchura de Breit–Wigner y desplazamiento de Lamb.",
+      "prerequisitos": [
+        {
+          "id": "mc.6.06",
+          "peso": 1.0
+        },
+        {
+          "id": "mc.2.06",
+          "peso": 1.0
+        }
+      ],
+      "fuentes": {
+        "guia": "Tema 6, continuo y decaimiento",
+        "apuntes_manuscritos": "MECANICA CUANTICA. TEORIA.pdf, pp. 217–221"
+      }
+    }
+  ],
+  "auditoria": {
+    "estado": "completa_local",
+    "fecha": "2026-09-16",
+    "nodos": 50,
+    "alineacion_apuntes": {
+      "fuente": "MECANICA CUANTICA. TEORIA.pdf",
+      "criterio": "Páginas del desarrollo manuscrito que contienen la evidencia directa del nodo. 'resumen' indica que el concepto aparece en el resumen del Tema 6 pero no tiene desarrollo manuscrito identificable en el escaneo.",
+      "nodos": {
+        "mc.1.01": {"paginas": "25–26", "cobertura": "desarrollado"},
+        "mc.1.02": {"paginas": "26", "cobertura": "desarrollado"},
+        "mc.1.03": {"paginas": "27–29", "cobertura": "desarrollado"},
+        "mc.1.04": {"paginas": "30–32", "cobertura": "desarrollado"},
+        "mc.1.05": {"paginas": "31–32", "cobertura": "desarrollado"},
+        "mc.1.06": {"paginas": "32–34", "cobertura": "desarrollado"},
+        "mc.1.07": {"paginas": "33–34", "cobertura": "desarrollado"},
+        "mc.1.08": {"paginas": "33–36", "cobertura": "desarrollado"},
+        "mc.1.09": {"paginas": "35–36; 135–137", "cobertura": "desarrollado"},
+        "mc.2.01": {"paginas": "37–40", "cobertura": "desarrollado"},
+        "mc.2.02": {"paginas": "38–39", "cobertura": "desarrollado"},
+        "mc.2.03": {"paginas": "41–43", "cobertura": "desarrollado"},
+        "mc.2.04": {"paginas": "43–47", "cobertura": "desarrollado"},
+        "mc.2.05": {"paginas": "48–50", "cobertura": "desarrollado"},
+        "mc.2.06": {"paginas": "50–52", "cobertura": "desarrollado"},
+        "mc.2.07": {"paginas": "53–54; 61–69", "cobertura": "desarrollado"},
+        "mc.2.08": {"paginas": "55–60; 70–73", "cobertura": "desarrollado"},
+        "mc.2.09": {"paginas": "74–84; 90–97", "cobertura": "desarrollado"},
+        "mc.3.01": {"paginas": "103–107", "cobertura": "desarrollado"},
+        "mc.3.02": {"paginas": "108–110", "cobertura": "desarrollado"},
+        "mc.3.03": {"paginas": "109–113", "cobertura": "desarrollado"},
+        "mc.3.04": {"paginas": "113–119", "cobertura": "desarrollado"},
+        "mc.4.01": {"paginas": "121–123", "cobertura": "desarrollado"},
+        "mc.4.02": {"paginas": "124–131", "cobertura": "desarrollado"},
+        "mc.4.03": {"paginas": "132–140", "cobertura": "desarrollado"},
+        "mc.4.04": {"paginas": "85–102", "cobertura": "desarrollado"},
+        "mc.4.05": {"paginas": "123–131; 140–142", "cobertura": "desarrollado"},
+        "mc.4.06": {"paginas": "143–149", "cobertura": "desarrollado"},
+        "mc.4.07": {"paginas": "145–149", "cobertura": "desarrollado"},
+        "mc.4.08": {"paginas": "150–157", "cobertura": "desarrollado"},
+        "mc.5.01": {"paginas": "159–165", "cobertura": "desarrollado"},
+        "mc.5.02": {"paginas": "166–168", "cobertura": "desarrollado"},
+        "mc.5.03": {"paginas": "168–170", "cobertura": "desarrollado"},
+        "mc.5.04": {"paginas": "167–172; 184", "cobertura": "desarrollado"},
+        "mc.5.05": {"paginas": "173–180", "cobertura": "desarrollado"},
+        "mc.5.06": {"paginas": "181–187", "cobertura": "desarrollado"},
+        "mc.5.07": {"paginas": "160", "cobertura": "desarrollado"},
+        "mc.6.01": {"paginas": "189–194", "cobertura": "desarrollado"},
+        "mc.6.02": {"paginas": "195–202", "cobertura": "desarrollado"},
+        "mc.6.03": {"paginas": "19", "cobertura": "resumen"},
+        "mc.6.04": {"paginas": "19", "cobertura": "resumen"},
+        "mc.6.05": {"paginas": "203–209", "cobertura": "desarrollado"},
+        "mc.6.06": {"paginas": "205–216", "cobertura": "desarrollado"},
+        "mc.6.07": {"paginas": "113–119", "cobertura": "desarrollado", "nota": "Aplicación del Tema 6 al oscilador 2-D; el contenido base del oscilador se desarrolla en el Tema 3."},
+        "mc.6.08": {"paginas": "217–221", "cobertura": "desarrollado"},
+        "mc.7.01": {"paginas": "223–233", "cobertura": "desarrollado"},
+        "mc.7.02": {"paginas": "223–234", "cobertura": "desarrollado"},
+        "mc.7.03": {"paginas": "156–157", "cobertura": "desarrollado", "nota": "Aplicación ubicada en el bloque de momento angular del desarrollo; se conserva en el Tema 7 por la clasificación operativa del temario."},
+        "mc.7.04": {"paginas": "227–240", "cobertura": "desarrollado"},
+        "mc.7.05": {"paginas": "234–238", "cobertura": "desarrollado"}
+      }
+    },
+    "temario": "Guía docente UVa 2026-27: 7 temas cubiertos; los nodos se han alineado con el desarrollo manuscrito y se separan scattering inelástico/absorción, decaimiento al continuo, átomos multielectrónicos, colisión idéntica y números de ocupación.",
+    "problemas": {
+      "total": 144,
+      "examen": 41,
+      "cohen": 103,
+      "clasificados": 144
+    },
+    "fuentes": [
+      "Mecánica Cuántica\\Cuántica.pdf",
+      "Mecánica Cuántica\\MECANICA CUANTICA. TEORIA.pdf (escaneo manuscrito; transcripción visual completa en knowledge_graph\\transcripcion_mecanica_cuantica_teoria.md)",
+      "Mecánica Cuántica\\MECANICA CUANTICA. PROBLEMAS1.pdf (escaneo manuscrito de problemas resueltos y exámenes UVa)",
+      "Mecánica Cuántica\\MECANICA CUANTICA. PROBLEMAS2.pdf (escaneo manuscrito de problemas y exámenes UVa resueltos)",
+      "Downloads\\Cohen - Volumen 1.pdf",
+      "Downloads\\Cohen - Volumen 2.pdf"
+    ],
+    "fuente_apuntes_manuscritos": {
+      "ruta": "C:\\Users\\jorge\\Desktop\\Física\\4º Física\\Mecánica Cuántica\\MECANICA CUANTICA. TEORIA.pdf",
+      "paginas": 240,
+      "estado_transcripcion": "completa a nivel de revisión visual: páginas manuscritas 3-240 transcritas; página 1 es material impreso ajeno al cuaderno y página 2 aparentemente en blanco",
+      "archivo_transcripcion": "knowledge_graph\\transcripcion_mecanica_cuantica_teoria.md",
+      "pagina_188": "en blanco, sin fórmulas, títulos ni notas legibles",
+      "paginas_en_blanco": [2, 14, 18, 22, 188, 222],
+      "nota_numeracion": "El escaneo usa numeración interna irregular: el resumen llama Tema 7 a partículas idénticas y el desarrollo extenso usa un separador Tema 8; no se crea un tema nuevo sin evidencia adicional."
+    },
+    "fuente_problemas_manuscritos": {
+      "volumen_1": {
+        "ruta": "C:\\Users\\jorge\\Desktop\\Física\\4º Física\\Mecánica Cuántica\\MECANICA CUANTICA. PROBLEMAS1.pdf",
+        "paginas": 144,
+        "descripcion": "Cuaderno 1 de problemas resueltos a mano por compañero UVa (ejercicios del Cohen-Tannoudji y exámenes oficiales).",
+        "estructura": {
+          "tema_1": "pp. 1–12 (Ejercicios Tema 1: Formalismo matemático / Cohen Tema 2: matrices de Pauli, funciones de operadores, proyectores)",
+          "tema_2": "pp. 13–48 (Ejercicios Tema 2: Postulados / Cohen Tema 3: medidas, probabilidades, evolución temporal, matriz densidad)",
+          "examenes_parcial_1": "pp. 49–104 (Exámenes resueltos del 1º Parcial UVa: 2017, 2018, 2020, 2021, 2022)",
+          "examenes_parcial_2": "pp. 105–138 (Exámenes resueltos del 2º Parcial UVa: momento angular, espín, composición)",
+          "tema_6": "pp. 139–144 (Problemas Tema 6: Métodos aproximados y teoría de perturbaciones)"
+        }
+      },
+      "volumen_2": {
+        "ruta": "C:\\Users\\jorge\\Desktop\\Física\\4º Física\\Mecánica Cuántica\\MECANICA CUANTICA. PROBLEMAS2.pdf",
+        "paginas": 110,
+        "descripcion": "Cuaderno 2 de problemas resueltos a mano por compañero UVa (Partículas idénticas y exámenes oficiales UVa resueltos al completo).",
+        "estructura": {
+          "tema_7": "pp. 1–4 (Problemas Tema 8 manuscrito / Tema 7 oficial: Partículas idénticas, simetrización, bosones y fermiones)",
+          "examenes_oficiales_resueltos": "pp. 5–110 (Exámenes y cuestiones UVa resueltos: Ordinaria 2024 pp. 95–104, 2023 pp. 44–52, 2022 pp. 5–27 y 53–68, 2021 pp. 28–43 y 69–94, 2019 pp. 105–110)"
+        }
+      }
+    },
+    "regla_preparacion": "Todos los nodos requeridos con dominio efectivo >= 0.7.",
+    "nota_cohen": "Se ha creado un índice operativo de todos los ejercicios de los complementos alineados con el temario; el enunciado completo permanece en los dos PDFs originales."
+  }
 }

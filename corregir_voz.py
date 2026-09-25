@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Corrige una narración hablada (método Feynman) con Claude Code, sin API de pago.
+"""Corrige una narración hablada (método Feynman) usando Gemini Web, sin API.
 
-El estudiante resuelve el ejercicio en papel/reMarkable mientras narra en alto su
+El estudiante resuelve el ejercicio en papel mientras narra en alto su
 razonamiento (incluidos los caminos equivocados). Ese audio se transcribe con
-`transcribir.py` y aquí se corrige llamando a `claude -p` (usa tu suscripción de
-Claude Code, no la API de Gemini). Se reutiliza el MISMO esquema `AnalysisResponse`
+`transcribir.py` y aquí se prepara un encargo para Gemini en la web/app (usa tu
+suscripción, no la API). Se reutiliza el MISMO esquema `AnalysisResponse`
 y el downstream del watcher, así que la corrección por voz crea las mismas fichas
-y mueve el knowledge graph igual que una hoja del reMarkable.
+y mueve el knowledge graph igual que una corrección desde el Inbox.
 
 Uso:
     python corregir_voz.py <transcripcion.txt>   # corrige esa transcripción
@@ -14,14 +14,14 @@ Uso:
     python corregir_voz.py                        # coge lo más nuevo de grabaciones/
     python corregir_voz.py <archivo> --solo-json  # NO toca el grafo; solo análisis
 
-El modelo se puede cambiar con la variable CLAUDE_MODEL (por defecto, el de tu
-sesión de Claude Code).
+El modelo debe verificarse en el selector de Gemini Web antes de enviar cada
+encargo; el Centro de Estudio impide integrar la respuesta si no se marca esa
+verificación.
 """
 import os
 import re
 import sys
 import json
-import shutil
 import subprocess
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -29,13 +29,13 @@ if BASE not in sys.path:
     sys.path.insert(0, BASE)
 
 import schemas  # noqa: E402  (reutilizamos el mismo esquema del resto del sistema)
+import config  # noqa: E402
 
 EXTS_AUDIO = {".m4a", ".mp3", ".wav", ".ogg", ".opus", ".flac", ".aac", ".wma", ".mp4", ".webm"}
 GRABACIONES_DIR = os.path.join(BASE, "grabaciones")
-# Opus 4.8 por defecto (máxima exigencia). Si se agota el límite del plan, se
-# reintenta automáticamente con el modelo de respaldo (sonnet).
-CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-4-8")
-CLAUDE_MODEL_FALLBACK = os.getenv("CLAUDE_MODEL_FALLBACK", "claude-sonnet-5")
+GEMINI_HANDOFF_DIR = os.path.join(BASE, "knowledge_graph", "encargos_gemini")
+GEMINI_WEB_URL = config.GEMINI_WEB_URL
+GEMINI_REQUIRED_MODEL = config.GEMINI_REQUIRED_MODEL
 
 
 # ---------------------------------------------------------------------------
@@ -88,6 +88,8 @@ def construir_prompt(transcripcion: str) -> str:
         '  "transcripcion_manuscrito": str,  // los pasos de la solución que narró, reconstruidos en LaTeX\n'
         '  "conceptos_dominio": [{"concepto": str, "dominio": float}],  // 0.0-1.0 por concepto\n'
         '  "nodos_detectados": [str],    // 1-5 ids EXACTOS del catálogo de nodos (ej: "em.1.07")\n'
+        '  "nodos_hueco_teorico": [str], // ids donde la explicación o justificación queda incompleta\n'
+        '  "nodos_error": [str],         // ids directamente afectados por un error de resolución\n'
         '  "resultado": str,             // "correcto" | "incorrecto" | "incompleto"\n'
         '  "tiene_error": bool,\n'
         '  "confianza_analisis": float,  // 0.0-1.0\n'
@@ -98,32 +100,39 @@ def construir_prompt(transcripcion: str) -> str:
         '      "tipo_error": [str],      // algebraico|conceptual|calculo|interpretacion_fisica|planteamiento|unidades_dimensiones|otros\n'
         '      "descripcion": str, "razon": str, "como_evitarlo": str,\n'
         '      "ejemplo_incorrecto": str, "ejemplo_correcto": str  // en LaTeX\n'
+        "  }],\n"
+        '  "checkpoints": [{\n'
+        '      "descripcion": str,       // qué sub-paso es, ej: "1ª integración por partes"\n'
+        '      "resultado_dicho": str,   // el resultado parcial que narró, en LaTeX\n'
+        '      "correcto": bool,         // verificado de forma independiente (recalculado por ti)\n'
+        '      "nota": str|null          // si es incorrecto, qué falla EN ESE checkpoint concreto\n'
         "  }]\n"
         "}"
     )
 
     return (
-        "Eres un profesor de Física exigente y riguroso que corrige a un estudiante del Grado en Física.\n"
+        "Eres un catedrático y examinador de Física de máxima exigencia en la Universidad de Valladolid (UVa).\n"
+        "OBJETIVO DEL ESTUDIANTE: SACAR MATRÍCULA DE HONOR (10.0) EN TODAS LAS ASIGNATURAS DE 4º DE FÍSICA.\n"
+        "Por tanto, tu corrección debe ser RIGOROSÍSIMA E IMPLACABLE. Cero complacencia: calificar con benevolencia o tolerar justificaciones a medias perjudica directamente su objetivo de alcanzar el 10.\n"
+        f"MODELO OBLIGATORIO: {GEMINI_REQUIRED_MODEL}. Antes de analizar, verifica en el selector de Gemini Web que aparece exactamente ese modelo. Si no aparece, no analices ni devuelvas JSON.\n\n"
         "El estudiante ha resuelto un ejercicio en papel MIENTRAS NARRABA EN ALTO su razonamiento "
         "(método Feynman). Lo que recibes es la TRANSCRIPCIÓN AUTOMÁTICA de esa narración: puede tener "
         "ruido de transcripción, muletillas y autocorrecciones (ej. 'espérate, no es 3x sino 5x'). "
         "Interpreta el RAZONAMIENTO, no las palabras literales.\n\n"
 
-        "Tu trabajo es corregir con rigor de profesor, no ser amable de más:\n"
+        "Tu trabajo es evaluar con el estándar de un 10.0 en un tribunal de examen:\n"
         "1. Reconstruye el ENUNCIADO del problema a partir de la narración (`transcripcion_enunciado`).\n"
         "2. Reconstruye los PASOS de su solución en LaTeX (`transcripcion_manuscrito`).\n"
-        "3. Marca CADA salto lógico no justificado y cada concepto usado sin justificar. Si dice "
-        "'aquí uso Gauss' sin argumentar la simetría, eso es un hueco: recógelo.\n"
-        "4. Distingue con claridad ERROR CONCEPTUAL vs ERROR MATEMÁTICO/algebraico/cálculo en `tipo_error`.\n"
-        "5. Sigue también los CAMINOS EQUIVOCADOS: si fue por un derrotero que estaba mal y luego rectificó, "
-        "identifica la justificación errónea que le llevó ahí — ahí suele estar el hueco conceptual real.\n"
-        "6. PUNTOS DE BAJA CONFIANZA: donde el razonamiento sea vago, circular o dé marcha atrás, señálalo "
-        "en `analisis_detallado`; y si refleja un hueco real de comprensión, conviértelo en un `error`.\n"
-        "7. En `errores`, para cada uno: por qué ocurrió (`razon`), cómo evitarlo (`como_evitarlo`) y el paso "
-        "incorrecto y el corregido en LaTeX.\n"
-        "8. `nodos_detectados`: elige de 1 a 5 ids EXACTOS del catálogo de abajo, los que este ejercicio "
-        "ejercita de verdad. Prioriza la asignatura detectada.\n"
-        "9. Todo en español. Sé honesto en `resultado` y `tiene_error`.\n\n"
+        "3. EXIGENCIA DE 10 EN JUSTIFICACIÓN: Marca CADA salto lógico no justificado. Si dice 'aquí uso Gauss' sin argumentar la simetría, si aplica una condición de contorno sin justificarla físicamente, o si desprecia un término sin verificar la hipótesis de validez (ej. baja inyección, régimen no relativista, aproximación dipolar, canal largo), es un HUECO GRAVE: recógelo como error.\n"
+        "4. RIGOR EN SIGNOS Y UNIDADES: En 4º de Física un error de signos en un potencial o tensor, o una incongruencia dimensional destruye una Matrícula de Honor. No lo trates como 'mero despiste', clasifícalo y señálalo con severidad en `tipo_error`.\n"
+        "5. Distingue con total precisión ERROR CONCEPTUAL vs ERROR MATEMÁTICO/algebraico/cálculo en `tipo_error`.\n"
+        "6. Sigue los CAMINOS EQUIVOCADOS: si fue por un derrotero erróneo y luego rectificó, identifica la justificación defectuosa que le indujo al error — ahí radica la laguna que le impediría sacar el 10.\n"
+        "7. PUNTOS DE BAJA CONFIANZA: donde el razonamiento sea titubeante, vago o circular, señálalo en `analisis_detallado`; si refleja duda en la base teórica, regístralo como `error`.\n"
+        "8. En `errores`, para cada uno: por qué ocurrió (`razon`), cómo evitarlo (`como_evitarlo`) y el paso incorrecto y el corregido en LaTeX.\n"
+        "9. CHECKPOINTS: el estudiante narra RESULTADOS PARCIALES de sub-pasos (ej. el resultado de cada integración, cada término de simetría, cada límite). Recalcúlalo tú de forma INDEPENDIENTE y sé riguroso: si un sub-paso no es exacto, `correcto: false` y explícalo en `nota`.\n"
+        "10. `nodos_detectados`: elige de 1 a 5 ids EXACTOS del catálogo de abajo, los que este ejercicio ejercita de verdad. Prioriza la asignatura detectada.\n"
+        "11. RETROALIMENTACIÓN POR NODO: en `nodos_hueco_teorico` pon solo ids donde falte una explicación, justificación o condición física aunque el cálculo global salga; en `nodos_error` pon solo ids donde el procedimiento esté mal. Usa ids del catálogo exactos y deja ambas listas vacías si no hay un diagnóstico fiable.\n"
+        "12. Calificación honesta: para que `resultado` sea 'correcto', la resolución debe ser impecable (digna de un 10). Si hay lagunas conceptuales o justificaciones a medias, califícalo como 'incompleto' o 'incorrecto'.\n\n"
 
         "IMPORTANTE sobre el formato de salida:\n"
         "- Devuelve EXCLUSIVAMENTE un objeto JSON válido con esta forma (sin ``` ni texto alrededor):\n"
@@ -143,25 +152,70 @@ def construir_prompt(transcripcion: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Llamada a Claude Code (claude -p) — usa la suscripción, no la API
+# Handoff a Gemini Web — usa la suscripción, no la API
 # ---------------------------------------------------------------------------
-def llamar_claude(prompt: str, model: str, timeout: int = 900) -> str:
-    exe = shutil.which("claude") or "claude"
-    cmd = [exe, "-p", "--output-format", "json", "--model", model]
-    print(f"Llamando a Claude ({model})... (puede tardar ~1-2 min)")
-    proc = subprocess.run(
-        cmd, input=prompt, capture_output=True, text=True,
-        encoding="utf-8", errors="replace", cwd=BASE, timeout=timeout,
-    )
-    if proc.returncode != 0:
-        raise RuntimeError(f"claude falló (código {proc.returncode}): {proc.stderr[:800]}")
+def _copiar_portapapeles(texto: str) -> bool:
+    """Deja el encargo completo listo para pegarlo en Gemini.
+
+    `clip.exe` forma parte de Windows y no envía nada a Internet; únicamente
+    escribe el portapapeles local. Si no está disponible, el archivo .md sigue
+    siendo la alternativa manual.
+    """
     try:
-        envelope = json.loads(proc.stdout)
-    except json.JSONDecodeError:
-        raise RuntimeError(f"No se pudo leer la respuesta de claude: {proc.stdout[:800]}")
-    if envelope.get("is_error"):
-        raise RuntimeError(f"claude devolvió error: {envelope.get('result')}")
-    return envelope.get("result", "")
+        subprocess.run(
+            ["clip.exe"], input=texto, text=True, check=True,
+            capture_output=True,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        return True
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
+def preparar_encargo_gemini(transcripcion: str, ruta_txt: str) -> tuple[str, str]:
+    """Prepara un encargo para Gemini Web sin usar ninguna API.
+
+    La respuesta de Gemini no puede escribir directamente en el disco desde la
+    web. Por eso el prompt se copia al portapapeles, se abre Gemini y el centro
+    de estudio ofrece un cuadro para pegar de vuelta la respuesta JSON.
+    """
+    os.makedirs(GEMINI_HANDOFF_DIR, exist_ok=True)
+    stem = os.path.splitext(os.path.basename(ruta_txt))[0]
+    resultado = os.path.join(GEMINI_HANDOFF_DIR, f"{stem}_resultado.json")
+    encargo = os.path.join(GEMINI_HANDOFF_DIR, f"{stem}_encargo.md")
+    prompt = construir_prompt(transcripcion)
+    with open(encargo, "w", encoding="utf-8") as f:
+        f.write(prompt)
+
+    copiado = _copiar_portapapeles(prompt)
+    try:
+        import webbrowser
+        webbrowser.open(GEMINI_WEB_URL)
+    except Exception:
+        pass
+
+    estado = (f"Prompt copiado al portapapeles. Comprueba que el selector muestra {GEMINI_REQUIRED_MODEL}."
+              if copiado else f"Abre el encargo guardado en disco y verifica {GEMINI_REQUIRED_MODEL}.")
+    print(f"GEMINI_HANDOFF:{encargo}|{resultado}|{estado}")
+    return encargo, resultado
+
+
+def importar_resultado_gemini(ruta_resultado: str, ruta_txt: str, solo_json: bool = False,
+                              modelo: str | None = None) -> schemas.AnalysisResponse:
+    """Valida e integra una respuesta de Gemini Web con el modelo confirmado."""
+    modelo_utilizado = (modelo or GEMINI_REQUIRED_MODEL).strip()
+    if modelo_utilizado != GEMINI_REQUIRED_MODEL:
+        raise ValueError(
+            f"Modelo no admitido: se esperaba {GEMINI_REQUIRED_MODEL!r}, "
+            f"pero se recibió {modelo_utilizado!r}."
+        )
+    with open(ruta_resultado, "r", encoding="utf-8") as f:
+        resp = schemas.AnalysisResponse.model_validate_json(_extraer_json(f.read()))
+    md = guardar_markdown(resp, ruta_txt)
+    if not solo_json:
+        integrar_en_grafo(resp, ruta_txt, modelo_ia=modelo_utilizado)
+    print(f"[OK] Corrección de Gemini guardada en: {md}")
+    return resp
 
 
 def _extraer_json(texto: str) -> str:
@@ -175,27 +229,6 @@ def _extraer_json(texto: str) -> str:
     return t
 
 
-def corregir_texto(transcripcion: str) -> schemas.AnalysisResponse:
-    prompt = construir_prompt(transcripcion)
-    modelos = [CLAUDE_MODEL]
-    if CLAUDE_MODEL_FALLBACK and CLAUDE_MODEL_FALLBACK != CLAUDE_MODEL:
-        modelos.append(CLAUDE_MODEL_FALLBACK)
-    ultimo_error = None
-    for i, m in enumerate(modelos):
-        try:
-            crudo = llamar_claude(prompt, m)
-            data = _extraer_json(crudo)
-            return schemas.AnalysisResponse.model_validate_json(data)
-        except Exception as e:
-            ultimo_error = e
-            if i + 1 < len(modelos):
-                print(f"  -> Falló con {m} ({e}). Puede ser el límite del plan; "
-                      f"reintento con el modelo de respaldo {modelos[i + 1]}...")
-            else:
-                print(f"  -> Falló también con {m}.")
-    raise ultimo_error
-
-
 # ---------------------------------------------------------------------------
 # Guardado del feedback legible + integración con el grafo
 # ---------------------------------------------------------------------------
@@ -207,10 +240,21 @@ def guardar_markdown(resp: schemas.AnalysisResponse, ruta_txt: str) -> str:
              f"**{resp.resultado.upper()}**  ·  confianza {resp.confianza_analisis:.0%}")
     if resp.nodos_detectados:
         L.append(f"\n**Nodos:** {', '.join(resp.nodos_detectados)}")
+    if resp.nodos_hueco_teorico:
+        L.append(f"\n**Huecos teóricos:** {', '.join(resp.nodos_hueco_teorico)}")
+    if resp.nodos_error:
+        L.append(f"\n**Nodos afectados por errores:** {', '.join(resp.nodos_error)}")
     if resp.resumen_correccion:
         L.append(f"\n> {resp.resumen_correccion}")
     L.append("\n## Análisis\n")
     L.append(resp.analisis_detallado or "")
+    if resp.checkpoints:
+        L.append("\n## Checkpoints\n")
+        for i, cp in enumerate(resp.checkpoints, 1):
+            marca = "✅" if cp.correcto else "❌"
+            L.append(f"{i}. {marca} **{cp.descripcion}** → `{cp.resultado_dicho}`")
+            if not cp.correcto and cp.nota:
+                L.append(f"   - {cp.nota}")
     if resp.errores:
         L.append("\n## Errores detectados\n")
         for i, e in enumerate(resp.errores, 1):
@@ -230,7 +274,8 @@ def guardar_markdown(resp: schemas.AnalysisResponse, ruta_txt: str) -> str:
     return salida
 
 
-def integrar_en_grafo(resp: schemas.AnalysisResponse, ruta_txt: str):
+def integrar_en_grafo(resp: schemas.AnalysisResponse, ruta_txt: str,
+                      modelo_ia: str | None = None):
     """Reutiliza el downstream del watcher: fichas Obsidian + actualización del grafo/XP + app."""
     import config
     config.init_vault_structure()
@@ -248,7 +293,7 @@ def integrar_en_grafo(resp: schemas.AnalysisResponse, ruta_txt: str):
         resp, ruta_txt, None, kg_perfil,
         sol_assets=[], enunciado_asset="",
         contexto="Narración de voz (método Feynman)", intento_mental="",
-        modelo_ia="claude-voz", es_fallback=False,
+        modelo_ia=modelo_ia or GEMINI_REQUIRED_MODEL, es_fallback=False,
     )
 
 
@@ -268,6 +313,22 @@ def _resolver_entrada(args) -> str | None:
 
 def main():
     solo_json = "--solo-json" in sys.argv
+    if "--importar-gemini" in sys.argv:
+        pos = sys.argv.index("--importar-gemini")
+        try:
+            modelo = GEMINI_REQUIRED_MODEL
+            if "--modelo" in sys.argv:
+                modelo_pos = sys.argv.index("--modelo")
+                if modelo_pos + 1 >= len(sys.argv):
+                    raise ValueError("Falta el nombre del modelo después de --modelo.")
+                modelo = sys.argv[modelo_pos + 1]
+            importar_resultado_gemini(
+                sys.argv[pos + 1], sys.argv[pos + 2], solo_json, modelo=modelo
+            )
+        except Exception as e:
+            print(f"[ERROR] No se pudo importar la corrección de Gemini: {e}")
+            sys.exit(1)
+        return
     ruta = _resolver_entrada(sys.argv[1:])
     if not ruta:
         print("[ERROR] No encuentro entrada. Pasa una transcripción .txt o un audio, "
@@ -291,23 +352,11 @@ def main():
         print("[ERROR] La transcripción está vacía.")
         sys.exit(1)
 
-    print(f"Corrigiendo la narración ({len(texto.split())} palabras)...")
-    resp = corregir_texto(texto)
-
-    md = guardar_markdown(resp, ruta_txt)
-    print(f"\n[OK] Corrección guardada en: {md}")
-    print(f"     Resultado: {resp.resultado} · errores: {len(resp.errores)} · "
-          f"nodos: {', '.join(resp.nodos_detectados) or '—'}")
-
-    if solo_json:
-        print("     (--solo-json) No se ha tocado el grafo.")
-    else:
-        try:
-            integrar_en_grafo(resp, ruta_txt)
-            print("     Grafo, fichas y corrección de la app actualizados.")
-        except Exception as e:
-            print(f"     [aviso] No se pudo integrar en el grafo: {e}")
-            print("     El análisis en Markdown sí está guardado.")
+    encargo, resultado = preparar_encargo_gemini(texto, ruta_txt)
+    print("[LISTO] Gemini se ha abierto. El prompt completo está en el portapapeles.")
+    print(f"        Comprueba que el modelo sea exactamente {GEMINI_REQUIRED_MODEL}.")
+    print("        Pégalo en Gemini, copia su respuesta JSON y devuélvela al Centro de Estudio.")
+    print(f"        Encargo guardado en: {encargo}")
 
 
 if __name__ == "__main__":

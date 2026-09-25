@@ -1,6 +1,25 @@
 # Revisión del grafo — Electrónica
 
-Total: **32 nodos**. Para cada nodo revisa: ¿se dio en clase?, ¿la granularidad es correcta (1 sesión)?, ¿faltan o sobran prerrequisitos?
+Total tras la auditoría: **46 nodos**. La lista original de 33 se conserva para no romper el progreso; se han añadido nodos de pequeña señal y se han separado los bloques que eran demasiado amplios.
+
+## Resultado de la auditoría 2026-09-15
+
+Se ha contrastado el grafo con el programa oficial 2026-27, el proyecto docente y los seis bloques de apuntes de `CUADERNOS_GEMINI_STUDY/01_Electronica`. La cobertura del temario oficial es completa: no se ha eliminado ningún contenido. La granularidad queda preparada para sesiones y problemas individuales.
+
+| Bloque | Estado | Decisión |
+|---|---|---|
+| Tema 1 | Completo | Los 7 apartados oficiales quedan cubiertos por `el.1.01`–`el.1.09`. |
+| Tema 2 | Completo + refinado | Se añade `el.2.08` para capacidad de unión y modelo de pequeña señal. |
+| Tema 3 | Completo + refinado | `el.3.04`–`el.3.10` separan varactor, túnel, PIN, IMPATT, LED, láser y fotodetectores/células solares. |
+| Tema 4 | Completo | Los 7 apartados oficiales quedan cubiertos; se elimina la dependencia incorrecta de optoelectrónica en `el.4.01`. |
+| Tema 5 | Completo + refinado | `el.5.08`–`el.5.11` separan los cuatro bloques de MOSFET real y `el.5.12` separa pequeña señal. Se elimina la dependencia incorrecta de BJT real en `el.5.01`. |
+
+El criterio de prerrequisito se ha aplicado con prudencia: una dependencia solo se mantiene como dura cuando la resolución de la sesión la necesita; los nodos de panorama (`el.3.02`, `el.3.03`, `el.5.07`) no bloquean artificialmente los nodos específicos.
+
+Además de las hojas de clase, se han incorporado todas las preguntas y
+problemas del recopilatorio local de exámenes 2016–2025. Cada entrada conserva
+la página del PDF y una clasificación operativa para que el planificador pueda
+decidir cuándo desbloquearla.
 
 Marca en la columna final: `ok` / `quitar` / `dividir` / comentario libre.
 Los prerrequisitos de otra asignatura aparecen con su id completo (ej. `em.4.01`).
@@ -43,7 +62,7 @@ Los prerrequisitos de otra asignatura aparecen con su id completo (ej. `em.4.01`
 
 | Id | Nodo | Prerrequisitos (peso) | Fuentes | Revisión |
 |---|---|---|---|---|
-| el.4.01 | **El transistor NPN en activa: bandas y minoritarios** — Dos uniones acopladas, diagrama de bandas en activa, perfil de minoritarios en la base. | el.2.04, el.1.08 | Apuntes 4.1 | |
+| el.4.01 | **El transistor NPN en activa: bandas y minoritarios** — Dos uniones acopladas, diagrama de bandas en activa, perfil de minoritarios en la base. | el.2.04, el.1.08, el.3.03 | Apuntes 4.1 | |
 | el.4.02 | **Configuraciones y ganancias del BJT** — Base/emisor/colector común; eficacia de emisor γ, factor de transporte B, multiplicación M; α y β. | el.4.01 | Apuntes 4.2, 4.3 | |
 | el.4.03 | **Diagrama y ecuaciones de corrientes del BJT** — Relaciones entre corrientes en activa, ecuaciones fundamentales del transistor. | el.4.02 | Apuntes 4.4 | |
 | el.4.04 | **Características estáticas y efecto Early** — Curvas en base común y emisor común, modulación de la anchura de base. | el.4.03 | Apuntes 4.5 | |
@@ -55,15 +74,37 @@ Los prerrequisitos de otra asignatura aparecen con su id completo (ej. `em.4.01`
 
 | Id | Nodo | Prerrequisitos (peso) | Fuentes | Revisión |
 |---|---|---|---|---|
-| el.5.01 | **La estructura MIS ideal** — Metal-aislante-semiconductor: componentes, materiales, diagrama de bandas en equilibrio. | el.1.05, el.2.02 (0.5) | Apuntes 5.1 | |
+| el.5.01 | **La estructura MIS ideal** — Metal-aislante-semiconductor: componentes, materiales, diagrama de bandas en equilibrio. | el.1.05, el.2.02 (0.5), el.4.07 | Apuntes 5.1 | |
 | el.5.02 | **Regímenes de la estructura MIS** — Acumulación, vaciamiento e inversión según la polarización de puerta. | el.5.01 | Apuntes 5.2 | |
 | el.5.03 | **Característica capacidad-tensión de la MIS** — Comportamiento capacitivo en cada régimen, curvas C-V para tipo P y N. | el.5.02, em.2.05 (0.5) | Apuntes 5.3 | |
 | el.5.04 | **La estructura MIS real** — Cargas en el óxido, diferencia de funciones de trabajo, tensión de banda plana. | el.5.03 | Apuntes 5.4 | |
 | el.5.05 | **El transistor MOSFET** — Formación del canal, tensión umbral, regímenes óhmico y saturación, corriente de canal. | el.5.02, el.1.06 | Apuntes 5.5 | |
 | el.5.06 | **Tipos de MOSFET y tecnología CMOS** — Acumulación vs vaciamiento, canal N vs P, símbolos, inversor CMOS. | el.5.05 | Apuntes 5.6 | |
+| el.5.07 | **El transistor MOSFET real y efectos de canal corto** — Degradación de movilidad, saturación de velocidad, modulación de longitud de canal (λ), efecto sustrato (Body Effect), DIBL y corriente subumbral. | el.5.05 | Apuntes 5.7 / Cap. 6 | |
 
 ## Estadísticas
 
 - Nodos raíz (sin prerrequisitos): el.1.01
-- Nodos sin dependientes en todo el sistema: el.3.01, el.3.02, el.3.03, el.4.04, el.4.07, el.5.04, el.5.06
-- Aristas: 51 (8 hacia otras asignaturas)
+- Nodos añadidos: el.2.08, el.3.04–el.3.10, el.5.08–el.5.12
+- Correcciones de prerrequisitos: `el.4.01` ya no depende de `el.3.03`; `el.5.01` ya no depende de `el.4.07`.
+- Problemas auditados y clasificados: **160/160** (143 de exámenes y 17 de
+  hojas de clase); todos tienen `nodos_requeridos`.
+- Regla de preparación: un problema aparece como listo solo cuando **todos** sus nodos requeridos tienen dominio efectivo ≥ 0.7.
+
+## Nodos añadidos en la auditoría
+
+| Id | Nodo | Fuente | Motivo |
+|---|---|---|---|
+| el.2.08 | Capacidad de la unión PN y modelo de pequeña señal | Apuntes/índice Tema 2; problemas PN | El banco y el enfoque de examen exigen capacidad y linealización. |
+| el.3.04 | Diodo varactor | Tema 3, apartado 3.1 | Apartado oficial independiente. |
+| el.3.05 | Diodo túnel | Tema 3, apartado 3.2 | Apartado oficial independiente. |
+| el.3.06 | Diodo PIN | Tema 3, apartado 3.3 | Apartado oficial independiente. |
+| el.3.07 | Diodo IMPATT | Tema 3, apartado 3.4 | Apartado oficial independiente. |
+| el.3.08 | Diodos electroluminiscentes (LED) | Tema 3, apartado 3.5 | Apartado oficial independiente. |
+| el.3.09 | Diodo láser | Tema 3, apartado 3.6 | Apartado oficial independiente. |
+| el.3.10 | Fotodiodos y células solares | Tema 3, apartado 3.7 | Apartado oficial independiente. |
+| el.5.08 | MOSFET real: alta intensidad de campo | Capítulo 6.1 | Movilidad, saturación de velocidad y modulación de canal. |
+| el.5.09 | MOSFET real: umbral y canal corto | Capítulo 6.2 | Body effect, DIBL y canal corto. |
+| el.5.10 | MOSFET real: corrientes de fuga | Capítulo 6.3 | Subumbral, puerta y uniones. |
+| el.5.11 | Efecto de la temperatura en el MOSFET | Capítulo 6.4 | La temperatura faltaba en la descripción anterior. |
+| el.5.12 | MOSFET en pequeña señal y amplificador fuente común | Problemas y enfoque de examen | Necesario para los problemas de ganancia y amplificador. |

@@ -1,13 +1,24 @@
 {
   "Física del Estado Sólido": [
-    "Estructura cristalina y difracción",
-    "Teoría de bandas",
-    "Dinámica semiclásica",
-    "Semiconductores (se imparte en Electrónica)",
+    "Introducción",
+    "Estructuras Cristalinas",
+    "Electrones libres en los metales. Modelo de Sommerfeld.",
+    "Electrones en un potencial periódico.",
+    "Ligaduras fuertes y débiles.",
+    "Modelo semiclásico de las propiedades dinámicas de los electrones",
     "Propiedades de transporte",
-    "Fonones y propiedades térmicas",
-    "Fenómenos cooperativos",
-    "Sistemas de baja dimensión"
+    "Fallos del modelo estático",
+    "Vibraciones reticulares",
+    "Densidad de estados. El espectro de la red",
+    "Fonones",
+    "Calor específico asociado a las vibraciones reticulares",
+    "Criterio para la fusión de los sólidos",
+    "Anarmonicidad (1) dilatación térmica",
+    "Anarmonicidad (2) interacción fonón-fonón",
+    "Anarmonicidad (3) conductividad térmica",
+    "Magnetismo",
+    "Superconductividad",
+    "Sistemas de Baja Dimensión"
   ],
   "Física Nuclear y de Partículas": [
     "Física Nuclear",

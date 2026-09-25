@@ -136,7 +136,32 @@ def _backup_perfil(perfil: dict, conservar: int = 14) -> None:
 
 def _entrada_nueva() -> dict:
     return {"dominio": 0.0, "fluidez": 0.0, "tiempos": [], "reps": 0, "intervalo": 0,
-            "ultima": None, "proxima": None, "historial": []}
+            "ultima": None, "proxima": None, "historial": [],
+            "teoria_vista": False}
+
+
+def marcar_teoria_vista(perfil: dict, ids: list[str], origen: str = "") -> list[str]:
+    """Marca que la teoría completa de esos nodos ya se ha impartido.
+
+    Esta marca es independiente de ``dominio``: recibir una explicación no
+    demuestra saber resolver ejercicios. Solo decide si la próxima sesión
+    empieza por práctica o por teoría. La función tolera perfiles antiguos.
+    """
+    nodos = cargar_grafos()
+    fecha = datetime.now().isoformat(timespec="seconds")
+    marcados = []
+    ids_unicos = dict.fromkeys(str(item).strip() for item in ids if str(item).strip())
+    for node_id in ids_unicos:
+        if node_id not in nodos:
+            continue
+        entrada = perfil.setdefault("nodos", {}).setdefault(node_id, _entrada_nueva())
+        if not entrada.get("teoria_vista", False):
+            entrada["teoria_vista"] = True
+            entrada["teoria_vista_en"] = fecha
+            if origen:
+                entrada["teoria_vista_origen"] = str(origen)[:120]
+            marcados.append(node_id)
+    return marcados
 
 
 def _hoy() -> date:
@@ -414,9 +439,36 @@ def vencidos(perfil: dict, nodos: dict, hoy: date | None = None) -> list[dict]:
         proxima = _fecha(e.get("proxima"))
         if proxima and proxima < hoy and e["dominio"] > 0 and nid in nodos:
             out.append({"id": nid, "nombre": nodos[nid]["nombre"], "materia": nodos[nid]["materia"],
+                        "proxima": proxima.isoformat(),
                         "retraso": (hoy - proxima).days,
                         "dominio_efectivo": round(dominio_efectivo(e, hoy), 2)})
     out.sort(key=lambda x: -x["retraso"])
+    return out
+
+
+def pendientes_repaso(perfil: dict, nodos: dict, hoy: date | None = None) -> list[dict]:
+    """Devuelve repasos académicos vencidos o programados para hoy.
+
+    ``vencidos`` conserva su semántica histórica (solo fechas anteriores a
+    hoy, usada por el planificador). El dashboard necesita además incluir los
+    nodos cuya fecha es exactamente hoy, por eso expone esta vista explícita.
+    La agenda sigue siendo siempre la del perfil de nodos, nunca la de las
+    notas individuales de ejercicios.
+    """
+    hoy = hoy or _hoy()
+    out = []
+    for nid, e in perfil["nodos"].items():
+        proxima = _fecha(e.get("proxima"))
+        if proxima and proxima <= hoy and e["dominio"] > 0 and nid in nodos:
+            out.append({
+                "id": nid,
+                "nombre": nodos[nid]["nombre"],
+                "materia": nodos[nid]["materia"],
+                "proxima": proxima.isoformat(),
+                "retraso": max(0, (hoy - proxima).days),
+                "dominio_efectivo": round(dominio_efectivo(e, hoy), 2),
+            })
+    out.sort(key=lambda x: (-x["retraso"], x["materia"], x["id"]))
     return out
 
 
@@ -460,9 +512,33 @@ def problemas_hechos(perfil: dict) -> dict:
     return perfil.setdefault("problemas", {})
 
 
-def marcar_problema(perfil: dict, problema_id: str, exito: bool, fecha: date | None = None) -> None:
+def marcar_problema(perfil: dict, problema_id: str, exito: bool, fecha: date | None = None,
+                    calidad: float | None = None, veredicto: str | None = None,
+                    nodos_requeridos: list[str] | None = None,
+                    nodos_hueco: list[str] | None = None,
+                    nodos_error: list[str] | None = None,
+                    comentarios: str = "") -> None:
+    """Registra el resultado de un problema sin romper el formato antiguo.
+
+    ``exito`` y ``fecha`` siguen siendo las claves mínimas que usan las
+    versiones anteriores. Las claves nuevas permiten distinguir un problema
+    perfecto de uno correcto con hueco teórico y localizar el nodo fallido.
+    """
     fecha = fecha or _hoy()
-    problemas_hechos(perfil)[problema_id] = {"exito": bool(exito), "fecha": fecha.isoformat()}
+    entrada = problemas_hechos(perfil).setdefault(problema_id, {})
+    entrada.update({"exito": bool(exito), "fecha": fecha.isoformat()})
+    if calidad is not None:
+        entrada["calidad"] = round(float(calidad), 2)
+    if veredicto:
+        entrada["veredicto"] = veredicto
+    if nodos_requeridos is not None:
+        entrada["nodos_requeridos"] = list(nodos_requeridos)
+    if nodos_hueco is not None:
+        entrada["nodos_hueco_teorico"] = list(nodos_hueco)
+    if nodos_error is not None:
+        entrada["nodos_error"] = list(nodos_error)
+    if comentarios:
+        entrada["comentarios"] = comentarios
 
 
 def marcar_problema_y_guardar(problema_id: str, exito: bool) -> None:
@@ -526,7 +602,8 @@ def seleccionar_quiz(n: int = 6, modo: str = "repaso", materia: str | None = Non
     - modo 'repaso': nodos ya practicados, priorizando los más 'fríos'
       (revisión cercana/pasada, pocas reps), interleaving máx. 2 por materia-tema.
     - modo 'diagnostico': nodos SIN evidencia (dominio 0), en orden del temario,
-      repartidos entre temas — para calibrar el perfil al empezar una materia.
+      repartidos entre temas — herramienta opcional, no requisito para empezar
+      una materia nueva; el perfil también se calibra con el aprendizaje normal.
     """
     nodos = cargar_grafos()
     perfil = cargar_perfil()
@@ -657,7 +734,11 @@ def _snapshot_reverso(antes: dict, despues: dict) -> dict:
 
 def registrar_manuscrito(ids: list[str], exito: bool, origen: str = "",
                          calidad: float | None = None,
-                         problema_id: str | None = None) -> tuple[list[str], dict]:
+                         problema_id: str | None = None,
+                         veredicto: str | None = None,
+                         nodos_hueco: list[str] | None = None,
+                         nodos_error: list[str] | None = None,
+                         comentarios: str = "") -> tuple[list[str], dict]:
     """Registra la práctica de un problema resuelto a mano (dominio/XP + marca del
     banco) en UNA sola pasada y devuelve (mensajes, reverso). `reverso` permite
     deshacer exactamente este registro si la corrección resultó equivocada."""
@@ -666,8 +747,35 @@ def registrar_manuscrito(ids: list[str], exito: bool, origen: str = "",
     perfil = cargar_perfil()
     antes = copy.deepcopy(perfil)
     mensajes = aplicar_practica(perfil, nodos, ids, exito, origen=origen, calidad=calidad)
+    calidad_real = calidad_desde(exito, calidad)
+    focales = [nid for nid in (nodos_hueco or []) + (nodos_error or []) if nid in nodos]
+    if calidad_real >= UMBRAL_EXITO_CALIDAD and focales:
+        mensajes += aplicar_practica(
+            perfil, nodos, list(dict.fromkeys(focales)), False,
+            origen=f"retroalimentacion:{origen}", calidad=CALIDAD["bloqueado"],
+        )
     if problema_id:
-        marcar_problema(perfil, problema_id, exito)
+        marcar_problema(
+            perfil, problema_id, exito, calidad=calidad, veredicto=veredicto,
+            nodos_requeridos=list(ids), nodos_hueco=nodos_hueco or [],
+            nodos_error=nodos_error or [], comentarios=comentarios,
+        )
+    if nodos_hueco or nodos_error:
+        # Un acierto global puede ocultar una laguna localizada. La señal
+        # focalizada se guarda aparte para que el planificador la acumule.
+        perfil.setdefault("retroalimentacion", []).insert(0, {
+            "fecha": _hoy().isoformat(),
+            "problema_id": problema_id,
+            "materia": nodos.get(ids[0], {}).get("materia", "") if ids else "",
+            "veredicto": veredicto or ("resuelto" if exito else "incorrecto"),
+            "calidad": round(calidad_real, 2),
+            "nodos_requeridos": list(ids),
+            "nodos_hueco_teorico": list(nodos_hueco or []),
+            "nodos_error": list(nodos_error or []),
+            "comentarios": comentarios or "",
+            "origen": origen,
+        })
+        perfil["retroalimentacion"] = perfil["retroalimentacion"][:500]
     guardar_perfil(perfil)
     _regenerar_mapa()
     return mensajes, _snapshot_reverso(antes, perfil)
@@ -707,7 +815,13 @@ def revertir_reverso(reverso: dict) -> bool:
 
 
 def marcar_cursadas(dominio: float = 0.75) -> None:
-    """Inicializa como sabidas las asignaturas ya cursadas (granularidad no fina)."""
+    """Inicializa asignaturas cursadas como hipótesis contextual.
+
+    El valor no representa dominio demostrado ni obliga a reevaluar toda la
+    carrera. Sirve para que el grafo no arranque completamente ciego; la
+    evidencia directa de cuarto curso y los fallos observados sustituyen esta
+    hipótesis en los nodos relevantes.
+    """
     nodos = cargar_grafos()
     perfil = cargar_perfil()
     hoy = _hoy()
@@ -724,7 +838,7 @@ def marcar_cursadas(dominio: float = 0.75) -> None:
         perfil["nodos"][nid] = e
         contador += 1
     guardar_perfil(perfil)
-    print(f"Marcados {contador} nodos de asignaturas cursadas con dominio inicial {dominio}.")
+    print(f"Marcados {contador} nodos como hipótesis contextual (dominio inicial {dominio}; no demostrado).")
     _regenerar_mapa()
 
 

@@ -33,7 +33,7 @@ Estado a 2026-07-09. Cada principio, dónde está implementado y qué queda.
 
 - SR por nodo: intervalos expansivos [1,3,7,14,30,60,120,240] días, fallo → reinicio a 1 día.
 - Quiz cronometrado (pestaña Autoevaluador): cobertura amplia sobre lo aprendido, interleaving (máx. 2 problemas por materia-tema), prioriza nodos "fríos", temporizador, autocalificación → actualiza el perfil.
-- **Unificado**: los tres canales de práctica (Inbox/watcher, botones ✓/✗ del plan, autoevaluación de flashcards) alimentan TODOS el mismo perfil. La ficha de ejercicio guarda ahora sus `nodos:` del grafo.
+- **Unificado**: los canales activos de práctica (voz validada con Gemini Web, botones ✓/✗ del plan y autoevaluación de flashcards) alimentan TODOS el mismo perfil. La ficha de ejercicio guarda ahora sus `nodos:` del grafo.
 
 ## 7. Repasar lo viejo aprendiendo lo nuevo — ✅
 
@@ -44,7 +44,7 @@ Estado a 2026-07-09. Cada principio, dónde está implementado y qué queda.
 
 ## Compresión temporal (la promesa del método)
 
-`planificar.py` planifica hacia atrás desde `examenes.json`: carga restante ÷ días = ritmo requerido, con semáforo HOLGADO/AJUSTADO/INSUFICIENTE y simulación de fechas de inicio (`--fecha`). Editable desde la app (pestaña Plan de Estudio).
+`planificar.py` planifica hacia atrás desde `examenes.json`: carga restante ÷ días = ritmo requerido orientativo, mientras el plan diario se recorta al tiempo real de cada sesión (`--minutos`). La app permite introducir ese tiempo al iniciar la sesión; la carga agregada no funciona como una cuota ni como semáforo de cumplimiento.
 
 ## Pendiente conocido
 

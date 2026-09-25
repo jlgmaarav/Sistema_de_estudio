@@ -6,9 +6,10 @@ echo ========================================================
 echo.
 
 cd /d "%~dp0"
+set "STUDY_PY=%USERPROFILE%\SistemaEstudioRuntime\venv\Scripts\python.exe"
 
 echo Lanzando Servidor Web de Lectura (Flask) en Puerto 5001...
-start "Servidor Biblioteca" cmd /c "call venv\Scripts\activate.bat && python app_biblioteca.py"
+start "Servidor Biblioteca" "%STUDY_PY%" app_biblioteca.py
 
 echo Esperando 3 segundos a que levante el servidor...
 timeout /t 3 /nobreak > nul

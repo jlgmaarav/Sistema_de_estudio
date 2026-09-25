@@ -3,12 +3,27 @@
   "materia": "Electrónica",
   "codigo_uva": "45772",
   "curso": 4,
+  "jerarquia_docente": "Secuencia acumulativa: Tema 1 → Tema 2 → Tema 3 → Tema 4 → Tema 5. El inicio de cada tema posterior exige dominar el cierre del anterior.",
   "temas": {
     "1": "Tema 1: Propiedades electrónicas de los materiales semiconductores",
     "2": "Tema 2: El diodo de unión PN",
     "3": "Tema 3: Aplicaciones de la unión PN",
     "4": "Tema 4: El transistor bipolar de unión (BJT)",
     "5": "Tema 5: La estructura MIS y el transistor MOSFET"
+  },
+  "auditoria": {
+    "estado": "completa",
+    "fecha": "2026-09-15",
+    "fuente": "Programa oficial 2026-27 + proyecto docente + apuntes y problemas locales",
+    "temario_oficial_completo": true,
+    "problemas_clasificados": 37,
+    "regla_preparacion_problemas": "Todos los nodos requeridos deben tener dominio efectivo >= 0.7",
+    "refinamientos": [
+      "el.2.08: capacidad de unión PN y pequeña señal",
+      "el.3.04-el.3.10: un nodo por dispositivo/aplicación oficial",
+      "el.5.08-el.5.11: bloques separados de MOSFET real",
+      "el.5.12: MOSFET en pequeña señal y fuente común"
+    ]
   },
   "nodos": [
     {
@@ -174,6 +189,17 @@
       ],
       "fuentes": { "apuntes": "2.6" }
     },
+    {
+      "id": "el.2.08",
+      "tema": 2,
+      "nombre": "Capacidad de la unión PN y modelo de pequeña señal",
+      "descripcion": "Capacidad de transición y de difusión; dependencia con la polarización y linealización incremental de la unión PN.",
+      "prerequisitos": [
+        { "id": "el.2.03", "peso": 1.0 },
+        { "id": "el.2.07", "peso": 0.5 }
+      ],
+      "fuentes": { "apuntes": "2.6 / índice Tema 2: modelo de pequeña señal" }
+    },
 
     {
       "id": "el.3.01",
@@ -187,7 +213,7 @@
       "id": "el.3.02",
       "tema": 3,
       "nombre": "Diodos especiales: varactor, túnel, PIN, IMPATT",
-      "descripcion": "Principio físico y aplicación de cada variante de la unión PN.",
+      "descripcion": "Mapa general de diodos especiales; cada variante se trabaja además en un nodo específico para evitar mezclar mecanismos físicos distintos.",
       "prerequisitos": [
         { "id": "el.2.07", "peso": 1.0 },
         { "id": "em.2.05", "peso": 0.5 }
@@ -198,9 +224,65 @@
       "id": "el.3.03",
       "tema": 3,
       "nombre": "Optoelectrónica: LED, láser y fotodetectores",
-      "descripcion": "Emisión y absorción en la unión PN, materiales de gap directo.",
+      "descripcion": "Mapa general de optoelectrónica; LED, láser y fotodetectores/células solares tienen nodos específicos para la práctica.",
       "prerequisitos": [{ "id": "el.2.07", "peso": 1.0 }],
       "fuentes": { "apuntes": "3.3" }
+    },
+    {
+      "id": "el.3.04",
+      "tema": 3,
+      "nombre": "Diodo varactor",
+      "descripcion": "Capacidad controlada por tensión, unión en inversa y uso como elemento sintonizable.",
+      "prerequisitos": [{ "id": "el.2.07", "peso": 1.0 }, { "id": "el.2.08", "peso": 1.0 }],
+      "fuentes": { "apuntes": "3.2.1" }
+    },
+    {
+      "id": "el.3.05",
+      "tema": 3,
+      "nombre": "Diodo túnel",
+      "descripcion": "Unión muy dopada, efecto túnel y región de resistencia diferencial negativa.",
+      "prerequisitos": [{ "id": "el.2.07", "peso": 1.0 }],
+      "fuentes": { "apuntes": "3.2.2" }
+    },
+    {
+      "id": "el.3.06",
+      "tema": 3,
+      "nombre": "Diodo PIN",
+      "descripcion": "Región intrínseca, modulación de conductividad y aplicaciones del diodo PIN.",
+      "prerequisitos": [{ "id": "el.2.07", "peso": 1.0 }],
+      "fuentes": { "apuntes": "3.2.3" }
+    },
+    {
+      "id": "el.3.07",
+      "tema": 3,
+      "nombre": "Diodo IMPATT",
+      "descripcion": "Tiempo de tránsito, avalancha y resistencia diferencial negativa en el diodo IMPATT.",
+      "prerequisitos": [{ "id": "el.2.07", "peso": 1.0 }],
+      "fuentes": { "apuntes": "3.2.4" }
+    },
+    {
+      "id": "el.3.08",
+      "tema": 3,
+      "nombre": "Diodos electroluminiscentes (LED)",
+      "descripcion": "Recombinación radiativa, gap directo, color de emisión y estructura de un LED.",
+      "prerequisitos": [{ "id": "el.2.07", "peso": 1.0 }, { "id": "el.1.08", "peso": 0.5 }],
+      "fuentes": { "apuntes": "3.3.1" }
+    },
+    {
+      "id": "el.3.09",
+      "tema": 3,
+      "nombre": "Diodo láser",
+      "descripcion": "Emisión estimulada, inversión de población y realimentación óptica en el diodo láser.",
+      "prerequisitos": [{ "id": "el.2.07", "peso": 1.0 }, { "id": "el.1.08", "peso": 0.5 }],
+      "fuentes": { "apuntes": "3.3.2" }
+    },
+    {
+      "id": "el.3.10",
+      "tema": 3,
+      "nombre": "Fotodiodos y células solares",
+      "descripcion": "Conversión fotón-corriente, característica I-V bajo iluminación, fotodiodo y célula solar.",
+      "prerequisitos": [{ "id": "el.2.07", "peso": 1.0 }, { "id": "el.1.08", "peso": 0.5 }],
+      "fuentes": { "apuntes": "3.3.3, 3.3.4" }
     },
 
     {
@@ -322,6 +404,54 @@
       "descripcion": "Acumulación vs vaciamiento, canal N vs P, símbolos, inversor CMOS.",
       "prerequisitos": [{ "id": "el.5.05", "peso": 1.0 }],
       "fuentes": { "apuntes": "5.6" }
+    },
+    {
+      "id": "el.5.07",
+      "tema": 5,
+      "nombre": "Mapa de efectos reales del MOSFET",
+      "descripcion": "Visión general de efectos no ideales; la práctica separa alta intensidad de campo, umbral/canal corto, fugas y temperatura en nodos específicos.",
+      "prerequisitos": [{ "id": "el.5.05", "peso": 1.0 }],
+      "fuentes": { "apuntes": "5.7 / Cap. 6" }
+    },
+    {
+      "id": "el.5.08",
+      "tema": 5,
+      "nombre": "MOSFET real: alta intensidad de campo",
+      "descripcion": "Degradación de movilidad, saturación de velocidad y modulación de longitud de canal.",
+      "prerequisitos": [{ "id": "el.5.05", "peso": 1.0 }],
+      "fuentes": { "apuntes": "Cap. 6.1" }
+    },
+    {
+      "id": "el.5.09",
+      "tema": 5,
+      "nombre": "MOSFET real: umbral y canal corto",
+      "descripcion": "Efecto sustrato (body effect), DIBL y variación de la tensión umbral en dispositivos cortos.",
+      "prerequisitos": [{ "id": "el.5.05", "peso": 1.0 }],
+      "fuentes": { "apuntes": "Cap. 6.2" }
+    },
+    {
+      "id": "el.5.10",
+      "tema": 5,
+      "nombre": "MOSFET real: corrientes de fuga",
+      "descripcion": "Corriente subumbral, fugas de puerta y fugas de las uniones reversas.",
+      "prerequisitos": [{ "id": "el.5.05", "peso": 1.0 }],
+      "fuentes": { "apuntes": "Cap. 6.3" }
+    },
+    {
+      "id": "el.5.11",
+      "tema": 5,
+      "nombre": "Efecto de la temperatura en el MOSFET",
+      "descripcion": "Dependencia térmica de la movilidad, de la corriente de encendido y de las corrientes de fuga.",
+      "prerequisitos": [{ "id": "el.5.05", "peso": 1.0 }],
+      "fuentes": { "apuntes": "Cap. 6.4" }
+    },
+    {
+      "id": "el.5.12",
+      "tema": 5,
+      "nombre": "MOSFET en pequeña señal y amplificador fuente común",
+      "descripcion": "Linealización alrededor del punto de operación, transconductancia, resistencia de salida y ganancia de tensión.",
+      "prerequisitos": [{ "id": "el.5.05", "peso": 1.0 }],
+      "fuentes": { "apuntes": "5.5 / problemas y enfoque de examen" }
     }
   ]
 }

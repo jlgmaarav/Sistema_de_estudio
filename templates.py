@@ -15,14 +15,37 @@ def slugify(text: str) -> str:
     text = re.sub(r'_+', '_', text)
     return text.strip('_')
 
+# Caracteres que Windows PROHÍBE en un nombre de archivo. El peligroso de verdad es
+# la barra invertida: la IA devuelve conceptos con LaTeX ("$dV=4\pi r^2dr$") y Windows
+# la interpreta como separador de carpetas -> FileNotFoundError al crear la nota.
+# Pasó el 29/07/2026 con la primera narración de voz real y abortó la actualización
+# del knowledge graph entera.
+_CARACTERES_PROHIBIDOS = r'[\\/:*?"<>|]'
+
+
+def nombre_concepto_seguro(concepto: str) -> str:
+    """Nombre canónico de un concepto: legible, y válido como archivo en Windows.
+
+    Se usa a la vez para el NOMBRE DEL ARCHIVO y para el enlace `[[...]]` de Obsidian.
+    Tienen que salir de la misma función o los enlaces apuntarían a notas inexistentes.
+    """
+    nombre = concepto.replace("[[", "").replace("]]", "").strip()
+    nombre = nombre.replace("\\", "")            # \pi -> pi (no ensucia con guiones)
+    nombre = re.sub(_CARACTERES_PROHIBIDOS, "-", nombre)
+    nombre = re.sub(r"\s+", " ", nombre).strip()
+    nombre = nombre.rstrip(". ")                 # Windows no admite punto/espacio final
+    if len(nombre) > 120:                        # margen de sobra bajo el límite de ruta
+        nombre = nombre[:120].rstrip(". ")
+    return nombre or "concepto sin nombre"
+
+
 def format_concept_links(conceptos: List[str]) -> str:
     """Formatos de lista de conceptos como enlaces de Obsidian entrecomillados para evitar fallos de YAML."""
     if not conceptos:
         return " []"
     lines = []
     for c in conceptos:
-        clean_c = c.replace("[[", "").replace("]]", "")
-        lines.append(f'  - "[[{clean_c}]]"')
+        lines.append(f'  - "[[{nombre_concepto_seguro(c)}]]"')
     return "\n" + "\n".join(lines)
 
 def format_links_list(items: List[str]) -> str:
@@ -99,18 +122,26 @@ def render_exercise_template(
     enunciado_transcrito: str,
     attempt_id: str,
     estado: str = "nuevo",
-    proxima_revision: str = "",
+    proxima_reintento: str | None = None,
     tipo_recurso: str = "ejercicio",
     origen: str = "",
     fecha_origen: str = "",
     warning_transcripcion: str = "",
-    nodos: List[str] | None = None
+    nodos: List[str] | None = None,
+    # Compatibilidad con llamadas antiguas: el nombre anterior describía
+    # ambiguamente una fecha que ya no controla el calendario académico.
+    proxima_revision: str | None = None,
 ) -> str:
-    """Genera el contenido Markdown para la nota de Ejercicio."""
+    """Genera la nota de ejercicio.
+
+    ``proxima_reintento`` es únicamente una cola local para repetir un
+    ejercicio fallado o incompleto. El repaso académico de conceptos lo
+    gobierna ``knowledge_graph/perfil.json``.
+    """
     concept_links = format_concept_links(conceptos)
     fecha_hoy = datetime.now().strftime("%d/%m/%Y")
-    if not proxima_revision:
-        proxima_revision = fecha_hoy
+    if proxima_reintento is None:
+        proxima_reintento = proxima_revision or ""
         
     enunciado_render = ""
     if enunciado_asset:
@@ -135,7 +166,7 @@ tema: "{tema}"
 conceptos:{concept_links}
 estado: {estado}
 fecha_creacion: {fecha_hoy}
-proxima_revision: {proxima_revision}
+proxima_reintento: {proxima_reintento}
 tiene_error: {str(tiene_error).lower()}
 nodos: [{", ".join(nodos or [])}]
 errores_asociados: []
@@ -150,7 +181,8 @@ enunciado_asset: "{enunciado_asset}"
 {warning_callout}
 - **Asignatura:** [[{subject_slug}|{asignatura}]]
 - **Tema:** [[{topic_slug}|{tema}]]
-- **Estado de Repaso:** `{estado.upper()}` (Próxima revisión: {proxima_revision})
+- **Estado del ejercicio:** `{estado.upper()}`
+- **Reintento local:** `{proxima_reintento or 'no programado'}`
 {origen_line}
 
 ## Enunciado del Problema

@@ -1,5 +1,20 @@
 # Revisión del grafo — Electrodinámica Clásica
 
+## Auditoría completada — 2026-09-16
+
+- El programa oficial UVa 2026-27 contiene 7 bloques y el grafo conserva las 30 unidades operativas correspondientes.
+- Banco clasificado: **113 problemas** (**103 de exámenes + 10 de la Hoja de problemas 01 de clase 2026-27**).
+- Cada entrada tiene `nodos_requeridos`, criterio `todos_los_nodos_superados` y fuente local verificable.
+- Un problema se desbloquea cuando todos sus nodos requeridos alcanzan dominio efectivo **≥ 0,7**.
+
+## Material documental incorporado
+
+- **Problemas de Electrodinámica Clásica** — compendio bibliográfico de 269 páginas.
+- **Cuestiones de exámenes** — recopilación escaneada de 23 páginas; es duplicado exacto de la copia archivada en `Exámenes/Procesados`.
+- **Ordinaria: cuestiones y problemas** — recopilación escaneada de 33 páginas, catalogada y pendiente de desglosar en ejercicios individuales.
+
+Estos documentos quedan registrados como fuentes consultables. El banco conserva sus **113 problemas** hasta que los escaneos puedan revisarse y clasificarse sin duplicaciones.
+
 Total: **30 nodos**. Para cada nodo revisa: ¿se dio en clase?, ¿la granularidad es correcta (1 sesión)?, ¿faltan o sobran prerrequisitos?
 
 Marca en la columna final: `ok` / `quitar` / `dividir` / comentario libre.

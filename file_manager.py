@@ -2,7 +2,7 @@ import os
 import shutil
 import re
 import io
-from datetime import datetime, timedelta
+from datetime import datetime
 import fitz  # PyMuPDF
 from PIL import Image
 import config
@@ -175,7 +175,9 @@ def ensure_topic_note(asignatura: str, tema: str) -> str:
 
 def ensure_concept_note(concepto: str, dominio: float = 0.0) -> str:
     """Crea la nota física del concepto en la carpeta Conceptos."""
-    clean_concept = concepto.replace("[[", "").replace("]]", "").strip()
+    # El nombre lo canoniza templates para que archivo y enlace [[...]] coincidan
+    # y para que sea un nombre de archivo válido en Windows (ver el porqué allí).
+    clean_concept = templates.nombre_concepto_seguro(concepto)
     file_path = f"{config.CONCEPTOS_DIR}/{clean_concept}.md"
     if not os.path.exists(file_path):
         content = templates.render_concept_template(clean_concept, dominio)
@@ -203,7 +205,7 @@ def link_exercise_to_indices(exerc_id: str, asignatura: str, tema: str):
 
 def update_concept_domain_score(concepto: str, dominio: float, exerc_id: str, attempt_id: str):
     """Actualiza la nota de concepto con una nueva evaluación de dominio e historial."""
-    clean_concept = concepto.replace("[[", "").replace("]]", "").strip()
+    clean_concept = templates.nombre_concepto_seguro(concepto)
     concept_file = ensure_concept_note(clean_concept, dominio)
     
     with open(concept_file, 'r', encoding='utf-8') as f:
@@ -225,7 +227,11 @@ def update_concept_domain_score(concepto: str, dominio: float, exerc_id: str, at
 # =====================================================================
 
 def get_exercise_repetition_state(exerc_path: str) -> tuple[str, str]:
-    """Extrae el estado actual y la fecha de próxima revisión del ejercicio."""
+    """Extrae el estado y el reintento local de un ejercicio.
+
+    El segundo valor mantiene la forma de retorno antigua para compatibilidad;
+    no representa la próxima revisión académica del nodo.
+    """
     if not os.path.exists(exerc_path):
         return "nuevo", datetime.now().strftime("%d/%m/%Y")
         
@@ -233,7 +239,9 @@ def get_exercise_repetition_state(exerc_path: str) -> tuple[str, str]:
         content = f.read()
         
     estado_match = re.search(r'^estado:\s*(\w+)', content, re.MULTILINE)
-    proxima_match = re.search(r'^proxima_revision:\s*([\d/]+)', content, re.MULTILINE)
+    proxima_match = re.search(r'^proxima_reintento:\s*([\d/]+)', content, re.MULTILINE)
+    if not proxima_match:
+        proxima_match = re.search(r'^proxima_revision:\s*([\d/]+)', content, re.MULTILINE)
     
     estado = estado_match.group(1) if estado_match else "nuevo"
     proxima = proxima_match.group(1) if proxima_match else datetime.now().strftime("%d/%m/%Y")
@@ -241,29 +249,19 @@ def get_exercise_repetition_state(exerc_path: str) -> tuple[str, str]:
     return estado, proxima
 
 def calculate_next_review(current_state: str, tiene_error: bool) -> tuple[str, str]:
-    """Algoritmo de repetición espaciada básico."""
-    hoy = datetime.now()
-    
-    if tiene_error:
-        # Intento incorrecto o incompleto
-        if current_state == "dominado":
-            new_state = "revisado"
-        else:
-            new_state = "nuevo"
-        next_date = hoy + timedelta(days=1)
-    else:
-        # Intento correcto (sin errores)
-        if current_state == "nuevo":
-            new_state = "revisado"
-            next_date = hoy + timedelta(days=3)
-        elif current_state == "revisado":
-            new_state = "dominado"
-            next_date = hoy + timedelta(days=10)
-        else:
-            new_state = "dominado"
-            next_date = hoy + timedelta(days=30)
-            
-    return new_state, next_date.strftime("%d/%m/%Y")
+    """Compatibilidad con notas antiguas; ya no se usa para la agenda académica.
+
+    El calendario académico lo calcula ``knowledge_graph/perfil.py`` por nodo.
+    Las rutas actuales solo necesitan conservar el estado local del ejercicio
+    y, si procede, un reintento inmediato gestionado por ``repeticion.py``.
+    """
+    import repeticion
+
+    calidad = 0.0 if tiene_error else 1.0
+    return (
+        repeticion.estado_ejercicio(current_state, calidad),
+        repeticion.fecha_reintento(calidad),
+    )
 
 # =====================================================================
 # Procesamiento de PDFs

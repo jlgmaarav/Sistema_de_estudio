@@ -218,6 +218,18 @@ def test_entrada_nueva_incluye_fluidez():
     assert motor._entrada_nueva()["fluidez"] == 0.0
 
 
+def test_teoria_vista_es_independiente_del_dominio(monkeypatch):
+    monkeypatch.setattr(motor, "cargar_grafos", lambda: {"a": _nodo("a")})
+    perfil = _perfil_vacio()
+    perfil["nodos"]["a"] = dict(motor._entrada_nueva(), dominio=0.1)
+
+    marcados = motor.marcar_teoria_vista(perfil, ["a", "no-existe"], "test")
+
+    assert marcados == ["a"]
+    assert perfil["nodos"]["a"]["teoria_vista"] is True
+    assert perfil["nodos"]["a"]["dominio"] == 0.1
+
+
 def test_practica_no_cronometrada_no_toca_fluidez():
     nodos = _grafo_cadena()
     perfil = _perfil_vacio()

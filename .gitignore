@@ -10,8 +10,9 @@ __pycache__/
 _archivo/
 knowledge_graph/_subidas/
 knowledge_graph/backups/
+knowledge_graph/encargos_gemini/busqueda_*_encargo.md
+knowledge_graph/encargos_gemini/busqueda_*_resultado.md
 knowledge_graph/correcciones.json
-remarkable_sync_state.json
 watcher.lock
 Inbox/
 
@@ -30,9 +31,57 @@ Problemas/**/*.pdf
 knowledge_graph/banco_problemas.json
 knowledge_graph/perfil.json
 knowledge_graph/examenes.json
+knowledge_graph/study_sessions.json
+knowledge_graph/apuntes_personales.json
+knowledge_graph/apuntes_personales.json.tmp
+knowledge_graph/contexto_ia.json
+knowledge_graph/contexto_ia.md
+knowledge_graph/active_study_context.json
+knowledge_graph/active_study_report.json
+
+# Apuntes personales generados y artefactos LaTeX locales
+apuntes_generados/
+*.aux
+*.log
+*.out
+*.toc
+*.lot
+*.synctex.gz
 
 # Material de profesores y notas de desarrollo — NO en repo público
 Problemas/
 Guiones Asignaturas/
+Materiales UVa/
 task.md
 Índices para knowleadge graph.txt
+
+# Artefactos locales y temporales
+/output/
+/tmp/
+/scratch/
+/informe_auditoria_sistema_estudio.*
+knowledge_graph/informes_paseos/
+knowledge_graph/transcripcion_mecanica_cuantica_teoria.md
+knowledge_graph/objetivo_academico.json
+knowledge_graph/cuadernos_gemini.json
+knowledge_graph/encargos_gemini/
+knowledge_graph/paseo_actual.json
+generar_informe_auditoria.py
+
+# Configuración e instrucciones personales de tutoría / backup
+.gitattributes
+AGENTS.md
+TUTOR_WORK.md
+PASEOS_CHATGPT.md
+BACKUP_COMPLETO.md
+NOTA_PARA_CODEX_OTRO_PORTATIL.md
+
+# Flujos antiguos de Gemini API y reMarkable, conservados solo localmente
+/Corregir.bat
+/analizar.py
+/buscar.py
+/corregir.py
+/gemini_client.py
+/iniciar_watcher.bat
+/remarkable_sync/
+/sync_remarkable.py

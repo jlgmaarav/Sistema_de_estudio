@@ -19,5 +19,5 @@ Los prerrequisitos de otra asignatura aparecen con su id completo (ej. `em.4.01`
 ## Estadísticas
 
 - Nodos raíz (sin prerrequisitos): al.01
-- Nodos sin dependientes en todo el sistema: al.06
+- Nodos sin dependientes en todo el sistema: —
 - Aristas: 5 (0 hacia otras asignaturas)

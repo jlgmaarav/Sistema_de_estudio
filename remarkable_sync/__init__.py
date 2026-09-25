@@ -1,1 +1,0 @@
-# reMarkable Synchronization Module

@@ -6,25 +6,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # =====================================================================
-# Validación de Variables de Entorno Fundamentales
+# Gemini Web: modelo obligatorio y sin credenciales de API
 # =====================================================================
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if not GEMINI_API_KEY or GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
-    print("Error: La variable GEMINI_API_KEY no está configurada en el archivo .env.")
-    print("Por favor, edita el archivo .env e introduce tu clave de la API de Gemini.")
-    sys.exit(1)
-
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
-# Modelo de respaldo: si el principal falla (429/503/sin cuota), se reintenta con
-# este. Debe ser un modelo DISTINTO y existente (tiene su propia cuota gratuita):
-# gemini-flash-lite-latest es un alias siempre válido y más ligero.
-GEMINI_MODEL_FALLBACK = os.getenv("GEMINI_MODEL_FALLBACK", "gemini-flash-lite-latest")
-
-try:
-    TEMPERATURE = float(os.getenv("TEMPERATURE", "0.1"))
-except ValueError:
-    TEMPERATURE = 0.1
+# Este es el único punto de configuración del modelo de Gemini Web. Ahora es
+# Gemini 3.8 Flash; cuando Google publique otro modelo, basta con cambiar esta
+# variable (o GEMINI_WEB_MODEL en .env). El resto del sistema lee el alias
+# GEMINI_REQUIRED_MODEL para mantener una API interna clara.
+GEMINI_WEB_MODEL = os.getenv("GEMINI_WEB_MODEL", "Gemini 3.8 Flash").strip()
+if not GEMINI_WEB_MODEL:
+    raise RuntimeError("GEMINI_WEB_MODEL no puede estar vacío.")
+GEMINI_REQUIRED_MODEL = GEMINI_WEB_MODEL
+GEMINI_WEB_URL = os.getenv("GEMINI_WEB_URL", "https://gemini.google.com/app").strip()
 
 VAULT_PATH = os.getenv("VAULT_PATH")
 if not VAULT_PATH:
@@ -75,9 +68,7 @@ def init_vault_structure():
 
 if __name__ == "__main__":
     print("Configuración cargada correctamente:")
-    print(f"  Modelo Gemini: {GEMINI_MODEL}")
-    print(f"  Modelo de respaldo: {GEMINI_MODEL_FALLBACK}")
-    print(f"  Temperatura: {TEMPERATURE}")
+    print(f"  Modelo Gemini Web obligatorio: {GEMINI_REQUIRED_MODEL}")
     print(f"  Vault Path: {VAULT_PATH}")
     print(f"  Assets Dir: {ASSETS_DIR}")
     print(f"  Errores Dir: {ERRORES_DIR}")

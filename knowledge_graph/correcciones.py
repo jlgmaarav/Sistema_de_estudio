@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Almacén de correcciones para verlas en la app web (no en Obsidian).
 
-Cada vez que Gemini corrige un ejercicio (vía watcher o CLI), se guarda aquí una
+Cada vez que Gemini Web corrige un ejercicio (vía el flujo de voz), se guarda aquí una
 entrada estructurada: qué problema es, el veredicto, un resumen directo de qué
 está bien y qué está mal, y los errores con su corrección en LaTeX. La app web
 las muestra en la vista "Correcciones"; Obsidian queda solo como registro.
@@ -57,6 +57,14 @@ def registrar_desde_respuesta(response, *, exerc_id="", asignatura="", tema="",
             "correcto": getattr(e, "ejemplo_correcto", ""),
             "como_evitarlo": getattr(e, "como_evitarlo", ""),
         })
+    checkpoints = []
+    for cp in getattr(response, "checkpoints", []) or []:
+        checkpoints.append({
+            "descripcion": getattr(cp, "descripcion", ""),
+            "resultado_dicho": getattr(cp, "resultado_dicho", ""),
+            "correcto": bool(getattr(cp, "correcto", True)),
+            "nota": getattr(cp, "nota", "") or "",
+        })
     entrada = {
         "id": uuid.uuid4().hex[:12],
         "exerc_id": exerc_id,
@@ -71,9 +79,13 @@ def registrar_desde_respuesta(response, *, exerc_id="", asignatura="", tema="",
         "resumen": getattr(response, "resumen_correccion", "") or "",
         "analisis": getattr(response, "analisis_detallado", ""),
         "errores": errores,
+        "checkpoints": checkpoints,
         "calidad": calidad,
         "asset": asset,
         "confianza": getattr(response, "confianza_analisis", None),
+        "nodos_detectados": list(getattr(response, "nodos_detectados", []) or []),
+        "nodos_hueco_teorico": list(getattr(response, "nodos_hueco_teorico", []) or []),
+        "nodos_error": list(getattr(response, "nodos_error", []) or []),
         "modelo": modelo or "",
         "es_fallback": bool(es_fallback),
         "motivo_baja_confianza": getattr(response, "motivo_baja_confianza", "") or "",
