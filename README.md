@@ -78,7 +78,7 @@ El repositorio contiene el código y los datos de ejemplo necesarios para entend
 
 ## Resumen para el currículum
 
-**Sistema de estudio con IA contextual — proyecto personal.** Diseño y desarrollo de una aplicación web local en Python/Flask y JavaScript que conecta tutores de IA con grafos de conocimiento e historial de aprendizaje. El flujo prepara contexto específico, solicita retroalimentación estructurada y valida cada respuesta antes de actualizar el progreso. Integra transcripción local de voz y seguimiento de dominio y fluidez por concepto.
+**Sistema de estudio desarrollado con IA generativa — proyecto personal.** Definí la idea y los requisitos, y utilicé IA generativa para crear e iterar el código de una aplicación web en Python/Flask y JavaScript. El producto también usa tutores de IA contextualizados con grafos de conocimiento e historial de aprendizaje; genera retroalimentación estructurada y la valida antes de registrar avances. Incluye transcripción local de voz y seguimiento conceptual.
 
 ## Licencia
 
