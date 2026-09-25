@@ -78,7 +78,7 @@ El repositorio contiene el código y los datos de ejemplo necesarios para entend
 
 ## Resumen para el currículum
 
-**Sistema de estudio asistido por IA — proyecto personal.** Diseño y desarrollo de una aplicación web local en Python/Flask y JavaScript para apoyar el estudio universitario mediante grafos de conocimiento, práctica espaciada, seguimiento de sesiones, transcripción local de voz e integración con tutores de inteligencia artificial.
+**Sistema de estudio con IA contextual — proyecto personal.** Diseño y desarrollo de una aplicación web local en Python/Flask y JavaScript que conecta tutores de IA con grafos de conocimiento e historial de aprendizaje. El flujo prepara contexto específico, solicita retroalimentación estructurada y valida cada respuesta antes de actualizar el progreso. Integra transcripción local de voz y seguimiento de dominio y fluidez por concepto.
 
 ## Licencia
 
