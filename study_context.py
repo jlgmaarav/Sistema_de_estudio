@@ -1029,7 +1029,7 @@ def render_session_outline(outline: dict) -> str:
             elif block.get("theory_certainty") == "probable":
                 lines.append(f"   {order}.T Teoría vista como probable → comprobar brevemente la base antes de avanzar")
             elif block.get("theory_status") == "vista":
-                lines.append(f"   {order}.T Teoría registrada como vista → comprobar recuperación; explicar a fondo cualquier laguna")
+                lines.append(f"   {order}.T Teoría registrada como vista → comprobar recuperación y pasar a práctica directa; explicar a fondo cualquier laguna")
             else:
                 lines.append(f"   {order}.T Teoría pendiente → explicación completa antes de los problemas del banco")
             for suborder, item in enumerate(block.get("items", []) or [], start=1):
@@ -1067,15 +1067,15 @@ def _work_prompt(pack: dict) -> str:
     outline_text = render_session_outline(outline)
     practice_first = _practice_first_subject(session.get("materia", ""))
     if practice_first:
-        session_method = """Esta es mi segunda cursada de Electromagnetismo. Empieza con el resumen completo de la sesión y después usa solo cuestiones y problemas existentes en el banco para descubrir huecos. No inventes ejercicios. Explica con detalle el concepto, definición, hipótesis o paso que falte y vuelve a comprobarlo con otra cuestión real del banco cuando exista."""
-        first_cycle = "- Primera respuesta obligatoria: presenta el resumen completo de la sesión antes de explicar o preguntar; después, en Electromagnetismo, empieza con una cuestión o problema real del banco. No inventes ejercicios."
-        theory_rule = "- En Electromagnetismo, explica con suficiente profundidad cada hueco que aparezca: definición, intuición física, hipótesis, derivación necesaria, significado y límite de validez."
-        cycle_rule = "- En Electromagnetismo, sigue: problema real del banco → intento → diagnóstico → explicación completa del hueco si hace falta → siguiente problema real disponible. Si no existe otro, no lo inventes."
+        session_method = """Esta es mi segunda cursada de Electromagnetismo. CERO TEORÍA PREVIA: ya la tengo controlada. Empieza con el resumen completo de la sesión y después usa solo cuestiones y problemas existentes en el banco para descubrir huecos. No inventes ejercicios. Explica puntualmente solo el hueco conceptual si el intento falla, y vuelve de inmediato a la práctica."""
+        first_cycle = "- Primera respuesta obligatoria: presenta antes de explicar teoría o lanzar una pregunta el resumen completo e ÍNDICE GRANULAR DE LA SESIÓN. En Electromagnetismo no des teoría: empieza de inmediato con una cuestión o problema real del banco. No inventes ejercicios."
+        theory_rule = "- En Electromagnetismo, la teoría se omite de entrada y solo interviene si el estudiante falla un problema: explica puntualmente el hueco (definición, intuición física, hipótesis o derivación) y regresa al banco."
+        cycle_rule = "- En Electromagnetismo, sigue: problema real del banco → intento del estudiante → diagnóstico → corrección del hueco si hace falta → siguiente problema real. Nunca uses modo paseo para Electromagnetismo."
     else:
-        session_method = "Se trabaja un nodo cada vez con una explicación de profesor completa y rigurosa. Se usan solo problemas registrados en el banco; se espera el intento y se corrige antes de pasar al siguiente nodo."
-        first_cycle = "- Primera respuesta obligatoria: presenta antes de enseñar el resumen completo, con objetivo, nodos e IDs, condición de repaso/nuevo, problemas previstos con ID y título, y nodos sin problema asociado. Después indica la continuidad y empieza el primer ciclo."
-        theory_rule = "- Explica con profundidad suficiente para reconstruir y aplicar la teoría: motivación e intuición física, definiciones, símbolos, hipótesis, derivación paso a paso, significado de las ecuaciones, interpretación física, condiciones de validez y límites. Evita los resúmenes superficiales y las listas de fórmulas."
-        cycle_rule = "- Para cada nodo, explica la teoría y plantea únicamente el siguiente problema real del banco asociado a ese nodo, con su enunciado exacto. Espera el intento, corrige y aclara antes de avanzar. Si no hay problema adecuado en el banco, dilo y no inventes uno ni un sustituto."
+        session_method = "Se trabaja un nodo cada vez con una explicación concisa y rigurosa (lo mínimo suficiente, sin spoilers del problema). Se usan solo problemas registrados en el banco; se espera el intento y se corrige con criterio estricto."
+        first_cycle = "- Primera respuesta obligatoria: presenta antes de explicar teoría o lanzar una pregunta el resumen completo e ÍNDICE GRANULAR DE LA SESIÓN, con objetivo, nodos e IDs, condición de repaso/nuevo, problemas previstos con ID y título, y nodos sin problema asociado. Si el estudiante no ha indicado el entorno (Paseo, Biblioteca o Casa), pregunta de inmediato dónde está para adaptar la sesión."
+        theory_rule = "- Explica con profundidad suficiente para reconstruir y aplicar la teoría: motivación e intuición física, definiciones, símbolos, hipótesis, derivación paso a paso, significado de las ecuaciones, interpretación física, condiciones de validez y límites. PROHIBIDO usar en la teoría ejemplos que reproduzcan el mismo caso o truco del problema posterior."
+        cycle_rule = "- Para cada nodo, explica la teoría concisa y plantea únicamente el siguiente problema real del banco asociado a ese nodo con su enunciado exacto y su ruta de archivo de Windows. Espera el intento, corrige y aclara antes de avanzar. Si no hay problema adecuado en el banco, dilo y no inventes uno ni un sustituto."
     partial_notice_block = ""
     if pack.get("partial_notice"):
         partial_notice_block = f"\nALERTA DE EXAMEN PARCIAL (LÍMITE ESTRICTO DE TEMARIO)\n{pack['partial_notice']}\n"
@@ -1158,7 +1158,7 @@ MÉTODO ESPECÍFICO DE ESTA ASIGNATURA
 
 {OUTPUT_FORMAT_GUIDANCE}
 
-RESUMEN COMPLETO DE LA SESIÓN
+ÍNDICE GRANULAR DE LA SESIÓN
 Este mapa contiene todos los nodos previstos y todos los problemas reales seleccionados
 de la base de datos. Muéstralo al estudiante en el primer mensaje, antes de enseñar o
 preguntar. Conserva IDs, nombres y títulos exactos; aclara qué es repaso, continuación o
@@ -1176,15 +1176,20 @@ PROTOCOLO DIDÁCTICO
 {first_cycle}
 {theory_rule}
 - Al acabar la explicación de cada nodo, presenta el siguiente problema previsto y vinculado
-  a ese nodo, usando su enunciado exacto, ID y nodos. Espera el intento antes de corregir.
+  a ese nodo, usando su enunciado exacto, ID, procedencia y ruta de Windows. Espera el intento antes de corregir.
   No avances hasta revisar el intento y aclarar las dudas.
+- PROHIBIDO DAR PISTAS EN EL ENUNCIADO: no digas qué método o coordenadas usar. Si quieres dirigir el foco,
+  pregunta al estudiante: «Explícame qué planteamiento/coordenadas eliges y por qué».
+- CRITERIO DE EXAMEN ESTRICTO (META: 10): un problema solo está resuelto si el estudiante lo completó 100% solo.
+  Si necesitó cualquier pista, aclaración o ayuda intermedia, NO cuenta como resuelto ni dominado. Quedan prohibidos
+  los elogios complacientes si hubo ayuda. El fallo se diagnostica y se registra como hueco para repaso.
 - Tras la corrección, identifica el hueco concreto, explica solo el microbloque que falte
   y pasa al siguiente problema real vinculado al nodo.
 - Si el banco no contiene un problema adecuado para el nodo, indícalo. No inventes un
   problema, no uses otro nodo como sustituto y no etiquetes una pregunta conceptual como
   ejercicio del banco. Puedes seguir explicando y comprobar conceptos con una pregunta
   cada vez.
-- Una marca de teoría vista no demuestra dominio: comprueba la recuperación antes de
+- Una marca de teoría vista o Teoría ya impartida no demuestra dominio: comprueba la recuperación antes de
   omitir contenidos. Si aparece una laguna, ofrece una explicación completa del concepto.
   Cuando la teoría está pendiente, explica el nodo con suficiente profundidad antes de
   plantear su problema del banco.
@@ -1660,6 +1665,24 @@ def _normalize_work_report(report: dict, session: dict) -> dict:
     return normalized
 
 
+def _async_git_backup(session_id: str, materia: str) -> None:
+    def _do_backup():
+        try:
+            import shutil
+            git_bin = shutil.which("git") or r"C:\Program Files\Git\cmd\git.exe"
+            if not os.path.exists(git_bin) and not shutil.which("git"):
+                return
+            subprocess.run([git_bin, "add", "-A"], cwd=BASE_DIR, capture_output=True, text=True, check=False)
+            commit_msg = f"Respaldo automático de sesión: {materia or 'Estudio'} ({session_id}) - {_now()}"
+            subprocess.run([git_bin, "commit", "-m", commit_msg], cwd=BASE_DIR, capture_output=True, text=True, check=False)
+            subprocess.run([git_bin, "push", "origin", "main"], cwd=BASE_DIR, capture_output=True, text=True, check=False)
+        except Exception as exc:
+            print(f"Aviso: error en respaldo git automático: {exc}")
+
+    thread = threading.Thread(target=_do_backup, daemon=True)
+    thread.start()
+
+
 def apply_work_report(session_id: str, report: dict) -> dict:
     """Integra el informe de Work en perfil, problemas, apuntes y sesiones."""
     session = study_sessions.get_session(session_id)
@@ -1791,6 +1814,7 @@ def apply_work_report(session_id: str, report: dict) -> dict:
         active.setdefault("session", {})["status"] = "completed"
         active["closed_at"] = _now()
         save_active_study_context(active)
+    _async_git_backup(session_id, session.get("materia", ""))
     return {
         "already_completed": False,
         "session": finished,

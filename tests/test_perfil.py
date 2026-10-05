@@ -158,7 +158,7 @@ def test_frontera_se_abre_al_dominar_prerrequisito():
     perfil["nodos"]["a"] = motor._entrada_nueva()
     perfil["nodos"]["a"].update(dominio=0.8,
                                 proxima=(HOY + timedelta(days=30)).isoformat())
-    ids = {n["id"] for n in motor.frontera(perfil, nodos)}
+    ids = {n["id"] for n in motor.frontera(perfil, nodos, hoy=HOY)}
     assert "b" in ids           # ahora 'a' está dominado
     assert "a" not in ids       # 'a' ya dominado, sale de la frontera
 
@@ -171,7 +171,7 @@ def test_frontera_prerrequisito_blando_no_bloquea():
         perfil["nodos"][n] = dict(motor._entrada_nueva(),
                                   dominio=0.8,
                                   proxima=(HOY + timedelta(days=30)).isoformat())
-    ids = {n["id"] for n in motor.frontera(perfil, nodos)}
+    ids = {n["id"] for n in motor.frontera(perfil, nodos, hoy=HOY)}
     assert "c" in ids
 
 

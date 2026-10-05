@@ -1247,6 +1247,16 @@ def compile_pdf(tex_path: str, runs: int = 2, clean_aux: bool = True) -> dict:
 
     pdflatex_bin = shutil.which("pdflatex")
     if not pdflatex_bin:
+        known_paths = [
+            os.path.expandvars(r"%LOCALAPPDATA%\Programs\MiKTeX\miktex\bin\x64\pdflatex.exe"),
+            r"C:\Program Files\MiKTeX\miktex\bin\x64\pdflatex.exe",
+            r"C:\texlive\bin\windows\pdflatex.exe",
+        ]
+        for kp in known_paths:
+            if os.path.exists(kp):
+                pdflatex_bin = kp
+                break
+    if not pdflatex_bin:
         return {"success": False, "error": "pdflatex no está disponible en PATH"}
 
     folder = os.path.dirname(os.path.abspath(tex_path))
@@ -1258,13 +1268,13 @@ def compile_pdf(tex_path: str, runs: int = 2, clean_aux: bool = True) -> dict:
     for _ in range(max(1, runs)):
         try:
             res = subprocess.run(
-                [pdflatex_bin, "-interaction=nonstopmode", "-halt-on-error", filename],
+                [pdflatex_bin, "-interaction=nonstopmode", "-halt-on-error", "-enable-installer", filename],
                 cwd=folder,
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
                 errors="replace",
-                timeout=40,
+                timeout=120,
             )
             if res.returncode != 0:
                 last_error = (res.stdout[-800:] if res.stdout else "") or (res.stderr[-800:] if res.stderr else "")

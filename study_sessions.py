@@ -82,9 +82,9 @@ RAIL = {
 WALK_MODES = {
     "walk_introduction": {
         "nombre": "Teoría guiada (paseo o bus)",
-        "descripcion": "La IA desarrolla cada nodo con rigor y comprueba su aplicación con problemas disponibles en el banco; puedes responder hablando o escribiendo.",
-        "reparto": "La IA explica el nodo y plantea después un problema registrado en el banco si existe uno asociado.",
-        "instrucciones": "Trabaja un nodo cada vez. Explica la teoría con profundidad y plantea solo problemas existentes en la base de datos. Si no hay uno asociado, dilo y no inventes un sustituto.",
+        "descripcion": "La IA desarrolla cada nodo con rigor teórico; el estudiante puede ir de paseo o en el bus, respondiendo por voz o por texto.",
+        "reparto": "El estudiante puede ir en el bus o de paseo, escuchando o respondiendo por texto o voz; la IA explica y evalúa conceptos teóricos.",
+        "instrucciones": "Trabaja un nodo cada vez. Explica la teoría primero con profundidad y rigor. En paseo o bus no plantees problemas numéricos ni ejercicios del banco; céntrate en la teoría, intuición física y relaciones conceptuales.",
     },
     "walk_rescue": {
         "nombre": "Paseo de rescate conceptual",

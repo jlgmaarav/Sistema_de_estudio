@@ -1,85 +1,107 @@
-# Sistema de estudio asistido por IA
+# Sistema de Estudio Asistido por IA (Physics Learning Engine)
 
-Aplicación local para organizar y practicar el estudio universitario con grafos de conocimiento, recuperación espaciada y apoyo de inteligencia artificial. Se creó para el Grado en Física y combina una interfaz web, herramientas de voz y seguimiento del aprendizaje.
+Aplicación y motor de aprendizaje adaptativo diseñado para optimizar el estudio intensivo en el **Grado en Física**. Combina grafos de conocimiento dirigidos (DAGs), algoritmos de recuperación espaciada, tutoría pedagógica contextualizada con modelos de lenguaje (LLMs), generación automatizada de apuntes en LaTeX/PDF y simulaciones interactivas.
 
-## Qué permite hacer
+---
 
-- Representar asignaturas, conceptos y prerrequisitos como grafos de conocimiento.
-- Seguir por separado el dominio conceptual y la fluidez, y registrar errores y avances por sesión.
-- Practicar con preguntas y problemas vinculados a conceptos concretos.
-- Mantener continuidad entre sesiones sin delegar en la IA la elección del contenido ni la actualización directa del estado académico.
-- Dictar razonamientos, transcribir audio localmente y recibir retroalimentación estructurada con ayuda de un tutor de IA.
-- Exportar contexto legible y estructurado para trabajar con distintos asistentes.
-- Guardar apuntes en una bóveda de Obsidian configurable.
+## 🚀 Arquitectura del Sistema
 
-## Cómo funciona
+El sistema opera bajo una **arquitectura desacoplada en dos capas**:
 
 ```text
-Estudiante
-   ↓ texto o voz
-Centro de Estudio (Python + Flask)
-   ├── grafos de conocimiento y estado de aprendizaje
-   ├── práctica, sesiones y apuntes
-   └── contexto estructurado para el tutor de IA
-            ↓
-       respuesta revisada
-            ↓
-La aplicación valida y registra los cambios
+┌────────────────────────────────────────────────────────────────────────┐
+│                   CAPA 1: PROTOCOLO DE TUTORÍA Y AGENTES              │
+│  - Detección de entorno (Paseo / Biblioteca / Casa)                    │
+│  - Criterio de dominio estricto 10/10 (Anti-Spoiler Pedagógico)        │
+│  - Inyección de contexto estructurado (TUTOR_WORK.md / docs/)          │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                    CAPA 2: MOTOR LOCAL (PYTHON / FLASK)                │
+│  - Grafos de Conocimiento (Álgebra, Electromagnetismo, Cuántica...)   │
+│  - Algoritmo de Frontera de Conocimiento y Repetición Espaciada       │
+│  - Compilador de Apuntes Vivos (LaTeX -> PDF automático)               │
+│  - Servicios Locales de Voz (Faster-Whisper STT)                       │
+│  - Respaldo Distribuido Dual (Portfolio Público vs Datos Privados)    │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-La aplicación y los datos de estudio se ejecutan localmente. La transcripción de voz usa Whisper local; la interacción con el tutor de IA se realiza mediante el flujo configurado por el usuario. Las respuestas se revisan y pasan por la aplicación antes de actualizar el seguimiento.
+---
 
-## Tecnologías
+## ✨ Características Principales
 
-- Python y Flask para la aplicación y sus servicios locales.
-- JavaScript, HTML y CSS para la interfaz web.
-- JSON para los grafos, el perfil de aprendizaje y los formatos de intercambio.
-- faster-whisper para transcripción local de voz.
-- Obsidian como destino configurable para notas y materiales personales.
+### 1. Grafos de Conocimiento Curriculares (Knowledge Graphs)
+- Cada asignatura se modela como un grafo dirigido acíclico (DAG) de conceptos con dependencias y prerrequisitos explícitos.
+- Cálculo automático de la **frontera de aprendizaje**: identifica los nodos óptimos para estudiar hoy sin lagunas previas.
+- Seguimiento diferenciado de **comprensión conceptual**, **fluidez operativa** y registro recurrente de **errores típicos**.
 
-## Puesta en marcha
+### 2. Entornos de Estudio Adaptativos
+El tutor ajusta su metodología y formato de respuesta según la situación del estudiante:
+- **🚶 Paseo (Modo Audio / Diálogo):** Enfocado 100% en debate conceptual de alto nivel, preguntas socráticas y analogías físicas (método Feynman), optimizado para entrada y salida por voz.
+- **📚 Biblioteca (Modo Texto Breve / Silencioso):** Interacción puramente escrita con máxima concisión. El tutor evalúa respuestas esquemáticas manteniendo el rigor analítico.
+- **🏠 Casa (Modo Análisis Profundo):** Explicación y resolución exhaustiva de problemas, deducciones matemáticas paso a paso y demostraciones completas.
 
-Se requiere Python y las dependencias indicadas en `requirements.txt`.
+### 3. Criterio de Dominio Estricto (Objetivo: Matrícula de Honor)
+- **Cero pistas regaladas:** Un problema solo se computa como *dominado* si el estudiante lo resuelve de manera 100% autónoma.
+- Si la IA proporciona pistas intermedias o desatasca el ejercicio, el concepto se registra como **brecha a reforzar** para futuras sesiones.
+- **Anti-Spoiler Pedagógico:** En las explicaciones teóricas previas, el sistema tiene prohibido utilizar la misma geometría o truco matemático del problema que se planteará a continuación.
 
-```bash
-python -m venv .venv
-```
+### 4. Apuntes Personales Vivos en LaTeX y PDF (`apuntes.py`)
+- Al finalizar cada sesión (`"cerramos sesión"`), el sistema recopila los conceptos trabajados, justificaciones teóricas, dudas resueltas y errores corregidos.
+- Genera automáticamente un documento formal en LaTeX (`main.tex`) y lo compila a **PDF** mediante integración con MiKTeX/TeX Live.
+- Redacción precisa con estilo técnico inspirado en especificaciones aeronáuticas (ASD-STE100) para máxima claridad y cero relleno superfluo.
 
-Activa el entorno virtual y luego instala las dependencias:
+### 5. Recursos Visuales e Interactivos
+- Soporte para generar simulaciones web autónomas (HTML5/JS con Canvas o Plotly) en tiempo real.
+- Permite al estudiante manipular parámetros físicos mediante controles deslizantes (ej. barreras de potencial cuántico, curvas $I$-$V$ de MOSFETs o reflexión de ondas electromagnéticas).
 
-```bash
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
+---
 
-# macOS o Linux
-source .venv/bin/activate
+## 🛠️ Tecnologías Utilizadas
 
-python -m pip install -r requirements.txt
-```
+- **Backend:** Python 3.11+, Flask, AnyIO.
+- **Frontend:** HTML5, CSS3 moderno, JavaScript (ES6+), KaTeX para renderizado matemático.
+- **Procesamiento de Voz:** `faster-whisper` para transcripción local de audio de baja latencia.
+- **Tipografía y Documentos:** LaTeX (`pdflatex`, MiKTeX, TeX Live) con compilación desatendida.
+- **Estructura de Datos:** Grafos en JSON, esquemas Pydantic / dataclasses para validación estricta de reportes.
+- **Control de Versiones y Sincronización:** Git, GitHub API, scripts de respaldo asíncrono.
 
-Copia `.env.example` a `.env` y configura `VAULT_PATH` si quieres guardar las notas en una bóveda de Obsidian. Inicia el servidor con `python app.py`; en Windows también puedes usar `iniciar_centro_estudio.bat`. La aplicación se abre en `http://localhost:5000`.
+---
 
-## Estructura del proyecto
+## 📁 Estructura del Repositorio
 
-| Ruta | Contenido |
+| Ruta | Descripción |
 | --- | --- |
-| `app.py` | Aplicación web y API local. |
-| `knowledge_graph/` | Grafos de asignaturas, herramientas del motor y visualizaciones. |
-| `study_sessions.py` | Flujo y registro de sesiones de estudio. |
-| `study_context.py` | Construcción y exportación del contexto para tutores de IA. |
-| `apuntes.py` | Gestión y generación de apuntes por concepto. |
-| `buscar_web.py` | Preparación de búsquedas asistidas por IA y recepción de resultados. |
-| `templates/`, `static/` | Interfaz web. |
-| `tests/` | Pruebas automatizadas del proyecto. |
+| `app.py` | Servidor web Flask y endpoints del centro de estudio. |
+| `study_context.py` | Motor de construcción y exportación de contexto para LLMs. |
+| `study_sessions.py` | Gestión del ciclo de vida de sesiones y persistencia. |
+| `study_output_guidance.py` | Esquemas y directrices pedagógicas estructuradas. |
+| `apuntes.py` | Motor de generación y compilación de apuntes en LaTeX (`.tex` y `.pdf`). |
+| `TUTOR_WORK.md` | Protocolo de tutoría personalizada y reglas pedagógicas activas. |
+| `docs/protocolo_de_tutoria.md` | Especificación del protocolo de interacción con la IA. |
+| `knowledge_graph/` | Definiciones JSON de los grafos curriculares por materia y visores interactivos. |
+| `templates/`, `static/` | Interfaz web de usuario y visores de grafos. |
+| `tests/` | Suite completa de pruebas unitarias y de integración (`pytest`). |
 
-## Privacidad y datos
+---
 
-El repositorio contiene el código y los datos de ejemplo necesarios para entender el sistema. El perfil personal, el historial de sesiones, el banco privado de problemas, las credenciales, las grabaciones, los materiales de clase y los apuntes generados deben permanecer en el equipo local y están excluidos mediante `.gitignore`. No se incluyen PDFs de libros ni materiales docentes.
+## 🔒 Privacidad y Política de Datos
 
-## Resumen para el currículum
+Este repositorio público contiene exclusivamente el **código fuente**, la **arquitectura del sistema**, los **grafos curriculares generales** y **datos de ejemplo**.
 
-**Sistema de estudio desarrollado con IA generativa — proyecto personal.** Definí la idea y los requisitos, y utilicé IA generativa para crear e iterar el código de una aplicación web en Python/Flask y JavaScript. El producto también usa tutores de IA contextualizados con grafos de conocimiento e historial de aprendizaje; genera retroalimentación estructurada y la valida antes de registrar avances. Incluye transcripción local de voz y seguimiento conceptual.
+- Los expedientes y métricas de progreso personal (`perfil.json`), los enunciados de exámenes universitarios sujetos a derechos docentes y las grabaciones de audio se gestionan en un **repositorio privado independiente** o almacenamiento seguro cifrado.
+- Se implementan reglas estrictas de `.gitignore` para garantizar el cumplimiento normativo y la propiedad intelectual.
 
-## Licencia
+---
 
-Este proyecto se distribuye bajo la licencia MIT. Consulta [`LICENSE`](LICENSE).
+## 💼 Resumen para Currículum / Portfolio
+
+> **Sistema de Estudio y Aprendizaje Acelerado con IA (Proyecto Personal — Física UVa)**  
+> Diseño e implementación completa de una plataforma local de tutoría y seguimiento pedagógico basada en Python/Flask y JavaScript. Implementé modelado del plan de estudios como Grafos de Conocimiento Dirigidos (DAGs) para cálculo de frontera de aprendizaje y recuperación espaciada. Diseñé un protocolo de tutoría adaptativa multi-entorno para LLMs con detección de brechas conceptuales, compilación automatizada de apuntes en LaTeX/PDF tras cada sesión y transcripción local de voz con Whisper.
+
+---
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Consulta el archivo [`LICENSE`](LICENSE) para más información.
