@@ -48,6 +48,9 @@ function loadStudySubjectCards() {
             container.innerHTML = subjects.map(subject => {
                 const materiaJson = JSON.stringify(subject.materia).replace(/'/g, '\\u0027');
                 const progress = Math.max(0, Math.min(100, Number(subject.dominio_porcentaje || 0)));
+                const theorySeen = Math.max(0, Number(subject.nodos_teoria_vista || 0));
+                const nodesTotal = Math.max(0, Number(subject.nodos || 0));
+                const attemptedProblems = Math.max(0, Number(subject.problemas_intentados || 0));
                 const examDate = subject.examen?.fecha || subject.examen?.fecha_examen || '';
                 return `
                     <article style="background:#11141d; border:1px solid #2d3748; border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:10px; min-height:190px;">
@@ -56,14 +59,16 @@ function loadStudySubjectCards() {
                                 <h3 style="margin:0 0 4px; color:#f3f4f6; font-size:16px;">${escapeSearchHtml(subject.materia)}</h3>
                                 <span style="color:#93c5fd; font-size:12px;">${escapeSearchHtml(subject.estado || 'Lista para estudiar')}</span>
                             </div>
-                            <span style="color:#60a5fa; font-weight:700; font-size:18px;">${progress}%</span>
+                            <span style="color:#60a5fa; font-weight:700; font-size:18px; text-align:right;">${progress}%<small style="display:block; color:#9ca3af; font-size:10px; font-weight:400;">dominio</small></span>
                         </div>
                         <div style="height:6px; background:#1e293b; border-radius:99px; overflow:hidden;"><div style="height:100%; width:${progress}%; background:${progress < 60 ? '#f59e0b' : '#34d399'}; border-radius:99px;"></div></div>
                         <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:6px; color:#9ca3af; font-size:11px;">
                             <span><strong style="display:block; color:#e2e8f0; font-size:14px;">${subject.repasos_pendientes ?? 0}</strong>repasos</span>
                             <span><strong style="display:block; color:#e2e8f0; font-size:14px;">${subject.nodos_debiles ?? 0}</strong>débiles</span>
-                            <span><strong style="display:block; color:#e2e8f0; font-size:14px;">${subject.problemas ?? 0}</strong>problemas</span>
+                            <span><strong style="display:block; color:#e2e8f0; font-size:14px;">${subject.problemas ?? 0}</strong>en banco</span>
                         </div>
+                        <div style="color:#9ca3af; font-size:11px; line-height:1.35;">Temario visto: <strong style="color:#e2e8f0;">${theorySeen}/${nodesTotal}</strong> · Ejercicios identificados: <strong style="color:#e2e8f0;">${attemptedProblems}</strong></div>
+                        ${subject.practica_sin_id_confirmada ? '<div style="color:#a7f3d0; font-size:11px; line-height:1.35;">Práctica previa confirmada; sin ejercicio identificado.</div>' : ''}
                         <div style="color:#6b7280; font-size:11px; line-height:1.35; min-height:30px;">${examDate ? `Examen configurado: ${escapeSearchHtml(examDate)}` : 'Sin examen configurado'}</div>
                         <div style="display:flex; gap:7px; margin-top:auto;">
                             <button class="btn btn-primary" onclick='startWorkStudySession(${materiaJson})' style="flex:1; padding:7px 9px; font-size:12px; display:inline-flex; justify-content:center; align-items:center; gap:5px;"><i data-lucide="play" style="width:14px;height:14px;"></i> Estudiar con Work</button>
@@ -2791,6 +2796,8 @@ Asegúrate de que NO tenga ninguna laguna teórica o de planteamiento. Evalúame
 2. Hipótesis y límites de validez de las aproximaciones.
 3. Planteamiento y condiciones de contorno para el problema matemático.
 4. Casos límite asintóticos y trampas típicas del examen.
+
+Escribe en español claro y directo, aproximadamente al 80% de ASD-STE100: una idea por frase, términos técnicos y símbolos definidos y pasos explícitos, sin perder precisión. Elige un esquema rotulado, gráfico, tabla o imagen cuando aclare el concepto. Si variar parámetros ayuda, crea una página HTML interactiva breve, accesible y autocontenida, sin dependencias ni conexiones externas. Si el tiempo es esencial y hay herramienta de vídeo disponible, crea un vídeo breve; si no, usa una animación HTML o un guion visual con fotogramas y narración. Los recursos visuales complementan la explicación y el ejercicio, no los sustituyen.
 
 Hazme una sola pregunta cada vez y no me des la respuesta masticada.`;
 
