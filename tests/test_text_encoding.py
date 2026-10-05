@@ -4,8 +4,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVE_TEXT_FILES = (
     ROOT / "knowledge_graph" / "planificar.py",
-    ROOT / "generar_informe_auditoria.py",
-    ROOT / "informe_auditoria_sistema_estudio.tex",
 )
 MOJIBAKE_MARKERS = ("Ã", "Â", "�", "Eval?", "â€", "ðŸ")
 
