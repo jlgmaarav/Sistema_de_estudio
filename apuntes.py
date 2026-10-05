@@ -83,6 +83,7 @@ def _empty_node(node_id: str, title: str, node: dict | None = None) -> dict:
         "recurrent_errors": [],
         "procedures": [],
         "examples": [],
+        "visual_resources": [],
         "evidence": [],
         "quality_samples": [],
         "last_result": None,
@@ -117,6 +118,49 @@ def _clean_list(values, limit: int = 12, item_limit: int = 900) -> list[str]:
             result.append(text)
         if len(result) >= limit:
             break
+    return result
+
+
+def _existing_visual_resources(subject_name: str, resources) -> list[dict]:
+    """Guarda en los apuntes solo rutas relativas que existen dentro de la asignatura."""
+    if not isinstance(resources, list):
+        return []
+    allowed_extensions = {
+        "imagen": {".png", ".jpg", ".jpeg", ".webp"},
+        "diagrama_svg": {".svg"},
+        "html_interactivo": {".html"},
+        "video": {".mp4", ".webm"},
+        "guion_video": {".md"},
+    }
+    subject_dir = os.path.abspath(os.path.join(OUTPUT_DIR, slugify(subject_name)))
+    result = []
+    for resource in resources[:8]:
+        if not isinstance(resource, dict):
+            continue
+        kind = str(resource.get("tipo", "")).strip().lower()
+        path = str(resource.get("ruta", "")).strip().replace("\\", "/")
+        if kind not in allowed_extensions or not path.startswith("recursos_visuales/"):
+            continue
+        if ".." in path.split("/") or not re.fullmatch(r"recursos_visuales/[A-Za-z0-9._/-]+", path):
+            continue
+        if os.path.splitext(path)[1].lower() not in allowed_extensions[kind]:
+            continue
+        absolute = os.path.abspath(os.path.join(subject_dir, *path.split("/")))
+        try:
+            inside_subject = os.path.commonpath([subject_dir, absolute]) == subject_dir
+        except ValueError:
+            inside_subject = False
+        if not inside_subject or not os.path.isfile(absolute):
+            continue
+        title = _clean(resource.get("titulo", ""), 200)
+        if not title:
+            continue
+        result.append({
+            "tipo": kind,
+            "titulo": title,
+            "descripcion": _clean(resource.get("descripcion", ""), 800),
+            "ruta": path,
+        })
     return result
 
 
@@ -174,6 +218,7 @@ def _apply_update(chapter: dict, update: dict, evidence: dict) -> None:
     _add_unique(chapter.setdefault("recurrent_errors", []), _clean_list(update.get("recurrent_errors", [])))
     _add_unique(chapter.setdefault("procedures", []), _clean_list(update.get("procedures", [])))
     _add_unique(chapter.setdefault("examples", []), _clean_list(update.get("examples", [])))
+    _add_unique(chapter.setdefault("visual_resources", []), update.get("visual_resources", []), limit=20)
     if update.get("result"):
         chapter["last_result"] = _clean(update["result"], 80)
     quality = update.get("quality")
@@ -278,6 +323,7 @@ def apply_walk_report(session: dict, report: dict, nodes: dict | None = None) ->
             "personal_explanations": note.get("explicacion_para_mi", note.get("personales", [])),
             "procedures": note.get("procedimiento_examen", note.get("procedimientos", [])),
             "examples": note.get("ejemplos", []),
+            "visual_resources": _existing_visual_resources(subject_name, note.get("recursos_visuales", [])),
         }
         grouped.setdefault(subject_name, []).append(update)
     evidence_base = {
@@ -1021,6 +1067,33 @@ def _node_tex(chapter: dict, graph_node: dict | None = None) -> str:
         body.append(_section("Procedimiento personal añadido", _paragraphs(chapter["procedures"])))
     if chapter.get("examples"):
         body.append(_section("Ejercicios o comprobaciones registrados", _paragraphs(chapter["examples"])))
+    visual_resources = []
+    for resource in chapter.get("visual_resources", []) or []:
+        if not isinstance(resource, dict):
+            continue
+        path = str(resource.get("ruta", "")).strip().replace("\\", "/")
+        if (not path.startswith("recursos_visuales/") or ".." in path.split("/")
+                or not re.fullmatch(r"recursos_visuales/[A-Za-z0-9._/-]+", path)):
+            continue
+        title = _latex_escape(resource.get("titulo", "Recurso visual"))
+        type_labels = {
+            "imagen": "Imagen",
+            "diagrama_svg": "Diagrama",
+            "html_interactivo": "Página interactiva",
+            "video": "Vídeo",
+            "guion_video": "Guion de vídeo",
+        }
+        kind = _latex_escape(type_labels.get(resource.get("tipo", ""), "Recurso"))
+        description = _latex_escape(resource.get("descripcion", ""))
+        item = f"\\item \\href{{run:{path}}}{{{title}}} ({kind}) \\texttt{{{_latex_escape(path)}}}"
+        if description:
+            item += f" — {description}"
+        visual_resources.append(item)
+    if visual_resources:
+        body.append(_section(
+            "Recursos visuales de estudio",
+            "\\begin{itemize}\n" + "\n".join(visual_resources) + "\n\\end{itemize}",
+        ))
     return "\n".join(body)
 
 
@@ -1283,6 +1356,14 @@ def context_for_nodes(node_ids: list[str]) -> str:
                 lines.append(f"  Dificultades previas: {'; '.join(node['difficulties'][-3:])}")
             if node.get("recurrent_errors"):
                 lines.append(f"  Errores previos: {'; '.join(node['recurrent_errors'][-3:])}")
+            if node.get("visual_resources"):
+                resources = [
+                    f"{item.get('titulo', 'Recurso visual')} ({item.get('ruta', '')})"
+                    for item in node["visual_resources"][-3:]
+                    if isinstance(item, dict)
+                ]
+                if resources:
+                    lines.append(f"  Recursos visuales previos: {'; '.join(resources)}")
     return "\n".join(lines)
 
 

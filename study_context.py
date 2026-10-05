@@ -27,6 +27,7 @@ import apuntes
 import config
 import generar_dashboard
 import study_sessions
+from study_output_guidance import OUTPUT_FORMAT_GUIDANCE
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -475,12 +476,17 @@ def build_context(materia: str | None = None,
                 "No inventes dominio: distingue evidencia demostrada de hipótesis inicial.",
                 "Usa los ids exactos de nodos y problemas cuando registres algo.",
                 "Si falta información o hay conflicto, dilo antes de asumir.",
-                "Las señales derivadas del perfil son descriptivas; no elijas por ellas el contenido de una sesión.",
-                "La sesión sigue el último punto trabajado o la elección explícita del estudiante.",
-                "Da solo la teoría mínima necesaria para abordar un problema real del banco vinculado al nodo.",
-                "No inventes problemas, variantes ni ejercicios fuera del banco salvo que el estudiante lo pida.",
+                "Antes de pedir que el estudiante elija tema, consulta el progreso y el historial disponibles para retomar el último punto trabajado.",
+                "Trata los datos reconstruidos o probables como inciertos; si el registro pide comprobar una base antes de avanzar, haz una comprobación breve y explícita.",
+                "Al inicio, presenta el objetivo, todos los nodos previstos con ID y nombre, su condición de repaso o nuevos, y la lista exacta de problemas del banco previstos, con ID y título.",
+                "Trabaja un nodo cada vez y espera el intento y la corrección antes de avanzar cuando exista un problema del banco vinculado.",
+                "Propón exclusivamente problemas que ya existan en la base de datos de la asignatura; conserva ID y enunciado exactos.",
+                "Si un nodo no tiene un problema adecuado en el banco, indícalo y no inventes ni propongas un ejercicio sustituto.",
+                "Guarda cada resultado y avance sustantivo también en GitHub o Drive y verifica la copia remota; el portátil no puede ser el único lugar donde quede.",
+                "Mantén perfiles y progreso personal en un destino privado; no subas datos personales de estudio a un repositorio público.",
                 "Propón cambios estructurados para el perfil; no sobrescribas datos sin confirmación.",
             ],
+            "output_format": OUTPUT_FORMAT_GUIDANCE,
         "write_protocol": {
             "event_types": [
                 "concept_review",
@@ -571,6 +577,24 @@ def subject_summaries() -> dict:
         values = list(effective.values())
         average = sum(values) / len(values) if values else 0.0
         subject_problems = bank.get(materia, {}).get("problemas", []) if isinstance(bank.get(materia, {}), dict) else []
+        profile_problems = profile.get("problemas", {}) or {}
+        attempted_problem_ids = {
+            str(problem.get("id", "")).strip()
+            for problem in subject_problems
+            if str(problem.get("id", "")).strip() in profile_problems
+        }
+        theory_seen = sum(
+            bool(node.get("teoria_vista")
+                 or node.get("theory_status") == "vista"
+                 or profile.get("nodos", {}).get(node_id, {}).get("teoria_vista"))
+            for node_id, node in nodes.items()
+        )
+        practice_without_ids = any(
+            item.get("tipo") == "ejercicios_sin_id"
+            and str(item.get("materia", "")).strip().casefold() == materia.casefold()
+            for item in (profile.get("evidencias_progreso", []) or [])
+            if isinstance(item, dict)
+        )
         node_ids = set(nodes)
         subject_sessions = [
             session for session in sessions
@@ -596,6 +620,7 @@ def subject_summaries() -> dict:
         summaries.append({
             "materia": materia,
             "nodos": len(nodes),
+            "nodos_teoria_vista": theory_seen,
             "nodos_con_evidencia": sum(value > 0 for value in values),
             "dominio_medio": round(average, 3),
             "dominio_porcentaje": round(average * 100),
@@ -603,6 +628,8 @@ def subject_summaries() -> dict:
             "repasos_pendientes": len(due),
             "frontera": len(frontier),
             "problemas": len(subject_problems),
+            "problemas_intentados": len(attempted_problem_ids),
+            "practica_sin_id_confirmada": practice_without_ids,
             "sesiones": len(subject_sessions),
             "ultima_sesion": last_session.get("ended_at") if last_session else None,
             "estado": status,
@@ -727,6 +754,10 @@ def context_to_markdown(context: dict) -> str:
         "",
         "Actúa como tutor de Física personalizado. Utiliza primero las instrucciones del estudiante y las evidencias del perfil e historial; después el grafo y los materiales. No inventes dominio ni problemas: cita los ids exactos y usa únicamente ejercicios del banco vinculados a los nodos trabajados. Si propones actualizar el sistema, devuelve un evento estructurado con fecha, origen, ids y resultado.",
         "",
+        "## Estilo de escritura y recursos visuales",
+        "",
+        OUTPUT_FORMAT_GUIDANCE,
+        "",
         "## Resumen",
         "",
         f"- Asignaturas: {stats.get('asignaturas', 0)}",
@@ -751,7 +782,7 @@ def context_to_markdown(context: dict) -> str:
         "```",
         "",
         "---",
-        "Generado automáticamente por el Sistema de Estudio. Los archivos fuente locales siguen siendo la fuente de verdad; este documento es su representación portable para la IA.",
+        "Generado automáticamente por el Sistema de Estudio. Guarda una copia duradera de este contexto en GitHub privado o Drive y verifica la lectura remota; el archivo local es una copia de trabajo, no el único respaldo.",
         "",
     ]
     return "\n".join(lines)
@@ -847,8 +878,8 @@ def build_session_outline(nodes: list[dict] | None = None,
     """Construye el índice de trabajo de una sesión, sin planificador.
 
     El índice se limita a los nodos y problemas que ya forman parte del paquete
-    o que el estudiante ha elegido. No decide qué estudiar: solo ordena el ciclo
-    didáctico de microteoría, ejercicio real, corrección y siguiente ejercicio.
+    o que el estudiante ha elegido. No decide qué estudiar: ordena el ciclo
+    didáctico de un nodo, sus problemas disponibles en el banco, la corrección y el nodo siguiente.
     """
     nodes = list(nodes or [])
     problems = list(problems or [])
@@ -862,9 +893,9 @@ def build_session_outline(nodes: list[dict] | None = None,
             "Después de cada corrección, comprobar el hueco con otra cuestión o ejercicio real.",
         ]
         if practice_first else [
-            "Confirmar el último punto trabajado o la elección explícita del estudiante.",
-            "Dar solo la teoría mínima necesaria para el primer ejercicio del banco.",
-            "Mantener el trabajo acotado a los nodos y problemas incluidos en el paquete.",
+            "Consultar el progreso y presentar primero el resumen completo de nodos y problemas previstos.",
+            "Explicar cada nodo con profundidad suficiente y trabajar los problemas reales previstos antes de avanzar.",
+            "Si un nodo no tiene problema asociado en el banco, indicarlo y no inventar un sustituto.",
         ]
     )
     blocks: list[dict] = [{
@@ -892,6 +923,7 @@ def build_session_outline(nodes: list[dict] | None = None,
                 node_problems.append({
                     "id": str(problem.get("id", "")),
                     "title": str(problem.get("titulo", "Problema")),
+                    "source": str(problem.get("hoja", "")).strip(),
                 })
 
         tipo = node.get("tipo")
@@ -906,15 +938,27 @@ def build_session_outline(nodes: list[dict] | None = None,
         theory_seen = bool(
             node.get("teoria_vista", False)
             or node.get("theory_status") == "vista"
+            or node.get("theory_status") == "vista_probable"
             or profile_entry.get("teoria_vista", False)
         )
+        theory_origin = str(profile_entry.get("teoria_vista_origen", "")).casefold()
+        theory_certainty = str(node.get("theory_certainty", "")).casefold()
+        if theory_certainty == "probable" or node.get("theory_status") == "vista_probable" or (
+            theory_seen and "probable" in theory_origin
+        ):
+            theory_status = "vista"
+            theory_certainty = "probable"
+        else:
+            theory_status = "vista" if theory_seen else "pendiente"
+            theory_certainty = "confirmada" if theory_seen else "no_registrada"
         blocks.append({
             "order": index,
             "type": "node",
             "node_id": node_id,
             "title": str(node.get("nombre", node_id)),
             "mode": mode,
-            "theory_status": "vista" if theory_seen else "pendiente",
+            "theory_status": theory_status,
+            "theory_certainty": theory_certainty,
             "practice_first": practice_first,
             "items": _outline_topics(node.get("descripcion", ""), node.get("nombre", node_id)),
             "prerequisites": prerequisite_items,
@@ -982,10 +1026,12 @@ def render_session_outline(outline: dict) -> str:
             lines.append(f"{order}. {label}{title}{suffix}")
             if block.get("practice_first"):
                 lines.append(f"   {order}.T Cuestiones y ejercicios primero → teoría solo si el intento descubre un hueco")
+            elif block.get("theory_certainty") == "probable":
+                lines.append(f"   {order}.T Teoría vista como probable → comprobar brevemente la base antes de avanzar")
             elif block.get("theory_status") == "vista":
-                lines.append(f"   {order}.T Teoría ya impartida → solo microteoría necesaria y práctica directa")
+                lines.append(f"   {order}.T Teoría registrada como vista → comprobar recuperación; explicar a fondo cualquier laguna")
             else:
-                lines.append(f"   {order}.T Teoría pendiente → microteoría necesaria y después práctica")
+                lines.append(f"   {order}.T Teoría pendiente → explicación completa antes de los problemas del banco")
             for suborder, item in enumerate(block.get("items", []) or [], start=1):
                 lines.append(f"   {order}.{suborder} {item}")
             prerequisites = block.get("prerequisites", []) or []
@@ -995,9 +1041,14 @@ def render_session_outline(outline: dict) -> str:
                 lines.append(f"   {order}.P Puente previo: {names}")
             practice = block.get("practice", []) or []
             if practice:
-                names = "; ".join(item.get("title", item.get("id", ""))
-                                 for item in practice)
-                lines.append(f"   {order}.E Práctica disponible: {names}")
+                names = "; ".join(
+                    f"{item.get('id', '')}: {item.get('title', 'Problema')}"
+                    + (f" ({item.get('source')})" if item.get("source") else "")
+                    for item in practice
+                )
+                lines.append(f"   {order}.E Problemas del banco previstos: {names}")
+            else:
+                lines.append(f"   {order}.E Sin problema asociado en la base de datos; no se propondrá un sustituto")
         else:
             lines.append(f"{order}. {title}")
             for suborder, item in enumerate(block.get("items", []) or [], start=1):
@@ -1016,15 +1067,15 @@ def _work_prompt(pack: dict) -> str:
     outline_text = render_session_outline(outline)
     practice_first = _practice_first_subject(session.get("materia", ""))
     if practice_first:
-        session_method = """Esta es mi segunda cursada de Electromagnetismo. No empieces impartiendo teoría ni siguiendo una secuencia teoría → ejercicios. Empieza directamente con una cuestión o ejercicio real del banco para detectar los huecos que arrastro. Usa mis respuestas para diagnosticar qué falló; explica únicamente el concepto, definición, hipótesis o paso que falte y vuelve a comprobarlo con otra cuestión o ejercicio real."""
-        first_cycle = "- Primera respuesta obligatoria: muestra el índice brevemente antes de explicar teoría o lanzar una pregunta y, en Electromagnetismo, empieza directamente con una cuestión o ejercicio real del banco. No des una introducción teórica previa salvo un recordatorio de una línea que sea imprescindible para poder intentarlo."
-        theory_rule = "- En Electromagnetismo, la teoría es reactiva: solo aparece después de detectar un hueco en mi intento y debe ser la mínima necesaria para corregirlo o volver a comprobarlo."
-        cycle_rule = "- En Electromagnetismo, la unidad normal es: cuestión o problema real → intento → diagnóstico del hueco → microexplicación si hace falta → nueva cuestión o problema real."
+        session_method = """Esta es mi segunda cursada de Electromagnetismo. Empieza con el resumen completo de la sesión y después usa solo cuestiones y problemas existentes en el banco para descubrir huecos. No inventes ejercicios. Explica con detalle el concepto, definición, hipótesis o paso que falte y vuelve a comprobarlo con otra cuestión real del banco cuando exista."""
+        first_cycle = "- Primera respuesta obligatoria: presenta el resumen completo de la sesión antes de explicar o preguntar; después, en Electromagnetismo, empieza con una cuestión o problema real del banco. No inventes ejercicios."
+        theory_rule = "- En Electromagnetismo, explica con suficiente profundidad cada hueco que aparezca: definición, intuición física, hipótesis, derivación necesaria, significado y límite de validez."
+        cycle_rule = "- En Electromagnetismo, sigue: problema real del banco → intento → diagnóstico → explicación completa del hueco si hace falta → siguiente problema real disponible. Si no existe otro, no lo inventes."
     else:
-        session_method = "La asignatura sigue el método general: microteoría imprescindible para el ejercicio actual y práctica inmediata con problemas reales del banco."
-        first_cycle = "- Primera respuesta obligatoria: muestra el índice brevemente antes de explicar teoría o lanzar una pregunta; indica la continuidad o elección y empieza el primer ciclo."
-        theory_rule = "- Da únicamente la microteoría mínima indispensable para poder abordar el siguiente ejercicio real (máx. 2-3 minutos): solo definiciones, hipótesis, ecuaciones y método inmediato. No des clases teóricas largas."
-        cycle_rule = "- La unidad normal de trabajo es: microteoría mínima imprescindible → ejercicio real del banco/libro/apuntes → intento del estudiante → corrección → aislar el fallo y profundizar ÚNICAMENTE en el hueco teórico descubierto → siguiente ejercicio."
+        session_method = "Se trabaja un nodo cada vez con una explicación de profesor completa y rigurosa. Se usan solo problemas registrados en el banco; se espera el intento y se corrige antes de pasar al siguiente nodo."
+        first_cycle = "- Primera respuesta obligatoria: presenta antes de enseñar el resumen completo, con objetivo, nodos e IDs, condición de repaso/nuevo, problemas previstos con ID y título, y nodos sin problema asociado. Después indica la continuidad y empieza el primer ciclo."
+        theory_rule = "- Explica con profundidad suficiente para reconstruir y aplicar la teoría: motivación e intuición física, definiciones, símbolos, hipótesis, derivación paso a paso, significado de las ecuaciones, interpretación física, condiciones de validez y límites. Evita los resúmenes superficiales y las listas de fórmulas."
+        cycle_rule = "- Para cada nodo, explica la teoría y plantea únicamente el siguiente problema real del banco asociado a ese nodo, con su enunciado exacto. Espera el intento, corrige y aclara antes de avanzar. Si no hay problema adecuado en el banco, dilo y no inventes uno ni un sustituto."
     partial_notice_block = ""
     if pack.get("partial_notice"):
         partial_notice_block = f"\nALERTA DE EXAMEN PARCIAL (LÍMITE ESTRICTO DE TEMARIO)\n{pack['partial_notice']}\n"
@@ -1040,6 +1091,9 @@ def _work_prompt(pack: dict) -> str:
                 "evidencias": [],
                 "siguiente_accion": "",
                 "teoria_vista": False,
+                "practica_realizada": False,
+                "practica_sin_id": False,
+                "practica_descripcion": "",
             }
         ],
         "problem_attempts": [
@@ -1056,7 +1110,24 @@ def _work_prompt(pack: dict) -> str:
         "resumen": "",
         "errores_recurrentes": [],
         "siguiente_accion": "",
-        "apuntes": [],
+        "apuntes": [
+            {
+                "node_id": "id-del-nodo-trabajado",
+                "teoria": ["Explicación completa de la teoría trabajada; incluye motivación, hipótesis, derivación, significado físico, condiciones de validez y aplicación."],
+                "aclaraciones": [
+                    {"duda": "Pregunta conceptual del estudiante", "aclaracion": "Respuesta explicada que pueda reutilizarse al repasar."}
+                ],
+                "explicacion_validada": ["Derivaciones, conexiones o correcciones que quedaron claras."],
+                "bien_entendido": [],
+                "dificultades": [],
+                "errores": ["Error concreto detectado y su corrección."],
+                "procedimiento_examen": ["Procedimiento razonado para plantear y resolver el tipo de ejercicio."],
+                "ejemplos": ["Ejercicio o comprobación trabajados, con el razonamiento útil para estudiar."],
+                "recursos_visuales": [
+                    {"tipo": "imagen|diagrama_svg|html_interactivo|video|guion_video", "titulo": "", "descripcion": "", "ruta": "recursos_visuales/archivo"}
+                ]
+            }
+        ],
         "reflection": {
             "worked": "",
             "friction": "",
@@ -1073,8 +1144,9 @@ Actúa como mi tutor personalizado para la asignatura «{session['materia']}».
 Esta sesión parte de un sistema local de seguimiento. Si tienes abierta la carpeta del
 proyecto, lee primero este archivo, que contiene el contexto vivo de esta sesión:
   knowledge_graph/active_study_context.json
-Lee también TUTOR_WORK.md si está disponible: contiene las reglas persistentes del
-tutor y del intercambio con el dashboard.
+Lee también docs/protocolo_de_tutoria.md, que contiene las reglas persistentes de
+enseñanza y práctica. Lee TUTOR_WORK.md si existe, para las preferencias personales
+adicionales del estudiante.
 
 OBJETIVO DE LA SESIÓN
 {session['goal']} durante aproximadamente {session['available_minutes']} minutos. El índice
@@ -1084,10 +1156,13 @@ ni una lista de tareas obligatoria.{partial_notice_block}
 MÉTODO ESPECÍFICO DE ESTA ASIGNATURA
 {session_method}
 
-ÍNDICE GRANULAR DE LA SESIÓN
-Este es el mapa de los nodos y problemas reales disponibles hoy. Preséntalo al estudiante
-al comienzo. Usa su numeración para anunciar las transiciones, pero sigue la elección
-explícita del estudiante y la continuidad de la última sesión, no una prioridad calculada.
+{OUTPUT_FORMAT_GUIDANCE}
+
+RESUMEN COMPLETO DE LA SESIÓN
+Este mapa contiene todos los nodos previstos y todos los problemas reales seleccionados
+de la base de datos. Muéstralo al estudiante en el primer mensaje, antes de enseñar o
+preguntar. Conserva IDs, nombres y títulos exactos; aclara qué es repaso, continuación o
+nuevo. No añadas problemas ausentes del mapa ni inventes sustitutos.
 ```text
 {outline_text}
 ```
@@ -1100,15 +1175,19 @@ ESTADO RESUMIDO QUE DEBES TENER EN CUENTA
 PROTOCOLO DIDÁCTICO
 {first_cycle}
 {theory_rule}
-- Presenta después el enunciado exacto de un problema incluido en el contexto, con su id
-  y sus nodos. Espera el intento del estudiante antes de corregir.
+- Al acabar la explicación de cada nodo, presenta el siguiente problema previsto y vinculado
+  a ese nodo, usando su enunciado exacto, ID y nodos. Espera el intento antes de corregir.
+  No avances hasta revisar el intento y aclarar las dudas.
 - Tras la corrección, identifica el hueco concreto, explica solo el microbloque que falte
   y pasa al siguiente problema real vinculado al nodo.
-- Nunca inventes problemas, variantes ni datos. Si un nodo no tiene problemas en el banco,
-  dilo y trabaja la teoría mínima o espera a que el estudiante elija otro nodo.
-- «Teoría ya impartida» solo evita repetir explicaciones innecesarias; no obliga a hacer
-  una clase completa antes de practicar. «Teoría pendiente» tampoco implica impartirla
-  entera: se cubre solo lo necesario para el problema actual.
+- Si el banco no contiene un problema adecuado para el nodo, indícalo. No inventes un
+  problema, no uses otro nodo como sustituto y no etiquetes una pregunta conceptual como
+  ejercicio del banco. Puedes seguir explicando y comprobar conceptos con una pregunta
+  cada vez.
+- Una marca de teoría vista no demuestra dominio: comprueba la recuperación antes de
+  omitir contenidos. Si aparece una laguna, ofrece una explicación completa del concepto.
+  Cuando la teoría está pendiente, explica el nodo con suficiente profundidad antes de
+  plantear su problema del banco.
 - La cercanía de un examen, un repaso pendiente, el dominio o la frontera pueden describir
   el estado, pero no eligen el contenido de la sesión.
 - Justifica las propiedades no inmediatas desde las definiciones y muestra los pasos
@@ -1126,9 +1205,10 @@ PROTOCOLO DIDÁCTICO
 - Exige intuición física, hipótesis, límites de validez, condiciones de contorno,
   unidades, casos límite y conexión con otros conceptos.
 - No me des la solución de un problema antes de que haya intentado plantearlo.
-- Para el seguimiento de procedencia, considera que los ejercicios de clase ya trabajados
-  por el estudiante son únicamente los de Electromagnetismo; en las demás asignaturas no
-  marques ejercicios de clase como hechos sin evidencia explícita.
+- No marques como hecho ningún ejercicio del banco hasta que el estudiante lo haya
+  intentado explícitamente. No exijas un problema para un nodo cuando la base de datos
+  no contenga uno adecuado.
+- Si el estado registra práctica confirmada sin identificador, respétala como práctica previa reportada por el estudiante, pero no inventes el enunciado, resultado ni número de ejercicios. Pregunta por los detalles solo si son necesarios para continuar.
 - No inventes dominio ni marques un concepto como sólido sin evidencia de mi respuesta.
 - El índice es la referencia inicial. Si el estudiante decide avanzar o profundizar en otros conceptos del temario o repasar prerrequisitos, acopla la explicación y regístralos con sus IDs oficiales en el cierre.
 
@@ -1141,6 +1221,19 @@ problemas que se hayan trabajado durante la sesión (tanto del índice como cual
 del temario o prerrequisito abordado con sus IDs oficiales del grafo). Si no puedes escribir el archivo,
 devuelve exactamente el mismo JSON para que pueda copiarlo al dashboard.
 
+Los apuntes de cierre alimentan los apuntes de estudio en LaTeX/PDF de la asignatura; no
+son un diario ni una transcripción. Para cada nodo trabajado, recoge la explicación
+teórica que realmente se dio, las preguntas conceptuales del estudiante con sus respuestas,
+las correcciones de errores y el procedimiento útil para resolver ejercicios. Escribe las
+explicaciones con el detalle suficiente para poder repasarlas después sin esta conversación.
+Usa `teoria` para los fundamentos explicados, `aclaraciones` para pregunta y respuesta,
+`explicacion_validada` para derivaciones o correcciones que quedaron asentadas, `errores`
+para los errores concretos y cómo corregirlos, `procedimiento_examen` para el método de
+resolución y `ejemplos` para los problemas del banco realmente trabajados. No inventes
+contenido que no haya aparecido o quedado comprobado durante la sesión. Registra en
+`problem_attempts` solo los IDs y resultados de problemas existentes en la base de datos;
+no marques práctica sin ID como realizada.
+
 Cuando diga «CIERRE DE SESIÓN» o «CERRAMOS LA CONVERSACIÓN» (también si lo expresa
 con una variación inequívoca como «cerramos»), deja de enseñar y genera el informe con
 esta estructura. No me pidas que pulse ningún botón: cuando el JSON esté guardado en
@@ -1151,6 +1244,9 @@ la ruta indicada, el Centro de Estudio lo detectará e importará automáticamen
 
 No cierres por tu cuenta antes de que yo lo pida. Durante la sesión, conserva el rigor y
 la continuidad con el historial, pero permite que yo decida el ritmo y la profundidad.
+En `apuntes.recursos_visuales`, registra solo recursos que realmente hayas creado y
+guardado. Usa rutas relativas desde la carpeta de apuntes de la asignatura. No incluyas
+el código HTML entero en el JSON ni inventes una ruta.
 """
 
 
@@ -1241,6 +1337,15 @@ def build_study_pack(materia: str, minutos: int = 60,
         ]
 
     requested_ids = [str(item).strip() for item in (node_ids or []) if str(item).strip()]
+
+    def _course_node_is_covered(node_id: str) -> bool:
+        entry = profile.get("nodos", {}).get(node_id, {})
+        try:
+            domain = float(entry.get("dominio", 0) or 0)
+        except (TypeError, ValueError):
+            domain = 0.0
+        return bool(entry.get("teoria_vista")) or domain >= 0.7
+
     if not requested_ids and session:
         requested_ids = [str(item).strip() for item in session.get("plan_ids", []) if str(item).strip()]
     if not requested_ids and previous:
@@ -1248,16 +1353,21 @@ def build_study_pack(materia: str, minutos: int = 60,
         last_node = prev_plans[-1] if prev_plans else None
         if last_node and last_node in canonical_subject_nodes:
             idx = canonical_subject_nodes.index(last_node)
-            last_entry = profile.get("nodos", {}).get(last_node, {})
-            start_idx = idx + 1 if (last_entry.get("teoria_vista") or last_entry.get("dominio", 0) >= 0.7) else idx
-            if start_idx >= len(canonical_subject_nodes):
-                start_idx = idx
-            requested_ids = canonical_subject_nodes[start_idx : start_idx + 4]
+            start_idx = idx + 1 if _course_node_is_covered(last_node) else idx
+            pending = [
+                course_node_id for course_node_id in canonical_subject_nodes[start_idx:]
+                if not _course_node_is_covered(course_node_id)
+            ]
+            requested_ids = pending[:4]
+            if not requested_ids:
+                requested_ids = prev_plans[-4:]
         if not requested_ids:
-            requested_ids = prev_plans
+            requested_ids = prev_plans[-4:]
     if not requested_ids:
-        # Es el orden canónico del grafo, no una recomendación calculada.
-        requested_ids = canonical_subject_nodes[:4]
+        # Respeta los nodos de teoría ya vistos; mantiene el orden del grafo.
+        pending = [course_node_id for course_node_id in canonical_subject_nodes
+                   if not _course_node_is_covered(course_node_id)]
+        requested_ids = pending[:4] if pending else canonical_subject_nodes[:4]
 
     source_kind = "continuacion" if previous and not node_ids and not session else "eleccion"
     preview = []
@@ -1272,45 +1382,72 @@ def build_study_pack(materia: str, minutos: int = 60,
     preview = preview[:12]
     node_ids = [str(item.get("id")) for item in preview if item.get("id")]
 
-    all_problems = [
+    problem_pool = [
         problem
         for block in context.get("problem_bank", {}).values()
         for problem in block.get("problemas", []) or []
     ]
     problem_items = []
     seen_problem_ids: set[str] = set()
-    if session and session.get("problem_ids"):
-        wanted = [str(item).strip() for item in session.get("problem_ids", []) if str(item).strip()]
-        all_problems = [
-            problem for problem in all_problems
-            if str(problem.get("id", "")).strip() in wanted
-        ]
-    else:
-        previous_problem_ids = set(previous.get("problem_ids", []) if previous else [])
-        successful_problem_ids = {
-            str(problem_id) for problem_id, result in (profile.get("problemas", {}) or {}).items()
-            if isinstance(result, dict) and result.get("exito") is True
-        }
-        node_set = set(node_ids)
-        linked = [
-            problem for problem in all_problems
-            if node_set.intersection(set(kg_problemas.nodos_requeridos(problem)))
-        ]
-        def problem_order(problem: dict) -> tuple[int, int, int]:
-            source = str(problem.get("tipo_problema", "")).strip().lower()
-            source_rank = 0 if source == "clase" else 1
-            seen_rank = 1 if str(problem.get("id", "")).strip() in (previous_problem_ids | successful_problem_ids) else 0
-            return source_rank, seen_rank, all_problems.index(problem)
-        all_problems = sorted(linked, key=problem_order)
+    previous_problem_ids = set(previous.get("problem_ids", []) if previous else [])
+    successful_problem_ids = {
+        str(problem_id) for problem_id, result in (profile.get("problemas", {}) or {}).items()
+        if isinstance(result, dict) and result.get("exito") is True
+    }
+    node_set = set(node_ids)
+    linked = [
+        problem for problem in problem_pool
+        if node_set.intersection(set(kg_problemas.nodos_requeridos(problem)))
+    ]
+    problem_position = {
+        str(problem.get("id", "")).strip(): index
+        for index, problem in enumerate(problem_pool)
+    }
 
-    for problem in all_problems:
+    def problem_order(problem: dict) -> tuple[int, int, int]:
+        problem_id = str(problem.get("id", "")).strip()
+        source = str(problem.get("tipo_problema", "")).strip().lower()
+        source_rank = 0 if source == "clase" else 1
+        seen_rank = 1 if problem_id in (previous_problem_ids | successful_problem_ids) else 0
+        return source_rank, seen_rank, problem_position.get(problem_id, len(problem_pool))
+
+    linked = sorted(linked, key=problem_order)
+    wanted = [str(item).strip() for item in (session.get("problem_ids", []) if session else []) if str(item).strip()]
+    wanted_set = set(wanted)
+    selected = [problem for problem in linked if str(problem.get("id", "")).strip() in wanted_set]
+    covered_nodes = {
+        node_id for problem in selected
+        for node_id in kg_problemas.nodos_requeridos(problem)
+        if node_id in node_set
+    }
+
+    # Incluye al menos un ejercicio vinculado a cada nodo antes de añadir práctica extra.
+    for node_id in node_ids:
+        if node_id in covered_nodes:
+            continue
+        candidate = next((problem for problem in linked
+                          if node_id in kg_problemas.nodos_requeridos(problem)), None)
+        if candidate:
+            selected.append(candidate)
+            covered_nodes.update(
+                linked_id for linked_id in kg_problemas.nodos_requeridos(candidate)
+                if linked_id in node_set
+            )
+
+    target_problem_count = max(6, len(node_ids))
+    for problem in linked:
+        problem_id = str(problem.get("id", "")).strip()
+        if len(selected) >= target_problem_count:
+            break
+        if problem_id not in {str(item.get("id", "")).strip() for item in selected}:
+            selected.append(problem)
+
+    for problem in selected:
         problem_id = str(problem.get("id", "")).strip()
         if not problem_id or problem_id in seen_problem_ids:
             continue
         problem_items.append(_work_problem(problem))
         seen_problem_ids.add(problem_id)
-        if len(problem_items) >= 6:
-            break
 
     for node in preview:
         node_id = str(node.get("id", ""))
@@ -1318,6 +1455,9 @@ def build_study_pack(materia: str, minutos: int = 60,
             problem for problem in problem_items
             if node_id in problem.get("nodos_requeridos", [])
         ]
+    nodes_without_bank_problem = [
+        str(node.get("id")) for node in preview if not node.get("problemas")
+    ]
 
     effective = context.get("student", {}).get("profile", {}).get("estado_efectivo", {})
     previous_reflection = (previous or {}).get("reflection") or {}
@@ -1331,17 +1471,28 @@ def build_study_pack(materia: str, minutos: int = 60,
         "practice_policy": {
             "source": "knowledge_graph/banco_problemas.json",
             "require_node_link": True,
-            "invent_problems": False,
-            "class_exercises_attempted_subjects": ["Electromagnetismo"],
+            "create_didactic_exercise_if_unlinked": True,
+            "misrepresent_generated_as_bank_problem": False,
             "teaching_mode": (
                 "practica_primero_segunda_cursada"
                 if _practice_first_subject(materia)
                 else "microteoria_justo_a_tiempo"
             ),
         },
+        "practica_reportada_sin_id": [
+            {
+                "nodos": item.get("nodos", []),
+                "detalle": item.get("detalle", ""),
+            }
+            for item in (profile.get("evidencias_progreso", []) or [])
+            if isinstance(item, dict)
+            and item.get("tipo") == "ejercicios_sin_id"
+            and str(item.get("materia", "")).strip().casefold() == materia.casefold()
+        ],
         "estado_de_los_nodos": {
             node_id: effective[node_id] for node_id in node_ids if node_id in effective
         },
+        "nodos_sin_ejercicio_en_banco": nodes_without_bank_problem,
     }
     session_info = {
         "id": session.get("id") if session else None,
@@ -1578,6 +1729,32 @@ def apply_work_report(session_id: str, report: dict) -> dict:
             "problem_results": {"problem_id": item["problem_id"], "verdict": item["verdict"]},
         })
         applied_problems.append(result)
+
+    practice_without_ids = [
+        item for item in normalized.get("nodos", [])
+        if item.get("practica_realizada") and item.get("practica_sin_id")
+    ]
+    if practice_without_ids:
+        profile = kg_perfil.cargar_perfil()
+        evidence_items = profile.setdefault("evidencias_progreso", [])
+        evidence_items.append({
+            "tipo": "ejercicios_sin_id",
+            "materia": session.get("materia", ""),
+            "nodos": [item["id"] for item in practice_without_ids],
+            "fecha": _now(),
+            "sesion_id": session_id,
+            "detalle": "; ".join(
+                f"{item['id']}: {item.get('practica_descripcion', '').strip()}"
+                for item in practice_without_ids
+            )[:2000],
+        })
+        kg_perfil.guardar_perfil(profile)
+        for item in practice_without_ids:
+            study_sessions.record_event(session_id, {
+                "type": "problem_attempt_without_bank_id",
+                "node_id": item["id"],
+                "encoding_response": item.get("practica_descripcion", ""),
+            })
 
     nodes = kg_perfil.cargar_grafos()
     note_result = apuntes.apply_walk_report(session, normalized, nodes)

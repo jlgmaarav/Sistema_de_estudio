@@ -897,6 +897,51 @@ def _apply_walk_report(session_id, report):
         )
         applied.append({'id': node_id, 'calidad': quality, 'exito': exito, 'mensajes': mensajes})
     try:
+        walk_report = session.get('walk_report', {})
+        graph_nodes = kg_perfil.cargar_grafos()
+        bank = kg_problemas.cargar_banco()
+        profile = kg_perfil.cargar_perfil()
+        valid_plan_ids = set(session.get('plan_ids', []))
+        for attempt in walk_report.get('problem_attempts', []):
+            problem_id = str(attempt.get('problem_id', '')).strip()
+            problem_materia, problem = kg_problemas.buscar_problema(bank, problem_id)
+            if (not problem or str(problem_materia).casefold() != str(session.get('materia', '')).casefold()
+                    or not valid_plan_ids.intersection(kg_problemas.nodos_requeridos(problem))):
+                continue
+            result = kg_problemas.registrar_feedback(
+                profile, graph_nodes, bank, problem_id,
+                veredicto=attempt.get('verdict'),
+                calidad=attempt.get('quality'),
+                nodos_hueco=attempt.get('theory_gap_nodes', []),
+                nodos_error=attempt.get('error_nodes', []),
+                comentarios=attempt.get('comments', ''),
+                segundos=attempt.get('seconds'),
+                origen='paseo_voz',
+            )
+            applied.append({'problem_id': problem_id, 'resultado': result.get('problema', {}).get('estado')})
+
+        practice_without_ids = [
+            item for item in walk_report.get('nodos', [])
+            if item.get('practica_realizada') and item.get('practica_sin_id')
+        ]
+        if practice_without_ids:
+            evidence_items = profile.setdefault('evidencias_progreso', [])
+            evidence_items.append({
+                'tipo': 'ejercicios_sin_id',
+                'materia': session.get('materia', ''),
+                'nodos': [item['id'] for item in practice_without_ids],
+                'fecha': datetime.now().isoformat(timespec='seconds'),
+                'sesion_id': session_id,
+                'detalle': '; '.join(
+                    f"{item['id']}: {item.get('practica_descripcion', '').strip()}"
+                    for item in practice_without_ids
+                )[:2000],
+            })
+        if walk_report.get('problem_attempts') or practice_without_ids:
+            kg_perfil.guardar_perfil(profile)
+    except Exception as exc:
+        session['practice_tracking_error'] = str(exc)
+    try:
         graph_nodes = kg_perfil.cargar_grafos()
         note_result = apuntes.apply_walk_report(
             session, session.get('walk_report', {}), graph_nodes

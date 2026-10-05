@@ -10,9 +10,12 @@ from __future__ import annotations
 import copy
 import json
 import os
+import re
 import threading
 import uuid
 from datetime import datetime
+
+from study_output_guidance import OUTPUT_FORMAT_GUIDANCE
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -78,10 +81,10 @@ RAIL = {
 
 WALK_MODES = {
     "walk_introduction": {
-        "nombre": "Microteoría y ejercicios (paseo o bus)",
-        "descripcion": "La IA da la teoría mínima para abordar un ejercicio real del banco y comprueba la resolución; puedes responder hablando o escribiendo.",
-        "reparto": "La IA explica lo imprescindible y después plantea un ejercicio del banco por vez; si vas en bus, responde por texto y no uses el micrófono.",
-        "instrucciones": "Primero explica solo las definiciones, hipótesis y ecuaciones necesarias para un problema incluido en el encargo. No plantees problemas inventados: después presenta el enunciado exacto, espera el intento y corrige antes de pasar al siguiente.",
+        "nombre": "Teoría guiada (paseo o bus)",
+        "descripcion": "La IA desarrolla cada nodo con rigor y comprueba su aplicación con problemas disponibles en el banco; puedes responder hablando o escribiendo.",
+        "reparto": "La IA explica el nodo y plantea después un problema registrado en el banco si existe uno asociado.",
+        "instrucciones": "Trabaja un nodo cada vez. Explica la teoría con profundidad y plantea solo problemas existentes en la base de datos. Si no hay uno asociado, dilo y no inventes un sustituto.",
     },
     "walk_rescue": {
         "nombre": "Paseo de rescate conceptual",
@@ -93,13 +96,13 @@ WALK_MODES = {
         "nombre": "Paseo de repaso general",
         "descripcion": "La IA examina la asignatura y registra qué recuperas, dudas y fallos.",
         "reparto": "El estudiante habla la mayor parte del tiempo; la IA pregunta y corrige al final de cada respuesta.",
-        "instrucciones": "Alterna microteoría y ejercicios reales del banco vinculados a los nodos. Haz preguntas de conceptos, hipótesis, relaciones, unidades y casos límite dentro de cada ejercicio. Da pistas solo si me bloqueo.",
+        "instrucciones": "Trabaja cada nodo con los problemas asociados que existan en el banco. No inventes ejercicios. Haz preguntas de conceptos, hipótesis, relaciones, unidades y casos límite al analizar el material del banco.",
     },
     "walk_oral_exam": {
         "nombre": "Paseo de examen oral",
         "descripcion": "La IA plantea una situación y evalúa tu enfoque físico y tu razonamiento.",
         "reparto": "El estudiante dirige la resolución; la IA actúa como examinador.",
-        "instrucciones": "Plantea un problema del banco cada vez. No corrijas hasta que termine mi razonamiento y pregunta por hipótesis, signos y significado físico.",
+        "instrucciones": "Plantea únicamente problemas asociados existentes en el banco. Si un nodo no tiene uno, indícalo y no lo sustituyas por un ejercicio inventado. No corrijas un intento hasta que el estudiante termine su razonamiento; pregunta por hipótesis, signos y significado físico al corregir.",
     },
 }
 
@@ -153,46 +156,81 @@ def build_walk_prompt(mode: str, context: dict, preview: list[dict],
     materia = str(context.get("materia", "")).strip()
     practice_first = materia.casefold() == "electromagnetismo"
     if practice_first:
-        method = """Esta es mi segunda cursada de Electromagnetismo. Empieza directamente con cuestiones y ejercicios reales del banco para descubrir mis huecos. No impartas teoría de entrada ni sigas una secuencia teoría → ejercicios. Explica teoría únicamente cuando mi intento revele un hueco y vuelve a comprobarlo con otra cuestión o ejercicio real."""
-        first_rule = "- En Electromagnetismo, empieza con una cuestión o ejercicio real del banco, sin exposición teórica previa salvo el recordatorio imprescindible de una línea."
-        theory_rule = "- En Electromagnetismo, la teoría es reactiva: solo explica el hueco que aparezca en mi intento y vuelve después a la práctica."
-        cycle_rule = "- En Electromagnetismo, sigue: cuestión o problema real → intento → diagnóstico → microexplicación si hace falta → nueva cuestión o problema real."
+        method = """Esta es mi segunda cursada de Electromagnetismo. Empieza con el resumen completo de la sesión y después usa solo cuestiones y problemas existentes en el banco para descubrir huecos. No inventes ejercicios. Explica con detalle cada hueco que aparezca y vuelve a comprobarlo con otra cuestión real del banco cuando exista."""
+        first_rule = "- En Electromagnetismo, presenta primero el resumen completo de la sesión; después empieza con una cuestión o ejercicio real del banco. No inventes ejercicios."
+        theory_rule = "- En Electromagnetismo, explica con suficiente profundidad cada hueco: definición, intuición física, hipótesis, derivación necesaria, significado y límites de validez."
+        cycle_rule = "- En Electromagnetismo, sigue: problema real del banco → intento → diagnóstico → explicación completa del hueco si hace falta → siguiente problema real disponible. Si no existe otro, no lo inventes."
     else:
-        method = "La asignatura sigue el método general: microteoría imprescindible para el ejercicio actual y práctica inmediata con problemas reales del banco."
-        first_rule = "- Empieza mostrando brevemente el alcance y plantea el primer ciclo de trabajo."
-        theory_rule = "- Da solo la teoría mínima necesaria para resolver el siguiente problema del banco."
-        cycle_rule = "- Sigue el ciclo: microteoría → enunciado exacto → intento del estudiante → corrección → siguiente ejercicio."
-    conceptos = "\n".join(
-        f"- {item.get('id')}: {item.get('nombre')} ({item.get('materia', '')}) — {item.get('descripcion', '')}"
-        for item in preview
-    ) or "- No hay nodos concretos; haz un repaso general de la asignatura indicada."
-    problemas = "\n".join(
-        f"- {problem.get('id')}: {problem.get('titulo', 'Problema')} "
-        f"({problem.get('tipo_problema', 'procedencia no indicada')}) — "
-        f"nodos: {', '.join(problem.get('nodos_requeridos', []))} — {problem.get('enunciado', '')}"
-        for item in preview
-        for problem in item.get('problemas', []) or []
-    ) or "- No hay problemas empaquetados; no inventes ninguno."
+        method = "Se trabaja un nodo cada vez con una explicación de profesor completa y rigurosa. Se usan solo problemas registrados en el banco; se espera el intento y se corrige antes de pasar al siguiente nodo."
+        first_rule = "- Antes de explicar o preguntar, presenta un resumen completo del objetivo, los nodos con ID y nombre, su condición de repaso/nuevo, todos los problemas previstos con ID y título, y los nodos sin problema asociado."
+        theory_rule = "- Explica con profundidad suficiente para reconstruir y aplicar la teoría: motivación e intuición física, definiciones, símbolos, hipótesis, derivación paso a paso, significado de las ecuaciones, interpretación física, condiciones de validez y límites. Evita los resúmenes superficiales y las listas de fórmulas."
+        cycle_rule = "- Después de explicar cada nodo, plantea solo el siguiente problema existente en el banco que esté vinculado al nodo. Conserva ID y enunciado exactos; espera el intento, corrige y aclara antes de avanzar. Si no existe un problema adecuado, dilo y no inventes uno."
+    type_labels = {
+        "repaso": "repaso",
+        "continuacion": "continuación",
+        "inicio": "inicio",
+        "eleccion": "elección del estudiante",
+        "nuevo": "nuevo",
+    }
+    concept_lines = []
+    for item in preview:
+        type_label = type_labels.get(str(item.get("tipo", "")), "tipo no indicado")
+        concept_lines.append(
+            f"- {item.get('id')}: {item.get('nombre')} [{type_label}] — {item.get('descripcion', '')}"
+        )
+    conceptos = "\n".join(concept_lines) or (
+        "- No hay nodos seleccionados. Consulta el progreso y el historial antes de iniciar; "
+        "no empieces un repaso genérico ni pidas elegir tema si la continuidad está registrada."
+    )
+    problem_by_id = {}
+    for item in preview:
+        for problem in item.get("problemas", []) or []:
+            problem_id = str(problem.get("id", "")).strip()
+            if problem_id:
+                problem_by_id.setdefault(problem_id, problem)
+    problem_lines = []
+    for problem in problem_by_id.values():
+        source = str(problem.get("hoja", "")).strip()
+        provenance = f" · {source}" if source else ""
+        problem_lines.append(
+            f"- {problem.get('id')}: {problem.get('titulo', 'Problema')}{provenance} — "
+            f"nodos: {', '.join(problem.get('nodos_requeridos', []))} — {problem.get('enunciado', '')}"
+        )
+    for item in preview:
+        if not (item.get("problemas", []) or []):
+            problem_lines.append(
+                f"- Sin problema del banco asociado a {item.get('id')}: "
+                "no se propondrá un ejercicio sustituto."
+            )
+    problemas = "\n".join(problem_lines) or "- No hay problemas del banco seleccionados; no se propondrán problemas inventados."
     return f"""ENCARGO DE PASEO DE ESTUDIO INTEGRADO
 Este texto es el encargo completo de una sesión de estudio. Pégalo entero en NotebookLM o en el chat remoto que vayas a utilizar. No conviertas la sesión en una conversación genérica: trabaja sobre los conceptos indicados y respeta el cierre estructurado.
 
 MODO: {info['nombre']}
 
 PROPÓSITO DEL PASEO:
-Usa los nodos y problemas reales incluidos en el encargo para trabajar en ciclos de microteoría, intento y corrección. El estudiante decide qué profundidad darle a cada concepto, cuándo cambiar de tema y cuándo cerrar; no hay una lista obligatoria que completar.
+Usa los nodos y problemas reales incluidos en el encargo para trabajar en ciclos de explicación, intento y corrección. El estudiante decide el ritmo y cuándo cerrar; cada explicación debe seguir siendo completa y rigurosa para el nodo trabajado.
 Tu función es actuar como tutor y examinador exigente cuando resulte útil: señala lagunas, dudas de planteamiento y falta de rigor en hipótesis o condiciones de contorno, pero no conviertas la conversación en una cuota de rendimiento.
 
 MÉTODO ESPECÍFICO:
 {method}
 
+Lee docs/protocolo_de_tutoria.md si tienes acceso al repositorio. Sus reglas de apertura,
+profundidad explicativa y uso exclusivo de la base de problemas son obligatorias.
+Guarda también en GitHub privado o Drive privado cada resultado sustantivo de esta sesión
+y verifica que se puede leer desde el destino remoto. El portátil no puede ser la única
+copia. No subas el perfil ni el progreso personal a un repositorio público.
+
+{OUTPUT_FORMAT_GUIDANCE}
+
 La duración del paseo es flexible; el valor de disponibilidad, si existe, solo se conserva como contexto y no limita la conversación.
 {info['instrucciones']}
 {info['reparto']}
 
-CONCEPTOS SUGERIDOS PARA EXPLORAR:
+NODOS DE LA SESIÓN:
 {conceptos}
 
-PROBLEMAS REALES DEL BANCO DISPONIBLES:
+PROBLEMAS DEL BANCO PREVISTOS Y DISPONIBLES:
 {problemas}
 
 APUNTES PERSONALES PREVIOS DE ESOS NODOS:
@@ -203,7 +241,8 @@ REGLAS DIDÁCTICAS OBLIGATORIAS (MÁXIMA EXIGENCIA - NIVEL 10):
 - Haz una sola pregunta cada vez y espera la respuesta del estudiante.
 {first_rule}
 {theory_rule}
-- Presenta únicamente problemas incluidos arriba y no inventes problemas ni variantes.
+- Al terminar la explicación, presenta únicamente el siguiente problema listado del banco que esté vinculado al nodo; conserva su enunciado exacto, ID y nodos. Espera el intento, corrige y revisa las dudas antes de pasar al nodo siguiente.
+- Si no hay un problema adecuado en el banco, dilo. No inventes ejercicios, no sustituyas por problemas de otro nodo y no presentes una pregunta conceptual como ejercicio del banco.
 {cycle_rule}
 - CERO COMPLACENCIA: No aceptes respuestas aproximadas, intuiciones vagas ni fórmulas sueltas sin derivación física. Si una respuesta sacaría un 7 en un examen, repregunta hasta elevarla al nivel del 10.
 - Para cada concepto, exige implacablemente estos 4 pilares:
@@ -217,10 +256,15 @@ REGLAS DIDÁCTICAS OBLIGATORIAS (MÁXIMA EXIGENCIA - NIVEL 10):
 - Separa la manipulación algebraica de la conclusión física y explica el puente entre ambas.
 - Lleva un registro interno de conceptos sólidos, parciales, débiles y pistas utilizadas.
 - Cuando diga exactamente «CIERRE ESTRUCTURADO DEL PASEO», no sigas enseñando. Genera el informe JSON de cierre. No respondas con una despedida normal ni con un resumen en prosa.
-{{"tipo":"{mode}","duracion_minutos":0,"nodos":[{{"id":"...","resultado":"solido|parcial|debil|no_trabajado","calidad":0.0,"dominado":[],"dudas":[],"evidencias":[],"siguiente_accion":""}}],"resumen":"","errores_recurrentes":[],"siguiente_accion":"","apuntes":[{{"node_id":"...","explicacion_validada":[],"explicacion_para_mi":[],"bien_entendido":[],"dificultades":[],"errores":[],"procedimiento_examen":[],"ejemplos":[]}}]}}
+{{"tipo":"{mode}","duracion_minutos":0,"nodos":[{{"id":"...","resultado":"solido|parcial|debil|no_trabajado","calidad":0.0,"dominado":[],"dudas":[],"evidencias":[],"siguiente_accion":"","practica_realizada":false,"practica_sin_id":false,"practica_descripcion":""}}],"problem_attempts":[{{"problem_id":"id-exacto-del-banco","verdict":"resuelto|hueco_teorico|incorrecto","quality":0.0,"theory_gap_nodes":[],"error_nodes":[],"comments":"","seconds":0}}],"resumen":"","errores_recurrentes":[],"siguiente_accion":"","apuntes":[{{"node_id":"...","explicacion_validada":[],"explicacion_para_mi":[],"bien_entendido":[],"dificultades":[],"errores":[],"procedimiento_examen":[],"ejemplos":[],"recursos_visuales":[{{"tipo":"imagen|diagrama_svg|html_interactivo|video|guion_video","titulo":"","descripcion":"","ruta":"recursos_visuales/archivo"}}]}}]}}
 - Usa solo ids de los conceptos del plan. La calidad debe ser acorde al estándar de un 10: solo 0.95 para respuestas impecables de Matrícula de Honor, 0.60 parcial, 0.25 débil y 0.0 no trabajado.
+- Registra en `apuntes.recursos_visuales` solo recursos creados y guardados, con tipo, título, descripción y ruta relativa. No inventes rutas ni incluyas el código HTML entero en el JSON.
+- Incluye un intento por cada problema del banco que realmente se haya trabajado e informa su ID y resultado en `problem_attempts`. No registres problemas inventados.
 - `apuntes` no es una transcripción: escribe solo las ideas que hayan quedado explicadas o comprobadas durante la conversación. Cada entrada debe usar un `node_id` del plan. Separa la explicación física general de la explicación o regla mnemotécnica que funciona específicamente para este estudiante. Si no hay evidencia suficiente, deja la lista vacía.
 {f'- Como esta es una sesión Remote, guarda ese JSON UTF-8, sin Markdown ni texto adicional, exactamente en: {report_path}. Al guardarlo el Centro de Estudio lo incorporará automáticamente.' if report_path else '- Devuelve únicamente el JSON, sin Markdown ni texto adicional. Yo lo copiaré después a la aplicación.'}
+Después de guardar e incorporar el informe, conserva una copia remota privada del informe y
+de cualquier recurso creado. Comprueba la copia con una lectura del destino antes de decir
+que la sesión quedó respaldada.
 """
 
 
@@ -318,6 +362,10 @@ def _node_preview(item: dict, nodes: dict, profile: dict, overrides: dict) -> di
     else:
         motivo = "Nodo incluido en la sesión"
     theory_seen = bool(profile_entry.get("teoria_vista", False))
+    theory_origin = str(profile_entry.get("teoria_vista_origen", "")).casefold()
+    theory_certainty = "probable" if theory_seen and "probable" in theory_origin else (
+        "confirmada" if theory_seen else "no_registrada"
+    )
     return {
         "id": item.get("id"),
         "nombre": item.get("nombre", node.get("nombre", item.get("id"))),
@@ -330,6 +378,7 @@ def _node_preview(item: dict, nodes: dict, profile: dict, overrides: dict) -> di
         "dominio": item.get("dominio", profile_entry.get("dominio", 0)),
         "teoria_vista": theory_seen,
         "theory_status": "vista" if theory_seen else "pendiente",
+        "theory_certainty": theory_certainty,
         "pregunta_preview": f"¿Qué recuerdas ya sobre {item.get('nombre', 'este concepto')} y con qué idea lo conectarías?",
     }
 
@@ -478,6 +527,46 @@ def finish_session(session_id: str, data: dict) -> dict:
     return copy.deepcopy(session)
 
 
+def _normalize_visual_resources(raw_resources) -> list[dict]:
+    """Conserva solo referencias locales válidas a recursos guardados."""
+    if not isinstance(raw_resources, list):
+        return []
+    extensions = {
+        "imagen": (".png", ".jpg", ".jpeg", ".webp"),
+        "diagrama_svg": ".svg",
+        "html_interactivo": ".html",
+        "video": (".mp4", ".webm"),
+        "guion_video": ".md",
+    }
+    result = []
+    for raw in raw_resources[:8]:
+        if not isinstance(raw, dict):
+            continue
+        kind = str(raw.get("tipo", "")).strip().lower()
+        if kind not in extensions:
+            continue
+        path = str(raw.get("ruta", "")).strip().replace("\\", "/")
+        parts = path.split("/")
+        if (not path.startswith("recursos_visuales/") or ".." in parts
+                or not re.fullmatch(r"recursos_visuales/[A-Za-z0-9._/-]+", path)):
+            continue
+        suffix = os.path.splitext(path)[1].lower()
+        allowed_suffixes = extensions[kind]
+        if suffix not in (allowed_suffixes if isinstance(allowed_suffixes, tuple) else (allowed_suffixes,)):
+            continue
+        title = str(raw.get("titulo", "")).strip()[:200]
+        description = str(raw.get("descripcion", "")).strip()[:800]
+        if not title:
+            continue
+        result.append({
+            "tipo": kind,
+            "titulo": title,
+            "descripcion": description,
+            "ruta": path,
+        })
+    return result
+
+
 def normalize_walk_report(report: dict, allowed_ids: list[str]) -> dict:
     """Valida el cierre de voz sin guardar transcripción ni aceptar nodos ajenos al plan."""
     if not isinstance(report, dict):
@@ -500,6 +589,39 @@ def normalize_walk_report(report: dict, allowed_ids: list[str]) -> dict:
             "evidencias": [str(x)[:500] for x in (raw.get("evidencias", []) or [])[:12]],
             "siguiente_accion": str(raw.get("siguiente_accion", ""))[:500],
             "teoria_vista": bool(raw["teoria_vista"]) if "teoria_vista" in raw else None,
+            "practica_realizada": bool(raw.get("practica_realizada", False)),
+            "practica_sin_id": bool(raw.get("practica_sin_id", False)),
+            "practica_descripcion": str(raw.get("practica_descripcion", ""))[:2000],
+        })
+    problem_attempts = []
+    for raw in report.get("problem_attempts", []) or []:
+        if not isinstance(raw, dict):
+            continue
+        problem_id = str(raw.get("problem_id", raw.get("id", ""))).strip()
+        if not problem_id:
+            continue
+        verdict = str(raw.get("verdict", raw.get("veredicto", ""))).strip()
+        verdict = {
+            "correcto": "resuelto",
+            "solido": "resuelto",
+            "parcial": "hueco_teorico",
+            "debil": "incorrecto",
+            "mal": "incorrecto",
+        }.get(verdict, verdict)
+        if verdict not in {"resuelto", "hueco_teorico", "incorrecto"}:
+            verdict = "hueco_teorico"
+        try:
+            quality = max(0.0, min(1.0, float(raw.get("quality", raw.get("calidad", 0)))))
+        except (TypeError, ValueError):
+            quality = 0.0
+        problem_attempts.append({
+            "problem_id": problem_id[:120],
+            "verdict": verdict,
+            "quality": round(quality, 2),
+            "theory_gap_nodes": [str(x) for x in (raw.get("theory_gap_nodes", []) or []) if str(x) in allowed][:20],
+            "error_nodes": [str(x) for x in (raw.get("error_nodes", []) or []) if str(x) in allowed][:20],
+            "comments": str(raw.get("comments", "") or "")[:2000],
+            "seconds": max(0, min(86400, int(raw.get("seconds", 0) or 0))),
         })
     note_updates = []
     for raw in report.get("apuntes", []) or []:
@@ -546,6 +668,7 @@ def normalize_walk_report(report: dict, allowed_ids: list[str]) -> dict:
             "errores": [str(x)[:700] for x in (raw.get("errores", []) or [])[:12]],
             "procedimiento_examen": [str(x)[:900] for x in (raw.get("procedimiento_examen", []) or [])[:12]],
             "ejemplos": [str(x)[:1000] for x in (raw.get("ejemplos", []) or [])[:8]],
+            "recursos_visuales": _normalize_visual_resources(raw.get("recursos_visuales", [])),
         })
     siguiente_accion = str(
         report.get("siguiente_accion", report.get("recomendacion", ""))
@@ -554,6 +677,7 @@ def normalize_walk_report(report: dict, allowed_ids: list[str]) -> dict:
         "tipo": str(report.get("tipo", "walk_review"))[:40],
         "duracion_minutos": max(0, min(600, int(report.get("duracion_minutos", 0) or 0))),
         "nodos": nodes,
+        "problem_attempts": problem_attempts,
         "resumen": str(report.get("resumen", ""))[:3000],
         "errores_recurrentes": [str(x)[:400] for x in (report.get("errores_recurrentes", []) or [])[:20]],
         "siguiente_accion": siguiente_accion,
